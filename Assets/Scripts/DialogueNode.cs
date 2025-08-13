@@ -1,11 +1,16 @@
 using UnityEditor.Experimental.GraphView;
-using UnityEngine;
 
+/// <summary>
+/// Узел диалогового графа
+/// </summary>
 public class DialogueNode : Node
 {
+    /// <summary>Уникальный идентификатор узла</summary>
     public string GUID;
 
+    /// <summary>Текст диалога</summary>
     public string DialogueText;
 
-    public bool EmtryPoint = false;
+    /// <summary>Флаг стартового узла</summary>
+    public bool EntryPoint;
 }

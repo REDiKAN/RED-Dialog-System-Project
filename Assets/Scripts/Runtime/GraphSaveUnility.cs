@@ -6,78 +6,102 @@ using UnityEditor;
 using System;
 using UnityEngine.UIElements;
 
-public class GraphSaveUnility
+/// <summary>
+/// Утилита для сохранения и загрузки диалоговых графов
+/// </summary>
+public class GraphSaveUtility
 {
-    private DialogueGrapView targetGrapView;
+    private DialogueGraphView targetGraphView;
     private DialogueContainer containerCache;
 
-    private List<Edge> Edges => targetGrapView.edges.ToList();
-    private List<DialogueNode> Nodes => targetGrapView.nodes.ToList().Cast<DialogueNode>().ToList();
-    public static GraphSaveUnility GetInstance(DialogueGrapView targetGrapView)
-    {
-        return new GraphSaveUnility
-        {
-            targetGrapView = targetGrapView
-        };
-    }
+    #region Properties
+    private List<Edge> Edges => targetGraphView.edges.ToList();
+    private List<DialogueNode> Nodes => targetGraphView.nodes.ToList().Cast<DialogueNode>().ToList();
+    #endregion
 
+    #region Initialization
+    public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
+    {
+        return new GraphSaveUtility { targetGraphView = targetGraphView };
+    }
+    #endregion
+
+    #region Saving
+    /// <summary>
+    /// Сохранение графа в файл
+    /// </summary>
     public void SaveGraph(string fileName)
     {
+        if (!Edges.Any())
+        {
+            EditorUtility.DisplayDialog("Error", "No edges to save!", "OK");
+            return;
+        }
+
         var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
-
-        if (!SaveNodes(dialogueContainer)) return;
-
+        SaveNodes(dialogueContainer);
         SaveExposedProperties(dialogueContainer);
 
-        if (!AssetDatabase.IsValidFolder($"Assets/Resources"))
+        // Создаем папку Resources если не существует
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             AssetDatabase.CreateFolder("Assets", "Resources");
 
         AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
         AssetDatabase.SaveAssets();
     }
 
-
-    private bool SaveNodes(DialogueContainer dialogueContainer)
+    /// <summary>
+    /// Сохранение узлов и связей
+    /// </summary>
+    private void SaveNodes(DialogueContainer dialogueContainer)
     {
-        if (!Edges.Any()) return false;
-
+        // Сохраняем связи между узлами
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
-        for (int i = 0; i < connectedPorts.Length; i++)
+        foreach (var edge in connectedPorts)
         {
-            var outputNode = connectedPorts[i].output.node as DialogueNode;
-            var inputNode = connectedPorts[i].input.node as DialogueNode;
+            var outputNode = edge.output.node as DialogueNode;
+            var inputNode = edge.input.node as DialogueNode;
 
             dialogueContainer.NodeLinks.Add(new NodeLinkData
             {
                 BaseNodeGuid = outputNode.GUID,
-                PortName = connectedPorts[i].output.portName,
+                PortName = edge.output.portName,
                 TargetNodeGuid = inputNode.GUID
             });
         }
 
-        foreach (var dialogueNode in Nodes.Where(node => !node.EmtryPoint))
+        // Сохраняем данные узлов
+        foreach (var node in Nodes.Where(node => !node.EntryPoint))
         {
             dialogueContainer.DialogueNodeDatas.Add(new DialogueNodeData
             {
-                Guid = dialogueNode.GUID,
-                DialogueText = dialogueNode.DialogueText,
-                Position = dialogueNode.GetPosition().position
+                Guid = node.GUID,
+                DialogueText = node.DialogueText,
+                Position = node.GetPosition().position
             });
         }
-
-        return true;
     }
+
+    /// <summary>
+    /// Сохранение свойств черной доски
+    /// </summary>
     private void SaveExposedProperties(DialogueContainer dialogueContainer)
     {
-        dialogueContainer.ExposedProperties.AddRange(targetGrapView.ExposedProperties);
+        dialogueContainer.ExposedProperties.Clear();
+        dialogueContainer.ExposedProperties.AddRange(targetGraphView.ExposedProperties);
     }
+    #endregion
+
+    #region Loading
+    /// <summary>
+    /// Загрузка графа из файла
+    /// </summary>
     public void LoadGraph(string fileName)
     {
         containerCache = Resources.Load<DialogueContainer>(fileName);
-
         if (containerCache == null)
         {
-            EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exists", "OK");
+            EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exist", "OK");
             return;
         }
 
@@ -87,78 +111,87 @@ public class GraphSaveUnility
         CreateExposedProperties();
     }
 
-    private void CreateExposedProperties()
-    {
-        targetGrapView.ClearBlackBoardAndExposedProperties();
-
-        foreach (var exposedProperty in containerCache.ExposedProperties)
-        {
-            targetGrapView.AddproperToBlackBoard(exposedProperty);
-        }
-    }
-
-    private void ConnectNodes()
-    {
-        for (int i = 0; i < Nodes.Count; i++)
-        {
-            var connection = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == Nodes[i].GUID).ToList();
-
-            for (int j = 0; j < connection.Count; j++)
-            {
-                var targetNodeGuid = connection[j].TargetNodeGuid;
-                var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
-
-                LinkNode(Nodes[i].outputContainer[j].Q<Port>(), (Port) targetNode.inputContainer[0]);
-
-                targetNode.SetPosition(new Rect(
-                    containerCache.DialogueNodeDatas.First(x => x.Guid == targetNodeGuid).Position,
-                    targetGrapView.defaultNodeSize
-                    ));
-            }
-        }
-    }
-
-    private void LinkNode(Port output, Port input)
-    {
-        var tempEdge = new Edge 
-        {
-            output = output,
-            input = input
-        };
-
-        tempEdge?.input.Connect(tempEdge);
-        tempEdge?.output.Connect(tempEdge);
-
-        targetGrapView.Add(tempEdge);
-
-
-    }
-
+    /// <summary>
+    /// Создание узлов из загруженных данных
+    /// </summary>
     private void CreateNodes()
     {
         foreach (var nodeData in containerCache.DialogueNodeDatas)
         {
-            var tempNode = targetGrapView.CreateDialogueNode(nodeData.DialogueText, Vector2.zero);
+            var tempNode = targetGraphView.CreateDialogueNode(nodeData.DialogueText, Vector2.zero);
             tempNode.GUID = nodeData.Guid;
-            targetGrapView.AddElement(tempNode);
+            targetGraphView.AddElement(tempNode);
 
             var nodePorts = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == nodeData.Guid).ToList();
-            nodePorts.ForEach(x => targetGrapView.AddChoicePort(tempNode, x.PortName));
+            nodePorts.ForEach(x => targetGraphView.AddChoicePort(tempNode, x.PortName));
         }
     }
 
-    private void ClearGraph()
+    /// <summary>
+    /// Восстановление связей между узлами
+    /// </summary>
+    private void ConnectNodes()
     {
-        Nodes.Find(x => x.EmtryPoint).GUID = containerCache.NodeLinks[0].BaseNodeGuid;
-
         foreach (var node in Nodes)
         {
-            if (node.EmtryPoint) continue;
+            var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == node.GUID).ToList();
+            for (int j = 0; j < connections.Count; j++)
+            {
+                var targetNodeGuid = connections[j].TargetNodeGuid;
+                var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
 
-            Edges.Where(x => x.input.node == node).ToList()
-                .ForEach(edge => targetGrapView.RemoveElement(edge));
-
-            targetGrapView.RemoveElement(node);
+                LinkNodes(node.outputContainer[j].Q<Port>(), (Port)targetNode.inputContainer[0]);
+                targetNode.SetPosition(new Rect(
+                    containerCache.DialogueNodeDatas.First(x => x.Guid == targetNodeGuid).Position,
+                    targetGraphView.defaultNodeSize
+                ));
+            }
         }
     }
+
+    /// <summary>
+    /// Связывание двух портов
+    /// </summary>
+    private void LinkNodes(Port output, Port input)
+    {
+        var tempEdge = new Edge { output = output, input = input };
+        tempEdge.input.Connect(tempEdge);
+        tempEdge.output.Connect(tempEdge);
+        targetGraphView.Add(tempEdge);
+    }
+
+    /// <summary>
+    /// Восстановление свойств черной доски
+    /// </summary>
+    private void CreateExposedProperties()
+    {
+        targetGraphView.ClearBlackBoardAndExposedProperties();
+        foreach (var exposedProperty in containerCache.ExposedProperties)
+        {
+            targetGraphView.AddPropertyToBlackBoard(exposedProperty);
+        }
+    }
+
+    /// <summary>
+    /// Очистка текущего графа перед загрузкой
+    /// </summary>
+    private void ClearGraph()
+    {
+        // Сохраняем GUID стартовой точки
+        Nodes.Find(x => x.EntryPoint).GUID = containerCache.NodeLinks[0].BaseNodeGuid;
+
+        // Удаляем все узлы кроме стартового
+        foreach (var node in Nodes.Where(node => !node.EntryPoint))
+        {
+            // Удаляем связанные связи
+            var edgesToRemove = Edges.Where(x => x.input.node == node).ToList();
+            foreach (var edge in edgesToRemove)
+            {
+                targetGraphView.RemoveElement(edge);
+            }
+
+            targetGraphView.RemoveElement(node);
+        }
+    }
+    #endregion
 }
