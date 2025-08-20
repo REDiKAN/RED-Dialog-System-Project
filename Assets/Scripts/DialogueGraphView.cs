@@ -282,4 +282,14 @@ public class DialogueGraphView : GraphView
             }
         }
     }
+
+    // Добавим этот метод в класс DialogueGraphView
+    /// <summary>
+    /// Очистка свойств черной доски
+    /// </summary>
+    public void ClearBlackBoardAndExposedProperties()
+    {
+        ExposedProperties.Clear();
+        Blackboard.Clear();
+    }
 }

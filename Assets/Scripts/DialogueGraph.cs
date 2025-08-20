@@ -77,15 +77,11 @@ public class DialogueGraph : EditorWindow
             return;
         }
 
-        // Заглушка для функциональности сохранения/загрузки
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
         if (save)
-        {
-            EditorUtility.DisplayDialog("Info", "Save functionality will be implemented here.", "OK");
-        }
+            saveUtility.SaveGraph(fileName);
         else
-        {
-            EditorUtility.DisplayDialog("Info", "Load functionality will be implemented here.", "OK");
-        }
+            saveUtility.LoadGraph(fileName);
     }
 
     /// <summary>

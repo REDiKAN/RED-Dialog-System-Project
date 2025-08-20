@@ -1,7 +1,7 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
-using UnityEditor.Search;
 using UnityEngine;
+using UnityEditor.Search;
 
 /// <summary>
 /// Узел речи NPC - содержит диалог и озвучку
@@ -63,24 +63,17 @@ public class SpeechNode : BaseNode
     }
 
     /// <summary>
-    /// Добавляет дополнительный выходной порт для подключения OptionNode
+    /// Находит порт по имени
     /// </summary>
-    private void AddOutputPort()
+    public Port GetPortByName(string portName)
     {
-        var newOutputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        newOutputPort.portName = $"Option {outputContainer.childCount}";
-
-        // Поле для редактирования имени порта
-        var textField = new TextField { value = newOutputPort.portName };
-        textField.RegisterValueChangedCallback(evt => newOutputPort.portName = evt.newValue);
-
-        // Убираем стандартный лейбл и добавляем поле для редактирования
-        newOutputPort.contentContainer.RemoveAt(0);
-        newOutputPort.contentContainer.Add(new Label("  "));
-        newOutputPort.contentContainer.Add(textField);
-
-        outputContainer.Add(newOutputPort);
-        RefreshExpandedState();
-        RefreshPorts();
+        foreach (var port in outputContainer.Children())
+        {
+            if (port is Port portElement && portElement.portName == portName)
+            {
+                return portElement;
+            }
+        }
+        return null;
     }
 }

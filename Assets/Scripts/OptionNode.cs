@@ -1,7 +1,7 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
-using UnityEditor.Search;
 using UnityEngine;
+using UnityEditor.Search;
 
 /// <summary>
 /// Узел варианта ответа игрока - содержит текст ответа и озвучку
