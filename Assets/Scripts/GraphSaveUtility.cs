@@ -102,6 +102,17 @@ public class GraphSaveUtility
                     AudioClipGuid = optionNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNode.AudioClip)) : ""
                 });
             }
+            else if (node is ModifyIntNode modifyIntNode)
+            {
+                dialogueContainer.ModifyIntNodeDatas.Add(new ModifyIntNodeData
+                {
+                    Guid = modifyIntNode.GUID,
+                    Position = node.GetPosition().position,
+                    SelectedProperty = modifyIntNode.SelectedProperty,
+                    Operator = modifyIntNode.Operator,
+                    Value = modifyIntNode.Value
+                });
+            }
         }
     }
 
@@ -181,6 +192,16 @@ public class GraphSaveUtility
                     AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
             }
 
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.ModifyIntNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            tempNode.SelectedProperty = nodeData.SelectedProperty;
+            tempNode.Operator = nodeData.Operator;
+            tempNode.Value = nodeData.Value;
             targetGraphView.AddElement(tempNode);
         }
     }

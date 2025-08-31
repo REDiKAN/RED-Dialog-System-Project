@@ -30,4 +30,7 @@ public class DialogueContainer : ScriptableObject
     [Header("Condition Nodes")]
     public List<IntConditionNodeData> IntConditionNodeDatas = new List<IntConditionNodeData>();
     public List<StringConditionNodeData> StringConditionNodeDatas = new List<StringConditionNodeData>();
+
+    [Header("Modify Int Nodes")]
+    public List<ModifyIntNodeData> ModifyIntNodeDatas = new List<ModifyIntNodeData>();
 }

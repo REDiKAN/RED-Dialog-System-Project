@@ -44,7 +44,10 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeEntry(new GUIContent("Condition (Int)", indentationIcon)) { userData = typeof(IntConditionNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Condition (String)", indentationIcon)) { userData = typeof(StringConditionNode), level = 2 },
         new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 }
+        new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon))
+        { userData = typeof(ModifyIntNode), level = 2 },
     };
     }
 

@@ -18,6 +18,7 @@ public static class NodeFactory
             nameof(EntryNode) => CreateEntryNode(position),
             nameof(IntConditionNode) => CreateIntConditionNode(position),
             nameof(StringConditionNode) => CreateStringConditionNode(position),
+            nameof(ModifyIntNode) => CreateModifyIntNode(position),
             _ => null
         };
     }
@@ -32,6 +33,13 @@ public static class NodeFactory
     public static StringConditionNode CreateStringConditionNode(Vector2 position)
     {
         var node = new StringConditionNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static ModifyIntNode CreateModifyIntNode(Vector2 position)
+    {
+        var node = new ModifyIntNode();
         node.Initialize(position);
         return node;
     }

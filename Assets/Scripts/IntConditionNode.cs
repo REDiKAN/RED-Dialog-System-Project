@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 using System.Linq;
 using UnityEngine;
 
-public class IntConditionNode : BaseConditionNode
+public class IntConditionNode : BaseConditionNode, IPropertyNode
 {
     public string SelectedProperty;
     public ComparisonType Comparison;

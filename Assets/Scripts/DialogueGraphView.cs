@@ -136,6 +136,10 @@ public class DialogueGraphView : GraphView
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
                 (EntryNode, SpeechNode) => true,
+                (ModifyIntNode, SpeechNode) => true,
+                (ModifyIntNode, OptionNode) => true,
+                (ModifyIntNode, IntConditionNode) => true,
+                (ModifyIntNode, StringConditionNode) => true,
                 (IntConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as IntConditionNode),
                 (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
                 (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
@@ -153,6 +157,10 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
+                (ModifyIntNode, SpeechNode) => true,
+                (ModifyIntNode, OptionNode) => true,
+                (ModifyIntNode, IntConditionNode) => true,
+                (ModifyIntNode, StringConditionNode) => true,
                 (IntConditionNode, OptionNode) => true,
                 (IntConditionNode, SpeechNode) => true,
                 (StringConditionNode, OptionNode) => true,
@@ -263,6 +271,9 @@ public class DialogueGraphView : GraphView
     /// <summary>
     /// Добавляет свойство на черную доску
     /// </summary>
+    // <summary>
+    /// Добавляет свойство на черную доску
+    /// </summary>
     public void AddPropertyToBlackBoard(object property)
     {
         if (property is IntExposedProperty intProperty)
@@ -316,6 +327,76 @@ public class DialogueGraphView : GraphView
             container.Add(valueField);
 
             Blackboard[0].Add(container); // Добавляем в секцию int свойств
+
+            blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
+            {
+                evt.menu.AppendAction("Delete", action =>
+                {
+                // Находим использование свойства
+                int usageCount = 0;
+                var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
+                var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
+
+                foreach (var node in conditionNodes)
+                {
+                    if (node.SelectedProperty == intProperty.PropertyName)
+                        usageCount++;
+                }
+
+                foreach (var node in modifyNodes)
+                {
+                    if (node.SelectedProperty == intProperty.PropertyName)
+                        usageCount++;
+                }
+
+                    // Диалог подтверждения
+                    if (EditorUtility.DisplayDialog("Confirm Delete",
+                        $"Property '{intProperty.PropertyName}' is used in {usageCount} nodes.\nDelete anyway?",
+                        "Delete", "Cancel"))
+                    {
+                        // Удаляем из списка
+                        IntExposedProperties.Remove(intProperty);
+
+                        // Обновляем все узлы, которые использовали это свойство
+                        foreach (var node in conditionNodes)
+                        {
+                            if (node.SelectedProperty == intProperty.PropertyName)
+                            {
+                                node.SelectedProperty = "";
+                                Debug.LogError($"Error: Variable {intProperty.PropertyName} was removed but is still used in IntConditionNode {node.GUID}");
+                            }
+                        }
+
+                        foreach (var node in modifyNodes)
+                        {
+                            if (node.SelectedProperty == intProperty.PropertyName)
+                            {
+                                node.SelectedProperty = "";
+                                Debug.LogError($"Error: Variable {intProperty.PropertyName} was removed but is still used in ModifyIntNode {node.GUID}");
+                            }
+                        }
+
+                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
+                        var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
+                        foreach (var node in allPropertyNodes)
+                        {
+                            node.RefreshPropertyDropdown();
+                        }
+
+                        // Находим и удаляем визуальный элемент по имени свойства
+                        var containers = Blackboard[0].Children().ToList();
+                        foreach (var cont in containers)
+                        {
+                            var field = cont.Q<BlackboardField>();
+                            if (field != null && field.text == intProperty.PropertyName)
+                            {
+                                Blackboard[0].Remove(cont);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }));
         }
         else if (property is StringExposedProperty stringProperty)
         {
@@ -347,6 +428,60 @@ public class DialogueGraphView : GraphView
             container.Add(valueField);
 
             Blackboard[1].Add(container); // Добавляем в секцию string свойств
+
+            // Добавляем контекстное меню для string свойств
+            blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
+            {
+                evt.menu.AppendAction("Delete", action =>
+                {
+                    // Находим использование свойства
+                    int usageCount = 0;
+                    var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
+                    foreach (var node in conditionNodes)
+                    {
+                        if (node.SelectedProperty == stringProperty.PropertyName)
+                            usageCount++;
+                    }
+
+                    // Диалог подтверждения
+                    if (EditorUtility.DisplayDialog("Confirm Delete",
+                        $"Property '{stringProperty.PropertyName}' is used in {usageCount} condition nodes.\nDelete anyway?",
+                        "Delete", "Cancel"))
+                    {
+                        // Удаляем из списка
+                        StringExposedProperties.Remove(stringProperty);
+
+                        // Обновляем все узлы, которые использовали это свойство
+                        foreach (var node in nodes.ToList().OfType<StringConditionNode>())
+                        {
+                            if (node.SelectedProperty == stringProperty.PropertyName)
+                            {
+                                node.SelectedProperty = "";
+                                Debug.LogError($"Error: Variable {stringProperty.PropertyName} was removed but is still used in StringConditionNode {node.GUID}");
+                            }
+                        }
+
+                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
+                        var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
+                        foreach (var node in allPropertyNodes)
+                        {
+                            node.RefreshPropertyDropdown();
+                        }
+
+                        // Находим и удаляем визуальный элемент по имени свойства
+                        var containers = Blackboard[1].Children().ToList();
+                        foreach (var cont in containers)
+                        {
+                            var field = cont.Q<BlackboardField>();
+                            if (field != null && field.text == stringProperty.PropertyName)
+                            {
+                                Blackboard[1].Remove(cont);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }));
         }
     }
 
