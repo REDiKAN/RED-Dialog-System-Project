@@ -34,29 +34,18 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     /// </summary>
     public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
     {
-        var tree = new List<SearchTreeEntry>
-        {
-            new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
-            new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 1),
-            new SearchTreeEntry(new GUIContent("Speech Node", indentationIcon))
-            {
-                userData = typeof(SpeechNode),
-                level = 2
-            },
-            new SearchTreeEntry(new GUIContent("Option Node", indentationIcon))
-            {
-                userData = typeof(OptionNode),
-                level = 2
-            },
-            new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
-            new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon))
-            {
-                userData = typeof(EntryNode),
-                level = 2
-            }
-        };
-
-        return tree;
+        return new List<SearchTreeEntry>
+    {
+        new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
+        new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Speech Node", indentationIcon)) { userData = typeof(SpeechNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Option Node", indentationIcon)) { userData = typeof(OptionNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Condition Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Condition (Int)", indentationIcon)) { userData = typeof(IntConditionNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Condition (String)", indentationIcon)) { userData = typeof(StringConditionNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 }
+    };
     }
 
     /// <summary>

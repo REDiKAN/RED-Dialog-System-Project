@@ -22,4 +22,12 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Exposed Properties")]
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
+
+    [Header("Exposed Properties")]
+    public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
+    public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
+
+    [Header("Condition Nodes")]
+    public List<IntConditionNodeData> IntConditionNodeDatas = new List<IntConditionNodeData>();
+    public List<StringConditionNodeData> StringConditionNodeDatas = new List<StringConditionNodeData>();
 }

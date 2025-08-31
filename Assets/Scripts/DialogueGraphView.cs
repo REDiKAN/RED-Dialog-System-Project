@@ -16,6 +16,9 @@ public class DialogueGraphView : GraphView
     public Blackboard Blackboard;
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
 
+    public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
+    public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
+
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
 
@@ -122,47 +125,64 @@ public class DialogueGraphView : GraphView
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
 
-        // Определяем направление соединения
         if (startPort.direction == Direction.Output)
         {
-            // Соединение от startNode к targetNode
-
-            // SpeechNode можно соединять только с OptionNode
-            if (startNode is SpeechNode)
+            return (startNode, targetNode) switch
             {
-                return targetNode is OptionNode;
-            }
-
-            // OptionNode можно соединять только с SpeechNode
-            if (startNode is OptionNode)
-            {
-                return targetNode is SpeechNode;
-            }
-
-            // EntryNode можно соединять только с SpeechNode
-            if (startNode is EntryNode)
-            {
-                return targetNode is SpeechNode;
-            }
+                (SpeechNode, OptionNode) => true,
+                (SpeechNode, IntConditionNode) => true,
+                (SpeechNode, StringConditionNode) => true,
+                (OptionNode, SpeechNode) => true,
+                (OptionNode, IntConditionNode) => true,
+                (OptionNode, StringConditionNode) => true,
+                (EntryNode, SpeechNode) => true,
+                (IntConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as IntConditionNode),
+                (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
+                (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
+                (StringConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as StringConditionNode),
+                _ => false
+            };
         }
-        else if (startPort.direction == Direction.Input)
+        else
         {
-            // Соединение от targetNode к startNode
-
-            // SpeechNode можно соединять только с OptionNode или EntryNode
-            if (startNode is SpeechNode)
+            return (startNode, targetNode) switch
             {
-                return targetNode is OptionNode || targetNode is EntryNode;
-            }
-
-            // OptionNode можно соединять только с SpeechNode
-            if (startNode is OptionNode)
-            {
-                return targetNode is SpeechNode;
-            }
+                (SpeechNode, OptionNode) => true,
+                (SpeechNode, IntConditionNode) => true,
+                (SpeechNode, StringConditionNode) => true,
+                (OptionNode, SpeechNode) => true,
+                (OptionNode, IntConditionNode) => true,
+                (OptionNode, StringConditionNode) => true,
+                (IntConditionNode, OptionNode) => true,
+                (IntConditionNode, SpeechNode) => true,
+                (StringConditionNode, OptionNode) => true,
+                (StringConditionNode, SpeechNode) => true,
+                _ => false
+            };
         }
+    }
+    /// <summary>
+    /// Проверяет, подключен ли узел условия к SpeechNode
+    /// </summary>
+    private bool IsConditionNodeConnectedToSpeech(BaseConditionNode conditionNode)
+    {
+        if (conditionNode == null) return false;
 
-        return false;
+        var inputPort = conditionNode.inputContainer.Children().FirstOrDefault() as Port;
+        return inputPort != null && inputPort.connections.Any(edge =>
+            edge.output.node is SpeechNode);
+    }
+
+    /// <summary>
+    /// Проверяет, подключен ли узел условия к OptionNode
+    /// </summary>
+    private bool IsConditionNodeConnectedToOption(BaseConditionNode conditionNode)
+    {
+        if (conditionNode == null) return false;
+
+        var inputPort = conditionNode.inputContainer.Children().FirstOrDefault() as Port;
+        return inputPort != null && inputPort.connections.Any(edge =>
+            edge.output.node is OptionNode);
     }
 
     /// <summary>
@@ -184,73 +204,150 @@ public class DialogueGraphView : GraphView
     {
         Blackboard = new Blackboard(this);
         Blackboard.title = "Exposed Properties";
-        Blackboard.Add(new BlackboardSection { title = "Exposed Properties" });
+
+        // Создаем отдельные секции для разных типов свойств
+        var intSection = new BlackboardSection { title = "Int Properties" };
+        var stringSection = new BlackboardSection { title = "String Properties" };
+
+        Blackboard.Add(intSection);
+        Blackboard.Add(stringSection);
 
         // Обработчик добавления нового свойства
         Blackboard.addItemRequested = blackboard =>
         {
-            AddPropertyToBlackBoard(new ExposedProperty());
+            // Создаем меню для выбора типа свойства
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Add Int Property"), false, () =>
+                AddPropertyToBlackBoard(new IntExposedProperty()));
+            menu.AddItem(new GUIContent("Add String Property"), false, () =>
+                AddPropertyToBlackBoard(new StringExposedProperty()));
+            menu.ShowAsContext();
         };
 
-        // Обработчик редактирования имени свойства
+        // Обработчик редактирования имени свойства (только для старых свойств, если они еще используются)
         Blackboard.editTextRequested = (blackboard, element, newValue) =>
         {
             var oldPropertyName = ((BlackboardField)element).text;
-            if (ExposedProperties.Any(x => x.PropertyName == newValue))
+
+            // Проверяем оба типа свойств на уникальность имени
+            if (IntExposedProperties.Any(x => x.PropertyName == newValue) ||
+                StringExposedProperties.Any(x => x.PropertyName == newValue))
             {
-                EditorUtility.DisplayDialog("Error", "This property name already exists, please chose another one.", "OK");
+                EditorUtility.DisplayDialog("Error", "This property name already exists, please choose another one.", "OK");
                 return;
             }
 
-            var propertyIndex = ExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
-            ExposedProperties[propertyIndex].PropertyName = newValue;
-            ((BlackboardField)element).text = newValue;
+            // Ищем свойство в Int свойствах
+            var intPropertyIndex = IntExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
+            if (intPropertyIndex >= 0)
+            {
+                IntExposedProperties[intPropertyIndex].PropertyName = newValue;
+                ((BlackboardField)element).text = newValue;
+                return;
+            }
+
+            // Ищем свойство в String свойствах
+            var stringPropertyIndex = StringExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
+            if (stringPropertyIndex >= 0)
+            {
+                StringExposedProperties[stringPropertyIndex].PropertyName = newValue;
+                ((BlackboardField)element).text = newValue;
+            }
         };
 
         // Добавляем черную доску в граф
         Add(Blackboard);
     }
 
+
     /// <summary>
     /// Добавляет свойство на черную доску
     /// </summary>
-    public void AddPropertyToBlackBoard(ExposedProperty exposedProperty)
+    public void AddPropertyToBlackBoard(object property)
     {
-        var localProperty = new ExposedProperty
+        if (property is IntExposedProperty intProperty)
         {
-            PropertyName = exposedProperty.PropertyName,
-            PropertyValue = exposedProperty.PropertyValue
-        };
+            IntExposedProperties.Add(intProperty);
 
-        ExposedProperties.Add(localProperty);
+            var container = new VisualElement();
+            var blackboardField = new BlackboardField
+            {
+                text = intProperty.PropertyName,
+                typeText = "Int"
+            };
 
-        // Создаем контейнер для свойства
-        var container = new VisualElement();
-        var blackboardField = new BlackboardField
+            // Поля для редактирования int свойства
+            var nameField = new TextField("Name:") { value = intProperty.PropertyName };
+            var minField = new IntegerField("Min:") { value = intProperty.MinValue };
+            var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
+            var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
+
+            // Обработчики изменений
+            nameField.RegisterValueChangedCallback(evt =>
+            {
+                intProperty.PropertyName = evt.newValue;
+                blackboardField.text = evt.newValue;
+            });
+
+            minField.RegisterValueChangedCallback(evt =>
+            {
+                intProperty.MinValue = evt.newValue;
+                if (intProperty.IntValue < evt.newValue)
+                    valueField.value = evt.newValue;
+            });
+
+            maxField.RegisterValueChangedCallback(evt =>
+            {
+                intProperty.MaxValue = evt.newValue;
+                if (intProperty.IntValue > evt.newValue)
+                    valueField.value = evt.newValue;
+            });
+
+            valueField.RegisterValueChangedCallback(evt =>
+            {
+                intProperty.IntValue = Mathf.Clamp(evt.newValue, intProperty.MinValue, intProperty.MaxValue);
+                valueField.value = intProperty.IntValue;
+            });
+
+            container.Add(blackboardField);
+            container.Add(nameField);
+            container.Add(minField);
+            container.Add(maxField);
+            container.Add(valueField);
+
+            Blackboard[0].Add(container); // Добавляем в секцию int свойств
+        }
+        else if (property is StringExposedProperty stringProperty)
         {
-            text = localProperty.PropertyName,
-            typeText = "String"
-        };
+            StringExposedProperties.Add(stringProperty);
 
-        // Поле для значения свойства
-        var propertyValueTextField = new TextField("Value:")
-        {
-            value = localProperty.PropertyValue
-        };
+            var container = new VisualElement();
+            var blackboardField = new BlackboardField
+            {
+                text = stringProperty.PropertyName,
+                typeText = "String"
+            };
 
-        // Обработчик изменения значения свойства
-        propertyValueTextField.RegisterValueChangedCallback(evt =>
-        {
-            var changingPropertyIndex = ExposedProperties.FindIndex(x => x.PropertyName == localProperty.PropertyName);
-            ExposedProperties[changingPropertyIndex].PropertyValue = evt.newValue;
-        });
+            var nameField = new TextField("Name:") { value = stringProperty.PropertyName };
+            var valueField = new TextField("Value:") { value = stringProperty.StringValue };
 
-        // Создаем строку для отображения свойства
-        var blackboardValueRow = new BlackboardRow(blackboardField, propertyValueTextField);
-        container.Add(blackboardValueRow);
+            nameField.RegisterValueChangedCallback(evt =>
+            {
+                stringProperty.PropertyName = evt.newValue;
+                blackboardField.text = evt.newValue;
+            });
 
-        // Добавляем свойство на черную доску
-        Blackboard.Add(container);
+            valueField.RegisterValueChangedCallback(evt =>
+            {
+                stringProperty.StringValue = evt.newValue;
+            });
+
+            container.Add(blackboardField);
+            container.Add(nameField);
+            container.Add(valueField);
+
+            Blackboard[1].Add(container); // Добавляем в секцию string свойств
+        }
     }
 
     /// <summary>
@@ -289,7 +386,12 @@ public class DialogueGraphView : GraphView
     /// </summary>
     public void ClearBlackBoardAndExposedProperties()
     {
-        ExposedProperties.Clear();
+        IntExposedProperties.Clear();
+        StringExposedProperties.Clear();
         Blackboard.Clear();
+
+        // Добавляем обратно секции после очистки
+        Blackboard.Add(new BlackboardSection { title = "Int Properties" });
+        Blackboard.Add(new BlackboardSection { title = "String Properties" });
     }
 }

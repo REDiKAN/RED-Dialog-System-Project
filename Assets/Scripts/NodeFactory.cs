@@ -11,14 +11,29 @@ public static class NodeFactory
     /// </summary>
     public static BaseNode CreateNode(System.Type nodeType, Vector2 position)
     {
-        if (nodeType == typeof(SpeechNode))
-            return CreateSpeechNode(position);
-        else if (nodeType == typeof(OptionNode))
-            return CreateOptionNode(position);
-        else if (nodeType == typeof(EntryNode))
-            return CreateEntryNode(position);
+        return nodeType.Name switch
+        {
+            nameof(SpeechNode) => CreateSpeechNode(position),
+            nameof(OptionNode) => CreateOptionNode(position),
+            nameof(EntryNode) => CreateEntryNode(position),
+            nameof(IntConditionNode) => CreateIntConditionNode(position),
+            nameof(StringConditionNode) => CreateStringConditionNode(position),
+            _ => null
+        };
+    }
 
-        return null;
+    public static IntConditionNode CreateIntConditionNode(Vector2 position)
+    {
+        var node = new IntConditionNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static StringConditionNode CreateStringConditionNode(Vector2 position)
+    {
+        var node = new StringConditionNode();
+        node.Initialize(position);
+        return node;
     }
 
     /// <summary>
