@@ -8,6 +8,6 @@ public class DMVisualizer
     }
     public void RecieveMessage(SendMessageEvent ctx)
     {
-        _messageFactory.Create(ctx.Message);
+        _messageFactory.Create(ctx.Message, ctx.Parent);
     }
 }
