@@ -15,6 +15,8 @@ public class SpeechNode : BaseNode
     private TextField dialogueTextField;
     private ObjectField audioField;
 
+
+
     /// <summary>
     /// Инициализация узла речи NPC
     /// </summary>

@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      8083_year-landscape-red_1080x1920_0: -8192811052962512379
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
