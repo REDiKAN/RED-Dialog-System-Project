@@ -1,12 +1,13 @@
+using DialogueSystem;
 using UnityEngine;
 using System;
 
 [Serializable]
-public class IntConditionNodeData
+public class ModifyIntNodeData
 {
     public string Guid;
     public Vector2 Position;
     public string SelectedProperty;
-    public IntConditionNode.ComparisonType Comparison;
-    public int CompareValue;
+    public OperatorType Operator;
+    public int Value;
 }

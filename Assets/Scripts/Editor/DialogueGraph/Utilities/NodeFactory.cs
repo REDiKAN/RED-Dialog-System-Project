@@ -19,6 +19,7 @@ public static class NodeFactory
             nameof(IntConditionNode) => CreateIntConditionNode(position),
             nameof(StringConditionNode) => CreateStringConditionNode(position),
             nameof(ModifyIntNode) => CreateModifyIntNode(position),
+            nameof(EndNode) => CreateEndNode(position),
             _ => null
         };
     }
@@ -73,6 +74,14 @@ public static class NodeFactory
     {
         var node = new EntryNode();
         node.Initialize(position);
+        return node;
+    }
+
+    public static EndNode CreateEndNode(Vector2 position, string nextDialogueName = "")
+    {
+        var node = new EndNode();
+        node.Initialize(position);
+        node.NextDialogueName = nextDialogueName;
         return node;
     }
 }

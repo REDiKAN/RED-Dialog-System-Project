@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
 using UnityEngine;
+using DialogueSystem;
 
 public class IntConditionNode : BaseConditionNode, IPropertyNode
 {
@@ -12,16 +13,6 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     private DropdownField propertyDropdown;
     private DropdownField comparisonDropdown;
     private IntegerField valueField;
-
-    public enum ComparisonType
-    {
-        Equal,
-        NotEqual,
-        Greater,
-        Less,
-        GreaterOrEqual,
-        LessOrEqual
-    }
 
     public override void Initialize(Vector2 position)
     {

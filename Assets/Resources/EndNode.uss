@@ -1,0 +1,13 @@
+EndNode {
+    background-color: rgba(255, 0, 0, 0.3);
+    border: 2px solid red;
+}
+
+EndNode:selected {
+    border: 2px solid #FF0000;
+}
+
+EndNode .title {
+    background-color: #FF0000;
+    color: white;
+}

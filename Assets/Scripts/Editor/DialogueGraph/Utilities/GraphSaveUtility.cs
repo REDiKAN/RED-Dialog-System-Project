@@ -113,6 +113,15 @@ public class GraphSaveUtility
                     Value = modifyIntNode.Value
                 });
             }
+            else if (node is EndNode endNode)
+            {
+                dialogueContainer.EndNodeDatas.Add(new EndNodeData
+                {
+                    Guid = endNode.GUID,
+                    Position = node.GetPosition().position,
+                    NextDialogueName = endNode.NextDialogueName
+                });
+            }
         }
     }
 
@@ -202,6 +211,13 @@ public class GraphSaveUtility
             tempNode.SelectedProperty = nodeData.SelectedProperty;
             tempNode.Operator = nodeData.Operator;
             tempNode.Value = nodeData.Value;
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.EndNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateEndNode(nodeData.Position, nodeData.NextDialogueName);
+            tempNode.GUID = nodeData.Guid;
             targetGraphView.AddElement(tempNode);
         }
     }

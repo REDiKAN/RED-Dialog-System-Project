@@ -1,100 +1,64 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 08.09.2025 20:15:41
-// Total Files: 27
+// Generation Time: 08.09.2025 22:50:14
+// Total Files: 29
 // =================================
 
-//==== File 1 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\BaseConditionNode.cs ====
+//==== File 1 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
 using UnityEditor.Experimental.GraphView;
+using UnityEngine.UIElements;
 using UnityEngine;
 
-public abstract class BaseConditionNode : BaseNode
+public class DialogueNode : BaseNode
 {
+    public string DialogueText { get; set; }
+    private TextField textField;
+
     public override void Initialize(Vector2 position)
     {
         base.Initialize(position);
+        title = "Dialogue Node";
+        DialogueText = "New Dialogue";
 
-        // ������� ������� ����
+        // ��������� ������� ����
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // ������� �������� ����� True � False
-        var truePort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        truePort.portName = "True";
-        outputContainer.Add(truePort);
+        // ��������� �������� ����
+        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        outputPort.portName = "Next";
+        outputContainer.Add(outputPort);
 
-        var falsePort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        falsePort.portName = "False";
-        outputContainer.Add(falsePort);
+        // ��������� ���� ��� �������
+        textField = new TextField(string.Empty);
+        textField.multiline = true;
+        textField.RegisterValueChangedCallback(evt =>
+        {
+            DialogueText = evt.newValue;
+            title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
+        });
+        textField.SetValueWithoutNotify(DialogueText);
+        mainContainer.Add(textField);
+
+        RefreshExpandedState();
+        RefreshPorts();
     }
 }
 
 
-//==== File 2 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\BaseNode.cs ====
-using UnityEditor.Experimental.GraphView;
+//==== File 2 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
 using UnityEngine;
-using System;
 
-/// <summary>
-/// ������� ����� ��� ���� ����� ����������� �����
-/// �������� ����� ������ � �������� ��� ���� �����
-/// </summary>
-public abstract class BaseNode : Node
+[System.Serializable]
+public class DialogueNodeData
 {
-    public string GUID { get; set; } // ���������� ������������� ����
-    public bool EntryPoint { get; set; } = false; // �������� �� ���� ������ �����
-
-    /// <summary>
-    /// ������������� ���� � ��������� ��������
-    /// </summary>
-    public virtual void Initialize(Vector2 position)
-    {
-        GUID = Guid.NewGuid().ToString();
-        SetPosition(new Rect(position, new Vector2(200, 150)));
-    }
+    public string Guid;
+    public string DialogueText;
+    public Vector2 Position;
 }
 
 
-//==== File 3 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueContainer.cs ====
-using System.Collections.Generic;
-using UnityEngine;
-using System;
-
-/// <summary>
-/// ��������� ��� �������� ������ ����������� ����
-/// </summary>
-[Serializable]
-public class DialogueContainer : ScriptableObject
-{
-    [Header("Entry Node")]
-    public EntryNodeData EntryNodeData;
-
-    [Header("Node Connections")]
-    public List<NodeLinkData> NodeLinks = new List<NodeLinkData>();
-
-    [Header("Speech Nodes")]
-    public List<SpeechNodeData> SpeechNodeDatas = new List<SpeechNodeData>();
-
-    [Header("Option Nodes")]
-    public List<OptionNodeData> OptionNodeDatas = new List<OptionNodeData>();
-
-    [Header("Exposed Properties")]
-    public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
-
-    [Header("Exposed Properties")]
-    public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
-    public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
-
-    [Header("Condition Nodes")]
-    public List<IntConditionNodeData> IntConditionNodeDatas = new List<IntConditionNodeData>();
-    public List<StringConditionNodeData> StringConditionNodeDatas = new List<StringConditionNodeData>();
-
-    [Header("Modify Int Nodes")]
-    public List<ModifyIntNodeData> ModifyIntNodeDatas = new List<ModifyIntNodeData>();
-}
-
-
-//==== File 4 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueGraph.cs ====
+//==== File 3 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -190,7 +154,7 @@ public class DialogueGraph : EditorWindow
     }
 }
 
-//==== File 5 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueGraphView.cs ====
+//==== File 4 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -310,8 +274,9 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// ���������, ��������� �� ���������� ����� ����� �������
-    /// SpeechNode ����� ��������� ������ � OptionNode, OptionNode ����� ��������� ������ � SpeechNode
+    /// ���������, ��������� �� ���������� ����� �������
+    /// SpeechNode ����� ����������� ������ � OptionNode, OptionNode ����� ����������� ������ � SpeechNode
+    /// EndNode ����� ����������� ������ � OptionNode
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
@@ -328,6 +293,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
+                (OptionNode, EndNode) => true, // ��������� ����������� �� OptionNode � EndNode
                 (EntryNode, SpeechNode) => true,
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
@@ -337,6 +303,7 @@ public class DialogueGraphView : GraphView
                 (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
                 (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
                 (StringConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as StringConditionNode),
+                (_, EndNode) => false, // ��������� ����������� � EndNode �� ����� ������ �����
                 _ => false
             };
         }
@@ -350,6 +317,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
+                (EndNode, OptionNode) => true, // ��������� ����������� �� EndNode � OptionNode (������� ����)
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
                 (ModifyIntNode, IntConditionNode) => true,
@@ -361,7 +329,8 @@ public class DialogueGraphView : GraphView
                 _ => false
             };
         }
-    }
+    } 
+
     /// <summary>
     /// ���������, ��������� �� ���� ������� � SpeechNode
     /// </summary>
@@ -724,62 +693,124 @@ public class DialogueGraphView : GraphView
     }
 }
 
-//==== File 6 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
+//==== File 5 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
+using UnityEditor.Experimental.GraphView;
+using System.Collections.Generic;
+using UnityEngine.UIElements;
+using UnityEditor;
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ���� ������ ����� ��� ����������� �����
+/// ��������� ��������� ����� ���� ����� �����
+/// </summary>
+public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
+{
+    private DialogueGraphView graphView;
+    private EditorWindow editorWindow;
+    private Texture2D indentationIcon;
+
+    /// <summary>
+    /// ������������� ���� ������
+    /// </summary>
+    public void Init(EditorWindow editorWindow, DialogueGraphView graphView)
+    {
+        this.graphView = graphView;
+        this.editorWindow = editorWindow;
+
+        // ������� ���������� ������ ��� ��������
+        indentationIcon = new Texture2D(1, 1);
+        indentationIcon.SetPixel(0, 0, new Color(0, 0, 0, 0));
+        indentationIcon.Apply();
+    }
+
+    /// <summary>
+    /// ������� ������ ��������� ��� ������
+    /// </summary>
+    public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
+    {
+        return new List<SearchTreeEntry>
+    {
+        new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
+        new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Speech Node", indentationIcon)) { userData = typeof(SpeechNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Option Node", indentationIcon)) { userData = typeof(OptionNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Condition Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Condition (Int)", indentationIcon)) { userData = typeof(IntConditionNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Condition (String)", indentationIcon)) { userData = typeof(StringConditionNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("End Node", indentationIcon)) { userData = typeof(EndNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon))
+        { userData = typeof(ModifyIntNode), level = 2 },
+    };
+    }
+
+    /// <summary>
+    /// ������������ ����� �������� � ���� ������
+    /// </summary>
+    public bool OnSelectEntry(SearchTreeEntry searchTreeEntry, SearchWindowContext context)
+    {
+        // ������������ ���������� ���� � ��������� ���������� �����
+        var worldMousePosition = editorWindow.rootVisualElement.ChangeCoordinatesTo(
+            editorWindow.rootVisualElement.parent,
+            context.screenMousePosition - editorWindow.position.position
+        );
+
+        var localMousePosition = graphView.contentViewContainer.WorldToLocal(worldMousePosition);
+
+        // ������� ���� ���������� ����
+        if (searchTreeEntry.userData is Type nodeType)
+        {
+            graphView.CreateNode(nodeType, localMousePosition);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+//==== File 6 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
 
-public class DialogueNode : BaseNode
+public class EndNode : BaseNode
 {
-    public string DialogueText { get; set; }
-    private TextField textField;
+    public string NextDialogueName { get; set; } = ""; // ��� ���������� �������
+
+    private TextField nextDialogueField;
 
     public override void Initialize(Vector2 position)
     {
         base.Initialize(position);
-        title = "Dialogue Node";
-        DialogueText = "New Dialogue";
+        title = "End Node";
 
-        // ��������� ������� ����
+        // ������� ����
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // ��������� �������� ����
-        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        outputPort.portName = "Next";
-        outputContainer.Add(outputPort);
-
-        // ��������� ���� ��� �������
-        textField = new TextField(string.Empty);
-        textField.multiline = true;
-        textField.RegisterValueChangedCallback(evt =>
+        // ���� ��� ����� ����� ���������� �������
+        nextDialogueField = new TextField("Next Dialogue:");
+        nextDialogueField.RegisterValueChangedCallback(evt =>
         {
-            DialogueText = evt.newValue;
-            title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
+            NextDialogueName = evt.newValue;
         });
-        textField.SetValueWithoutNotify(DialogueText);
-        mainContainer.Add(textField);
+        mainContainer.Add(nextDialogueField);
 
         RefreshExpandedState();
         RefreshPorts();
+
+        // ����� ��� EndNode
+        styleSheets.Add(Resources.Load<StyleSheet>("EndNode"));
     }
 }
 
 
-//==== File 7 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
-using UnityEngine;
-
-[System.Serializable]
-public class DialogueNodeData
-{
-    public string Guid;
-    public string DialogueText;
-    public Vector2 Position;
-}
-
-
-//==== File 8 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\EntryNode.cs ====
+//==== File 7 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -817,356 +848,7 @@ public class EntryNode : BaseNode
     }
 }
 
-//==== File 9 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\EntryNodeData.cs ====
-using UnityEngine;
-using System;
-
-/// <summary>
-/// ������ ���������� ���� ��� ������������
-/// </summary>
-[Serializable]
-public class EntryNodeData
-{
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
-
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
-}
-
-
-//==== File 10 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\ExposedProperty.cs ====
-using UnityEngine;
-
-/// <summary>
-/// �������� ��� ������ ����� - ����������, ������� ����� ������������ � ��������
-/// </summary>
-[System.Serializable]
-public class ExposedProperty
-{
-    public string PropertyName = "New Property"; // ��� ��������
-    public string PropertyValue = "New Value";   // �������� ��������
-}
-
-//==== File 11 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\GraphSaveUtility.cs ====
-using UnityEditor.Experimental.GraphView;
-using System.Collections.Generic;
-using UnityEngine.UIElements;
-using System.Linq;
-using UnityEngine;
-using UnityEditor;
-using System;
-
-/// <summary>
-/// ������� ��� ���������� � �������� ���������� ������
-/// </summary>
-public class GraphSaveUtility
-{
-    private DialogueGraphView targetGraphView;
-    private DialogueContainer containerCache;
-    private List<Edge> Edges => targetGraphView.edges.ToList();
-    private List<BaseNode> Nodes => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
-
-    /// <summary>
-    /// ��������� ���������� ������� ��� ����������
-    /// </summary>
-    public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
-    {
-        return new GraphSaveUtility { targetGraphView = targetGraphView };
-    }
-
-    #region Saving
-    /// <summary>
-    /// ���������� ����� � ����
-    /// </summary>
-    public void SaveGraph(string fileName)
-    {
-        // ������� ��������� ��� ������ �������
-        var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
-
-        // ��������� ���� � �����
-        SaveNodes(dialogueContainer);
-
-        // ��������� �������� ������ �����
-        SaveExposedProperties(dialogueContainer);
-
-        // ������� ����� Resources ���� �� ����������
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-
-        // ��������� �����
-        AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
-        AssetDatabase.SaveAssets();
-
-        EditorUtility.DisplayDialog("Success", $"Graph saved as {fileName}", "OK");
-    }
-
-    /// <summary>
-    /// ���������� ����� � ������
-    /// </summary>
-    private void SaveNodes(DialogueContainer dialogueContainer)
-    {
-        // ��������� ����� ����� ������
-        var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
-        foreach (var edge in connectedPorts)
-        {
-            var outputNode = edge.output.node as BaseNode;
-            var inputNode = edge.input.node as BaseNode;
-
-            dialogueContainer.NodeLinks.Add(new NodeLinkData
-            {
-                BaseNodeGuid = outputNode.GUID,
-                PortName = edge.output.portName,
-                TargetNodeGuid = inputNode.GUID
-            });
-        }
-
-        // ��������� ������ �����
-        foreach (var node in Nodes)
-        {
-            if (node.EntryPoint)
-            {
-                // ��������� ������ EntryNode
-                dialogueContainer.EntryNodeData = new EntryNodeData
-                {
-                    Guid = node.GUID,
-                    Position = node.GetPosition().position
-                };
-            }
-            else if (node is SpeechNode speechNode)
-            {
-                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
-                {
-                    Guid = speechNode.GUID,
-                    DialogueText = speechNode.DialogueText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = speechNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNode.AudioClip)) : ""
-                });
-            }
-            else if (node is OptionNode optionNode)
-            {
-                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
-                {
-                    Guid = optionNode.GUID,
-                    ResponseText = optionNode.ResponseText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = optionNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNode.AudioClip)) : ""
-                });
-            }
-            else if (node is ModifyIntNode modifyIntNode)
-            {
-                dialogueContainer.ModifyIntNodeDatas.Add(new ModifyIntNodeData
-                {
-                    Guid = modifyIntNode.GUID,
-                    Position = node.GetPosition().position,
-                    SelectedProperty = modifyIntNode.SelectedProperty,
-                    Operator = modifyIntNode.Operator,
-                    Value = modifyIntNode.Value
-                });
-            }
-        }
-    }
-
-    /// <summary>
-    /// ���������� ������� ������ �����
-    /// </summary>
-    private void SaveExposedProperties(DialogueContainer dialogueContainer)
-    {
-        dialogueContainer.ExposedProperties.Clear();
-        dialogueContainer.ExposedProperties.AddRange(targetGraphView.ExposedProperties);
-    }
-    #endregion
-
-    #region Loading
-    /// <summary>
-    /// �������� ����� �� �����
-    /// </summary>
-    public void LoadGraph(string fileName)
-    {
-        containerCache = Resources.Load<DialogueContainer>(fileName);
-        if (containerCache == null)
-        {
-            EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exist", "OK");
-            return;
-        }
-
-        ClearGraph();
-        CreateNodes();
-        ConnectNodes();
-        CreateExposedProperties();
-
-        EditorUtility.DisplayDialog("Success", $"Graph {fileName} loaded", "OK");
-    }
-
-    /// <summary>
-    /// �������� ����� �� ����������� ������
-    /// </summary>
-    private void CreateNodes()
-    {
-        // ��������������� EntryNode
-        if (containerCache.EntryNodeData != null)
-        {
-            var entryNode = Nodes.Find(x => x.EntryPoint);
-            if (entryNode != null)
-            {
-                entryNode.GUID = containerCache.EntryNodeData.Guid;
-                entryNode.SetPosition(new Rect(containerCache.EntryNodeData.Position, targetGraphView.DefaultNodeSize));
-            }
-        }
-
-        // ������� SpeechNode
-        foreach (var nodeData in containerCache.SpeechNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateSpeechNode(nodeData.Position, nodeData.DialogueText);
-            tempNode.GUID = nodeData.Guid;
-
-            // ��������� ��������� ���� ���� GUID
-            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
-            {
-                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // ������� OptionNode
-        foreach (var nodeData in containerCache.OptionNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateOptionNode(nodeData.Position, nodeData.ResponseText);
-            tempNode.GUID = nodeData.Guid;
-
-            // ��������� ��������� ���� ���� GUID
-            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
-            {
-                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.ModifyIntNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            tempNode.SelectedProperty = nodeData.SelectedProperty;
-            tempNode.Operator = nodeData.Operator;
-            tempNode.Value = nodeData.Value;
-            targetGraphView.AddElement(tempNode);
-        }
-    }
-
-    /// <summary>
-    /// �������������� ������ ����� ������
-    /// </summary>
-    private void ConnectNodes()
-    {
-        try
-        {
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == Nodes[i].GUID).ToList();
-
-                foreach (var connection in connections)
-                {
-                    var targetNodeGuid = connection.TargetNodeGuid;
-                    var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
-
-                    // ������� ��������������� ����
-                    Port outputPort = null;
-
-                    if (Nodes[i] is SpeechNode speechNode)
-                    {
-                        // ���� ���� � ������ ������
-                        foreach (var port in speechNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-
-                        // ���� ���� �� ������, ������� ���
-                        if (outputPort == null)
-                        {
-                            outputPort = speechNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName;
-                            speechNode.outputContainer.Add(outputPort);
-                            speechNode.RefreshPorts();
-                            speechNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (Nodes[i] is OptionNode optionNode)
-                    {
-                        outputPort = optionNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (Nodes[i] is EntryNode entryNode)
-                    {
-                        outputPort = entryNode.outputContainer[0].Q<Port>();
-                    }
-
-                    var inputPort = (Port)targetNode.inputContainer[0];
-
-                    if (outputPort != null && inputPort != null)
-                    {
-                        LinkNodes(outputPort, inputPort);
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error connecting nodes: {e.Message}");
-        }
-    }
-
-    /// <summary>
-    /// ���������� ���� ������
-    /// </summary>
-    private void LinkNodes(Port output, Port input)
-    {
-        var tempEdge = new Edge { output = output, input = input };
-        tempEdge.input.Connect(tempEdge);
-        tempEdge.output.Connect(tempEdge);
-        targetGraphView.Add(tempEdge);
-    }
-
-    /// <summary>
-    /// �������������� ������� ������ �����
-    /// </summary>
-    private void CreateExposedProperties()
-    {
-        targetGraphView.ClearBlackBoardAndExposedProperties();
-        foreach (var exposedProperty in containerCache.ExposedProperties)
-        {
-            targetGraphView.AddPropertyToBlackBoard(exposedProperty);
-        }
-    }
-
-    /// <summary>
-    /// ������� �������� ����� ����� ���������
-    /// </summary>
-    private void ClearGraph()
-    {
-        // ������� ��� ���� ����� ����������
-        foreach (var node in Nodes.Where(node => !node.EntryPoint).ToList())
-        {
-            // ������� ��������� �����
-            var edgesToRemove = Edges.Where(x => x.input.node == node || x.output.node == node).ToList();
-            foreach (var edge in edgesToRemove)
-            {
-                targetGraphView.RemoveElement(edge);
-            }
-
-            targetGraphView.RemoveElement(node);
-        }
-    }
-    #endregion
-}
-
-//==== File 12 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\IntConditionNode.cs ====
+//==== File 8 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -1257,39 +939,7 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 13 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\IntConditionNodeData.cs ====
-using UnityEngine;
-using System;
-
-[Serializable]
-public class IntConditionNodeData
-{
-    public string Guid;
-    public Vector2 Position;
-    public string SelectedProperty;
-    public IntConditionNode.ComparisonType Comparison;
-    public int CompareValue;
-}
-
-
-//==== File 14 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\IntExposedProperty.cs ====
-[System.Serializable]
-public class IntExposedProperty
-{
-    public string PropertyName = "New Int Property";
-    public int IntValue = 0;
-    public int MinValue = 0;
-    public int MaxValue = 100;
-}
-
-
-//==== File 15 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\IPropertyNode.cs ====
-public interface IPropertyNode
-{
-    void RefreshPropertyDropdown();
-}
-
-//==== File 16 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\ModifyIntNode.cs ====
+//==== File 9 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1411,190 +1061,7 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     }
 }
 
-//==== File 17 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\ModifyIntNodeData.cs ====
-using UnityEngine;
-using System;
-
-[Serializable]
-public class ModifyIntNodeData
-{
-    public string Guid;
-    public Vector2 Position;
-    public string SelectedProperty;
-    public ModifyIntNode.OperatorType Operator;
-    public int Value;
-}
-
-
-//==== File 18 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\NodeFactory.cs ====
-using UnityEngine;
-
-/// <summary>
-/// ������� ��� �������� ����� ����������� �����
-/// ������������ ������ �������� ���� ����� �����
-/// </summary>
-public static class NodeFactory
-{
-    /// <summary>
-    /// ������� ���� ���������� ���� � �������� �������
-    /// </summary>
-    public static BaseNode CreateNode(System.Type nodeType, Vector2 position)
-    {
-        return nodeType.Name switch
-        {
-            nameof(SpeechNode) => CreateSpeechNode(position),
-            nameof(OptionNode) => CreateOptionNode(position),
-            nameof(EntryNode) => CreateEntryNode(position),
-            nameof(IntConditionNode) => CreateIntConditionNode(position),
-            nameof(StringConditionNode) => CreateStringConditionNode(position),
-            nameof(ModifyIntNode) => CreateModifyIntNode(position),
-            _ => null
-        };
-    }
-
-    public static IntConditionNode CreateIntConditionNode(Vector2 position)
-    {
-        var node = new IntConditionNode();
-        node.Initialize(position);
-        return node;
-    }
-
-    public static StringConditionNode CreateStringConditionNode(Vector2 position)
-    {
-        var node = new StringConditionNode();
-        node.Initialize(position);
-        return node;
-    }
-
-    public static ModifyIntNode CreateModifyIntNode(Vector2 position)
-    {
-        var node = new ModifyIntNode();
-        node.Initialize(position);
-        return node;
-    }
-
-    /// <summary>
-    /// ������� ���� ���� NPC
-    /// </summary>
-    public static SpeechNode CreateSpeechNode(Vector2 position, string dialogueText = "New Dialogue")
-    {
-        var node = new SpeechNode();
-        node.Initialize(position);
-        node.DialogueText = dialogueText;
-        return node;
-    }
-
-    /// <summary>
-    /// ������� ���� �������� ������ ������
-    /// </summary>
-    public static OptionNode CreateOptionNode(Vector2 position, string responseText = "New Response")
-    {
-        var node = new OptionNode();
-        node.Initialize(position);
-        node.ResponseText = responseText;
-        return node;
-    }
-
-    /// <summary>
-    /// ������� ��������� ����
-    /// </summary>
-    public static EntryNode CreateEntryNode(Vector2 position)
-    {
-        var node = new EntryNode();
-        node.Initialize(position);
-        return node;
-    }
-}
-
-//==== File 19 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\NodeLinkData.cs ====
-[System.Serializable]
-public class NodeLinkData
-{
-    public string BaseNodeGuid;
-    public string PortName;
-    public string TargetNodeGuid;
-}
-
-
-//==== File 20 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\NodeSearchWindow.cs ====
-using UnityEditor.Experimental.GraphView;
-using System.Collections.Generic;
-using UnityEngine.UIElements;
-using UnityEditor;
-using UnityEngine;
-using System;
-
-/// <summary>
-/// ���� ������ ����� ��� ����������� �����
-/// ��������� ��������� ����� ���� ����� �����
-/// </summary>
-public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
-{
-    private DialogueGraphView graphView;
-    private EditorWindow editorWindow;
-    private Texture2D indentationIcon;
-
-    /// <summary>
-    /// ������������� ���� ������
-    /// </summary>
-    public void Init(EditorWindow editorWindow, DialogueGraphView graphView)
-    {
-        this.graphView = graphView;
-        this.editorWindow = editorWindow;
-
-        // ������� ���������� ������ ��� ��������
-        indentationIcon = new Texture2D(1, 1);
-        indentationIcon.SetPixel(0, 0, new Color(0, 0, 0, 0));
-        indentationIcon.Apply();
-    }
-
-    /// <summary>
-    /// ������� ������ ��������� ��� ������
-    /// </summary>
-    public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
-    {
-        return new List<SearchTreeEntry>
-    {
-        new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
-        new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Speech Node", indentationIcon)) { userData = typeof(SpeechNode), level = 2 },
-        new SearchTreeEntry(new GUIContent("Option Node", indentationIcon)) { userData = typeof(OptionNode), level = 2 },
-        new SearchTreeGroupEntry(new GUIContent("Condition Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Condition (Int)", indentationIcon)) { userData = typeof(IntConditionNode), level = 2 },
-        new SearchTreeEntry(new GUIContent("Condition (String)", indentationIcon)) { userData = typeof(StringConditionNode), level = 2 },
-        new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
-        new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon))
-        { userData = typeof(ModifyIntNode), level = 2 },
-    };
-    }
-
-    /// <summary>
-    /// ������������ ����� �������� � ���� ������
-    /// </summary>
-    public bool OnSelectEntry(SearchTreeEntry searchTreeEntry, SearchWindowContext context)
-    {
-        // ������������ ���������� ���� � ��������� ���������� �����
-        var worldMousePosition = editorWindow.rootVisualElement.ChangeCoordinatesTo(
-            editorWindow.rootVisualElement.parent,
-            context.screenMousePosition - editorWindow.position.position
-        );
-
-        var localMousePosition = graphView.contentViewContainer.WorldToLocal(worldMousePosition);
-
-        // ������� ���� ���������� ����
-        if (searchTreeEntry.userData is Type nodeType)
-        {
-            graphView.CreateNode(nodeType, localMousePosition);
-            return true;
-        }
-
-        return false;
-    }
-}
-
-//==== File 21 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionNode.cs ====
+//==== File 10 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1660,31 +1127,7 @@ public class OptionNode : BaseNode
     }
 }
 
-//==== File 22 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionNodeData.cs ====
-using UnityEngine;
-using System;
-
-/// <summary>
-/// ������ ���� �������� ������ ������ ��� ������������
-/// </summary>
-[Serializable]
-public class OptionNodeData
-{
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
-
-    [TextArea, Tooltip("Response text content")]
-    public string ResponseText;
-
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
-
-    [Tooltip("GUID of the audio clip asset")]
-    public string AudioClipGuid;
-}
-
-
-//==== File 23 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechNode.cs ====
+//==== File 11 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1767,31 +1210,7 @@ public class SpeechNode : BaseNode
     }
 }
 
-//==== File 24 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechNodeData.cs ====
-using UnityEngine;
-using System;
-
-/// <summary>
-/// ������ ���� ���� NPC ��� ������������
-/// </summary>
-[Serializable]
-public class SpeechNodeData
-{
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
-
-    [TextArea, Tooltip("Dialogue text content")]
-    public string DialogueText;
-
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
-
-    [Tooltip("GUID of the audio clip asset")]
-    public string AudioClipGuid;
-}
-
-
-//==== File 25 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\StringConditionNode.cs ====
+//==== File 12 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -1880,7 +1299,681 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 26 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\StringConditionNodeData.cs ====
+//==== File 13 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
+using UnityEditor.Experimental.GraphView;
+using System.Collections.Generic;
+using UnityEngine.UIElements;
+using System.Linq;
+using UnityEngine;
+using UnityEditor;
+using System;
+
+/// <summary>
+/// ������� ��� ���������� � �������� ���������� ������
+/// </summary>
+public class GraphSaveUtility
+{
+    private DialogueGraphView targetGraphView;
+    private DialogueContainer containerCache;
+    private List<Edge> Edges => targetGraphView.edges.ToList();
+    private List<BaseNode> Nodes => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
+
+    /// <summary>
+    /// ��������� ���������� ������� ��� ����������
+    /// </summary>
+    public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
+    {
+        return new GraphSaveUtility { targetGraphView = targetGraphView };
+    }
+
+    #region Saving
+    /// <summary>
+    /// ���������� ����� � ����
+    /// </summary>
+    public void SaveGraph(string fileName)
+    {
+        // ������� ��������� ��� ������ �������
+        var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+
+        // ��������� ���� � �����
+        SaveNodes(dialogueContainer);
+
+        // ��������� �������� ������ �����
+        SaveExposedProperties(dialogueContainer);
+
+        // ������� ����� Resources ���� �� ����������
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            AssetDatabase.CreateFolder("Assets", "Resources");
+
+        // ��������� �����
+        AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
+        AssetDatabase.SaveAssets();
+
+        EditorUtility.DisplayDialog("Success", $"Graph saved as {fileName}", "OK");
+    }
+
+    /// <summary>
+    /// ���������� ����� � ������
+    /// </summary>
+    private void SaveNodes(DialogueContainer dialogueContainer)
+    {
+        // ��������� ����� ����� ������
+        var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
+        foreach (var edge in connectedPorts)
+        {
+            var outputNode = edge.output.node as BaseNode;
+            var inputNode = edge.input.node as BaseNode;
+
+            dialogueContainer.NodeLinks.Add(new NodeLinkData
+            {
+                BaseNodeGuid = outputNode.GUID,
+                PortName = edge.output.portName,
+                TargetNodeGuid = inputNode.GUID
+            });
+        }
+
+        // ��������� ������ �����
+        foreach (var node in Nodes)
+        {
+            if (node.EntryPoint)
+            {
+                // ��������� ������ EntryNode
+                dialogueContainer.EntryNodeData = new EntryNodeData
+                {
+                    Guid = node.GUID,
+                    Position = node.GetPosition().position
+                };
+            }
+            else if (node is SpeechNode speechNode)
+            {
+                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
+                {
+                    Guid = speechNode.GUID,
+                    DialogueText = speechNode.DialogueText,
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = speechNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNode.AudioClip)) : ""
+                });
+            }
+            else if (node is OptionNode optionNode)
+            {
+                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
+                {
+                    Guid = optionNode.GUID,
+                    ResponseText = optionNode.ResponseText,
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = optionNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNode.AudioClip)) : ""
+                });
+            }
+            else if (node is ModifyIntNode modifyIntNode)
+            {
+                dialogueContainer.ModifyIntNodeDatas.Add(new ModifyIntNodeData
+                {
+                    Guid = modifyIntNode.GUID,
+                    Position = node.GetPosition().position,
+                    SelectedProperty = modifyIntNode.SelectedProperty,
+                    Operator = modifyIntNode.Operator,
+                    Value = modifyIntNode.Value
+                });
+            }
+            else if (node is EndNode endNode)
+            {
+                dialogueContainer.EndNodeDatas.Add(new EndNodeData
+                {
+                    Guid = endNode.GUID,
+                    Position = node.GetPosition().position,
+                    NextDialogueName = endNode.NextDialogueName
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// ���������� ������� ������ �����
+    /// </summary>
+    private void SaveExposedProperties(DialogueContainer dialogueContainer)
+    {
+        dialogueContainer.ExposedProperties.Clear();
+        dialogueContainer.ExposedProperties.AddRange(targetGraphView.ExposedProperties);
+    }
+    #endregion
+
+    #region Loading
+    /// <summary>
+    /// �������� ����� �� �����
+    /// </summary>
+    public void LoadGraph(string fileName)
+    {
+        containerCache = Resources.Load<DialogueContainer>(fileName);
+        if (containerCache == null)
+        {
+            EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exist", "OK");
+            return;
+        }
+
+        ClearGraph();
+        CreateNodes();
+        ConnectNodes();
+        CreateExposedProperties();
+
+        EditorUtility.DisplayDialog("Success", $"Graph {fileName} loaded", "OK");
+    }
+
+    /// <summary>
+    /// �������� ����� �� ����������� ������
+    /// </summary>
+    private void CreateNodes()
+    {
+        // ��������������� EntryNode
+        if (containerCache.EntryNodeData != null)
+        {
+            var entryNode = Nodes.Find(x => x.EntryPoint);
+            if (entryNode != null)
+            {
+                entryNode.GUID = containerCache.EntryNodeData.Guid;
+                entryNode.SetPosition(new Rect(containerCache.EntryNodeData.Position, targetGraphView.DefaultNodeSize));
+            }
+        }
+
+        // ������� SpeechNode
+        foreach (var nodeData in containerCache.SpeechNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateSpeechNode(nodeData.Position, nodeData.DialogueText);
+            tempNode.GUID = nodeData.Guid;
+
+            // ��������� ��������� ���� ���� GUID
+            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
+            {
+                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
+
+        // ������� OptionNode
+        foreach (var nodeData in containerCache.OptionNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateOptionNode(nodeData.Position, nodeData.ResponseText);
+            tempNode.GUID = nodeData.Guid;
+
+            // ��������� ��������� ���� ���� GUID
+            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
+            {
+                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.ModifyIntNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            tempNode.SelectedProperty = nodeData.SelectedProperty;
+            tempNode.Operator = nodeData.Operator;
+            tempNode.Value = nodeData.Value;
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.EndNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateEndNode(nodeData.Position, nodeData.NextDialogueName);
+            tempNode.GUID = nodeData.Guid;
+            targetGraphView.AddElement(tempNode);
+        }
+    }
+
+    /// <summary>
+    /// �������������� ������ ����� ������
+    /// </summary>
+    private void ConnectNodes()
+    {
+        try
+        {
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == Nodes[i].GUID).ToList();
+
+                foreach (var connection in connections)
+                {
+                    var targetNodeGuid = connection.TargetNodeGuid;
+                    var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
+
+                    // ������� ��������������� ����
+                    Port outputPort = null;
+
+                    if (Nodes[i] is SpeechNode speechNode)
+                    {
+                        // ���� ���� � ������ ������
+                        foreach (var port in speechNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+
+                        // ���� ���� �� ������, ������� ���
+                        if (outputPort == null)
+                        {
+                            outputPort = speechNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = connection.PortName;
+                            speechNode.outputContainer.Add(outputPort);
+                            speechNode.RefreshPorts();
+                            speechNode.RefreshExpandedState();
+                        }
+                    }
+                    else if (Nodes[i] is OptionNode optionNode)
+                    {
+                        outputPort = optionNode.outputContainer[0].Q<Port>();
+                    }
+                    else if (Nodes[i] is EntryNode entryNode)
+                    {
+                        outputPort = entryNode.outputContainer[0].Q<Port>();
+                    }
+
+                    var inputPort = (Port)targetNode.inputContainer[0];
+
+                    if (outputPort != null && inputPort != null)
+                    {
+                        LinkNodes(outputPort, inputPort);
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error connecting nodes: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// ���������� ���� ������
+    /// </summary>
+    private void LinkNodes(Port output, Port input)
+    {
+        var tempEdge = new Edge { output = output, input = input };
+        tempEdge.input.Connect(tempEdge);
+        tempEdge.output.Connect(tempEdge);
+        targetGraphView.Add(tempEdge);
+    }
+
+    /// <summary>
+    /// �������������� ������� ������ �����
+    /// </summary>
+    private void CreateExposedProperties()
+    {
+        targetGraphView.ClearBlackBoardAndExposedProperties();
+        foreach (var exposedProperty in containerCache.ExposedProperties)
+        {
+            targetGraphView.AddPropertyToBlackBoard(exposedProperty);
+        }
+    }
+
+    /// <summary>
+    /// ������� �������� ����� ����� ���������
+    /// </summary>
+    private void ClearGraph()
+    {
+        // ������� ��� ���� ����� ����������
+        foreach (var node in Nodes.Where(node => !node.EntryPoint).ToList())
+        {
+            // ������� ��������� �����
+            var edgesToRemove = Edges.Where(x => x.input.node == node || x.output.node == node).ToList();
+            foreach (var edge in edgesToRemove)
+            {
+                targetGraphView.RemoveElement(edge);
+            }
+
+            targetGraphView.RemoveElement(node);
+        }
+    }
+    #endregion
+}
+
+//==== File 14 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
+using UnityEngine;
+
+/// <summary>
+/// ������� ��� �������� ����� ����������� �����
+/// ������������ ������ �������� ���� ����� �����
+/// </summary>
+public static class NodeFactory
+{
+    /// <summary>
+    /// ������� ���� ���������� ���� � �������� �������
+    /// </summary>
+    public static BaseNode CreateNode(System.Type nodeType, Vector2 position)
+    {
+        return nodeType.Name switch
+        {
+            nameof(SpeechNode) => CreateSpeechNode(position),
+            nameof(OptionNode) => CreateOptionNode(position),
+            nameof(EntryNode) => CreateEntryNode(position),
+            nameof(IntConditionNode) => CreateIntConditionNode(position),
+            nameof(StringConditionNode) => CreateStringConditionNode(position),
+            nameof(ModifyIntNode) => CreateModifyIntNode(position),
+            nameof(EndNode) => CreateEndNode(position),
+            _ => null
+        };
+    }
+
+    public static IntConditionNode CreateIntConditionNode(Vector2 position)
+    {
+        var node = new IntConditionNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static StringConditionNode CreateStringConditionNode(Vector2 position)
+    {
+        var node = new StringConditionNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static ModifyIntNode CreateModifyIntNode(Vector2 position)
+    {
+        var node = new ModifyIntNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    /// <summary>
+    /// ������� ���� ���� NPC
+    /// </summary>
+    public static SpeechNode CreateSpeechNode(Vector2 position, string dialogueText = "New Dialogue")
+    {
+        var node = new SpeechNode();
+        node.Initialize(position);
+        node.DialogueText = dialogueText;
+        return node;
+    }
+
+    /// <summary>
+    /// ������� ���� �������� ������ ������
+    /// </summary>
+    public static OptionNode CreateOptionNode(Vector2 position, string responseText = "New Response")
+    {
+        var node = new OptionNode();
+        node.Initialize(position);
+        node.ResponseText = responseText;
+        return node;
+    }
+
+    /// <summary>
+    /// ������� ��������� ����
+    /// </summary>
+    public static EntryNode CreateEntryNode(Vector2 position)
+    {
+        var node = new EntryNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static EndNode CreateEndNode(Vector2 position, string nextDialogueName = "")
+    {
+        var node = new EndNode();
+        node.Initialize(position);
+        node.NextDialogueName = nextDialogueName;
+        return node;
+    }
+}
+
+//==== File 15 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+
+public abstract class BaseConditionNode : BaseNode
+{
+    public override void Initialize(Vector2 position)
+    {
+        base.Initialize(position);
+
+        // ������� ������� ����
+        var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
+        inputPort.portName = "Input";
+        inputContainer.Add(inputPort);
+
+        // ������� �������� ����� True � False
+        var truePort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        truePort.portName = "True";
+        outputContainer.Add(truePort);
+
+        var falsePort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        falsePort.portName = "False";
+        outputContainer.Add(falsePort);
+    }
+}
+
+
+//==== File 16 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ������� ����� ��� ���� ����� ����������� �����
+/// �������� ����� ������ � �������� ��� ���� �����
+/// </summary>
+public abstract class BaseNode : Node
+{
+    public string GUID { get; set; } // ���������� ������������� ����
+    public bool EntryPoint { get; set; } = false; // �������� �� ���� ������ �����
+
+    /// <summary>
+    /// ������������� ���� � ��������� ��������
+    /// </summary>
+    public virtual void Initialize(Vector2 position)
+    {
+        GUID = Guid.NewGuid().ToString();
+        SetPosition(new Rect(position, new Vector2(200, 150)));
+    }
+}
+
+
+//==== File 17 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
+public interface IPropertyNode
+{
+    void RefreshPropertyDropdown();
+}
+
+//==== File 18 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
+using System.Collections.Generic;
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ��������� ��� �������� ������ ����������� ����
+/// </summary>
+[Serializable]
+public class DialogueContainer : ScriptableObject
+{
+    [Header("Entry Node")]
+    public EntryNodeData EntryNodeData;
+
+    [Header("Node Connections")]
+    public List<NodeLinkData> NodeLinks = new List<NodeLinkData>();
+
+    [Header("Speech Nodes")]
+    public List<SpeechNodeData> SpeechNodeDatas = new List<SpeechNodeData>();
+
+    [Header("Option Nodes")]
+    public List<OptionNodeData> OptionNodeDatas = new List<OptionNodeData>();
+
+    [Header("Exposed Properties")]
+    public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
+
+    [Header("Exposed Properties")]
+    public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
+    public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
+
+    [Header("Condition Nodes")]
+    public List<IntConditionNodeData> IntConditionNodeDatas = new List<IntConditionNodeData>();
+    public List<StringConditionNodeData> StringConditionNodeDatas = new List<StringConditionNodeData>();
+
+    [Header("Modify Int Nodes")]
+    public List<ModifyIntNodeData> ModifyIntNodeDatas = new List<ModifyIntNodeData>();
+
+    [Header("End Nodes")]
+    public List<EndNodeData> EndNodeDatas = new List<EndNodeData>();
+}
+
+
+//==== File 19 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
+using UnityEngine;
+
+/// <summary>
+/// �������� ��� ������ ����� - ����������, ������� ����� ������������ � ��������
+/// </summary>
+[System.Serializable]
+public class ExposedProperty
+{
+    public string PropertyName = "New Property"; // ��� ��������
+    public string PropertyValue = "New Value";   // �������� ��������
+}
+
+//==== File 20 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
+[System.Serializable]
+public class IntExposedProperty
+{
+    public string PropertyName = "New Int Property";
+    public int IntValue = 0;
+    public int MinValue = 0;
+    public int MaxValue = 100;
+}
+
+
+//==== File 21 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
+[System.Serializable]
+public class NodeLinkData
+{
+    public string BaseNodeGuid;
+    public string PortName;
+    public string TargetNodeGuid;
+}
+
+
+//==== File 22 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
+[System.Serializable]
+public class StringExposedProperty
+{
+    public string PropertyName = "New String Property";
+    public string StringValue = "New Value";
+}
+
+
+//==== File 23 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+using UnityEngine;
+using System;
+
+[Serializable]
+public class EndNodeData
+{
+    public string Guid;
+    public Vector2 Position;
+    public string NextDialogueName;
+}
+
+//==== File 24 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ������ ���������� ���� ��� ������������
+/// </summary>
+[Serializable]
+public class EntryNodeData
+{
+    [Tooltip("Unique identifier for the node")]
+    public string Guid;
+
+    [Tooltip("Position in the graph view")]
+    public Vector2 Position;
+}
+
+
+//==== File 25 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+using UnityEngine;
+using System;
+
+[Serializable]
+public class IntConditionNodeData
+{
+    public string Guid;
+    public Vector2 Position;
+    public string SelectedProperty;
+    public IntConditionNode.ComparisonType Comparison;
+    public int CompareValue;
+}
+
+
+//==== File 26 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+using UnityEngine;
+using System;
+
+[Serializable]
+public class ModifyIntNodeData
+{
+    public string Guid;
+    public Vector2 Position;
+    public string SelectedProperty;
+    public ModifyIntNode.OperatorType Operator;
+    public int Value;
+}
+
+
+//==== File 27 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ������ ���� �������� ������ ������ ��� ������������
+/// </summary>
+[Serializable]
+public class OptionNodeData
+{
+    [Tooltip("Unique identifier for the node")]
+    public string Guid;
+
+    [TextArea, Tooltip("Response text content")]
+    public string ResponseText;
+
+    [Tooltip("Position in the graph view")]
+    public Vector2 Position;
+
+    [Tooltip("GUID of the audio clip asset")]
+    public string AudioClipGuid;
+}
+
+
+//==== File 28 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
+using UnityEngine;
+using System;
+
+/// <summary>
+/// ������ ���� ���� NPC ��� ������������
+/// </summary>
+[Serializable]
+public class SpeechNodeData
+{
+    [Tooltip("Unique identifier for the node")]
+    public string Guid;
+
+    [TextArea, Tooltip("Dialogue text content")]
+    public string DialogueText;
+
+    [Tooltip("Position in the graph view")]
+    public Vector2 Position;
+
+    [Tooltip("GUID of the audio clip asset")]
+    public string AudioClipGuid;
+}
+
+
+//==== File 29 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
 using System;
 using UnityEngine;
 
@@ -1895,21 +1988,12 @@ public class StringConditionNodeData
 }
 
 
-//==== File 27 of 27: D:/Work/REDDialogSystemProject/Assets\Scripts\StringExposedProperty.cs ====
-[System.Serializable]
-public class StringExposedProperty
-{
-    public string PropertyName = "New String Property";
-    public string StringValue = "New Value";
-}
-
-
 
 // ============ Statistics =============
-// Total Files: 27
-// Total Size: 63,76 KB
-// Total Lines: 1847
-// Classes: 26
-// Methods: 119
-// Comments: 283
+// Total Files: 29
+// Total Size: 66,46 KB
+// Total Lines: 1927
+// Classes: 28
+// Methods: 122
+// Comments: 287
 // =====================================

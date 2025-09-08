@@ -33,4 +33,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Modify Int Nodes")]
     public List<ModifyIntNodeData> ModifyIntNodeDatas = new List<ModifyIntNodeData>();
+
+    [Header("End Nodes")]
+    public List<EndNodeData> EndNodeDatas = new List<EndNodeData>();
 }

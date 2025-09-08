@@ -1,5 +1,6 @@
-using System;
+using DialogueSystem;
 using UnityEngine;
+using System;
 
 [Serializable]
 public class StringConditionNodeData
@@ -7,6 +8,6 @@ public class StringConditionNodeData
     public string Guid;
     public Vector2 Position;
     public string SelectedProperty;
-    public StringConditionNode.StringComparisonType Comparison;
+    public StringComparisonType Comparison;
     public string CompareValue;
 }

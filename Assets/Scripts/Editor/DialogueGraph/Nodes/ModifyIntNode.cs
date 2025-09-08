@@ -1,5 +1,6 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
+using DialogueSystem;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,17 +14,6 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     private DropdownField propertyDropdown;
     private DropdownField operatorDropdown;
     private IntegerField valueField;
-
-    public enum OperatorType
-    {
-        Set,
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        Increment,
-        Decrement
-    }
 
     public override void Initialize(Vector2 position)
     {

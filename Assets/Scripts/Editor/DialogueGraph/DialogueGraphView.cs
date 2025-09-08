@@ -117,8 +117,9 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, разрешено ли соединение между двумя портами
-    /// SpeechNode можно соединять только с OptionNode, OptionNode можно соединять только с SpeechNode
+    /// Проверяет, разрешено ли соединение между портами
+    /// SpeechNode может соединяться только с OptionNode, OptionNode может соединяться только с SpeechNode
+    /// EndNode может соединяться только с OptionNode
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
@@ -135,6 +136,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
+                (OptionNode, EndNode) => true, // Разрешаем подключение от OptionNode к EndNode
                 (EntryNode, SpeechNode) => true,
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
@@ -144,6 +146,7 @@ public class DialogueGraphView : GraphView
                 (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
                 (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
                 (StringConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as StringConditionNode),
+                (_, EndNode) => false, // Запрещаем подключение к EndNode от любых других узлов
                 _ => false
             };
         }
@@ -157,6 +160,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
+                (EndNode, OptionNode) => true, // Разрешаем подключение от EndNode к OptionNode (входной порт)
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
                 (ModifyIntNode, IntConditionNode) => true,
@@ -168,7 +172,8 @@ public class DialogueGraphView : GraphView
                 _ => false
             };
         }
-    }
+    } 
+
     /// <summary>
     /// Проверяет, подключен ли узел условия к SpeechNode
     /// </summary>
