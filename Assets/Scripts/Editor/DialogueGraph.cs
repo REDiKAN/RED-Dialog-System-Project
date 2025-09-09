@@ -62,8 +62,22 @@ public class DialogueGraph : EditorWindow
         // Кнопки сохранения и загрузки
         toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
         toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
+        toolbar.Add(new Button(() => OpenNodeEditor()) { text = "Edit Node" });
 
         rootVisualElement.Add(toolbar);
+    }
+
+    private void OpenNodeEditor()
+    {
+        var selectedNodes = graphView.selection.OfType<BaseNode>().ToList();
+        if (selectedNodes.Count != 1)
+        {
+            EditorUtility.DisplayDialog("Edit Node", "Please select a single node to edit.", "OK");
+            return;
+        }
+
+        var editorWindow = new NodeEditorWindow(selectedNodes[0], graphView);
+        graphView.Add(editorWindow);
     }
 
     /// <summary>

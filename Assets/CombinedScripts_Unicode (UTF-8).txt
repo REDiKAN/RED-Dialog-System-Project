@@ -1,9 +1,9 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 08.09.2025 22:50:14
-// Total Files: 29
+// Generation Time: 08.09.2025 23:09:58
+// Total Files: 30
 // =================================
 
-//==== File 1 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
+//==== File 1 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -46,7 +46,7 @@ public class DialogueNode : BaseNode
 }
 
 
-//==== File 2 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
+//==== File 2 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
 using UnityEngine;
 
 [System.Serializable]
@@ -58,7 +58,7 @@ public class DialogueNodeData
 }
 
 
-//==== File 3 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
+//==== File 3 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -154,7 +154,7 @@ public class DialogueGraph : EditorWindow
     }
 }
 
-//==== File 4 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
+//==== File 4 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -693,7 +693,7 @@ public class DialogueGraphView : GraphView
     }
 }
 
-//==== File 5 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
+//==== File 5 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -772,7 +772,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     }
 }
 
-//==== File 6 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
+//==== File 6 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -810,7 +810,7 @@ public class EndNode : BaseNode
 }
 
 
-//==== File 7 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
+//==== File 7 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -848,11 +848,12 @@ public class EntryNode : BaseNode
     }
 }
 
-//==== File 8 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
+//==== File 8 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
 using UnityEngine;
+using DialogueSystem;
 
 public class IntConditionNode : BaseConditionNode, IPropertyNode
 {
@@ -863,16 +864,6 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     private DropdownField propertyDropdown;
     private DropdownField comparisonDropdown;
     private IntegerField valueField;
-
-    public enum ComparisonType
-    {
-        Equal,
-        NotEqual,
-        Greater,
-        Less,
-        GreaterOrEqual,
-        LessOrEqual
-    }
 
     public override void Initialize(Vector2 position)
     {
@@ -939,9 +930,10 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 9 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
+//==== File 9 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
+using DialogueSystem;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -955,17 +947,6 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     private DropdownField propertyDropdown;
     private DropdownField operatorDropdown;
     private IntegerField valueField;
-
-    public enum OperatorType
-    {
-        Set,
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        Increment,
-        Decrement
-    }
 
     public override void Initialize(Vector2 position)
     {
@@ -1061,7 +1042,7 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     }
 }
 
-//==== File 10 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
+//==== File 10 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1127,7 +1108,7 @@ public class OptionNode : BaseNode
     }
 }
 
-//==== File 11 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
+//==== File 11 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1210,7 +1191,7 @@ public class SpeechNode : BaseNode
     }
 }
 
-//==== File 12 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
+//==== File 12 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -1299,7 +1280,7 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 13 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
+//==== File 13 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -1633,7 +1614,7 @@ public class GraphSaveUtility
     #endregion
 }
 
-//==== File 14 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
+//==== File 14 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -1722,7 +1703,7 @@ public static class NodeFactory
     }
 }
 
-//==== File 15 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
+//==== File 15 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -1749,7 +1730,7 @@ public abstract class BaseConditionNode : BaseNode
 }
 
 
-//==== File 16 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
+//==== File 16 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
@@ -1774,13 +1755,13 @@ public abstract class BaseNode : Node
 }
 
 
-//==== File 17 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
+//==== File 17 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
 public interface IPropertyNode
 {
     void RefreshPropertyDropdown();
 }
 
-//==== File 18 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
+//==== File 18 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -1822,7 +1803,7 @@ public class DialogueContainer : ScriptableObject
 }
 
 
-//==== File 19 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
+//==== File 19 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -1835,7 +1816,7 @@ public class ExposedProperty
     public string PropertyValue = "New Value";   // �������� ��������
 }
 
-//==== File 20 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
+//==== File 20 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
 [System.Serializable]
 public class IntExposedProperty
 {
@@ -1846,7 +1827,7 @@ public class IntExposedProperty
 }
 
 
-//==== File 21 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
+//==== File 21 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
 [System.Serializable]
 public class NodeLinkData
 {
@@ -1856,7 +1837,7 @@ public class NodeLinkData
 }
 
 
-//==== File 22 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
+//==== File 22 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
 [System.Serializable]
 public class StringExposedProperty
 {
@@ -1865,7 +1846,40 @@ public class StringExposedProperty
 }
 
 
-//==== File 23 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+//==== File 23 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
+namespace DialogueSystem
+{
+    public enum ComparisonType
+    {
+        Equal,
+        NotEqual,
+        Greater,
+        Less,
+        GreaterOrEqual,
+        LessOrEqual
+    }
+
+    public enum StringComparisonType
+    {
+        Equal,
+        NotEqual,
+        IsNullOrEmpty
+    }
+
+    public enum OperatorType
+    {
+        Set,
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+        Increment,
+        Decrement
+    }
+}
+
+
+//==== File 24 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -1877,7 +1891,7 @@ public class EndNodeData
     public string NextDialogueName;
 }
 
-//==== File 24 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
+//==== File 25 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -1895,7 +1909,8 @@ public class EntryNodeData
 }
 
 
-//==== File 25 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+//==== File 26 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+using DialogueSystem;
 using UnityEngine;
 using System;
 
@@ -1905,12 +1920,13 @@ public class IntConditionNodeData
     public string Guid;
     public Vector2 Position;
     public string SelectedProperty;
-    public IntConditionNode.ComparisonType Comparison;
+    public ComparisonType Comparison;
     public int CompareValue;
 }
 
 
-//==== File 26 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+//==== File 27 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+using DialogueSystem;
 using UnityEngine;
 using System;
 
@@ -1920,12 +1936,12 @@ public class ModifyIntNodeData
     public string Guid;
     public Vector2 Position;
     public string SelectedProperty;
-    public ModifyIntNode.OperatorType Operator;
+    public OperatorType Operator;
     public int Value;
 }
 
 
-//==== File 27 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
+//==== File 28 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -1949,7 +1965,7 @@ public class OptionNodeData
 }
 
 
-//==== File 28 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
+//==== File 29 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -1973,9 +1989,10 @@ public class SpeechNodeData
 }
 
 
-//==== File 29 of 29: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
-using System;
+//==== File 30 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
+using DialogueSystem;
 using UnityEngine;
+using System;
 
 [Serializable]
 public class StringConditionNodeData
@@ -1983,16 +2000,16 @@ public class StringConditionNodeData
     public string Guid;
     public Vector2 Position;
     public string SelectedProperty;
-    public StringConditionNode.StringComparisonType Comparison;
+    public StringComparisonType Comparison;
     public string CompareValue;
 }
 
 
 
 // ============ Statistics =============
-// Total Files: 29
-// Total Size: 66,46 KB
-// Total Lines: 1927
+// Total Files: 30
+// Total Size: 66,67 KB
+// Total Lines: 1942
 // Classes: 28
 // Methods: 122
 // Comments: 287
