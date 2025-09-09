@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 08.09.2025 23:09:58
+// Generation Time: 09.09.2025 22:28:45
 // Total Files: 30
 // =================================
 
@@ -59,6 +59,7 @@ public class DialogueNodeData
 
 
 //==== File 3 of 30: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -123,8 +124,19 @@ public class DialogueGraph : EditorWindow
         // ������ ���������� � ��������
         toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
         toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
+        toolbar.Add(new Button(() => OpenNodeEditor()) { text = "Edit Node" });
 
         rootVisualElement.Add(toolbar);
+    }
+
+    private void OpenNodeEditor()
+    {
+        var selectedNodes = graphView.selection.OfType<BaseNode>().ToList();
+        if (selectedNodes.Count != 1)
+        {
+            EditorUtility.DisplayDialog("Edit Node", "Please select a single node to edit.", "OK");
+            return;
+        }
     }
 
     /// <summary>
@@ -2008,9 +2020,9 @@ public class StringConditionNodeData
 
 // ============ Statistics =============
 // Total Files: 30
-// Total Size: 66,67 KB
-// Total Lines: 1942
+// Total Size: 67,07 KB
+// Total Lines: 1954
 // Classes: 28
-// Methods: 122
+// Methods: 123
 // Comments: 287
 // =====================================

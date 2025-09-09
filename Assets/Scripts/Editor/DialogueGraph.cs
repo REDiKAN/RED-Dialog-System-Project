@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -75,9 +76,6 @@ public class DialogueGraph : EditorWindow
             EditorUtility.DisplayDialog("Edit Node", "Please select a single node to edit.", "OK");
             return;
         }
-
-        var editorWindow = new NodeEditorWindow(selectedNodes[0], graphView);
-        graphView.Add(editorWindow);
     }
 
     /// <summary>
