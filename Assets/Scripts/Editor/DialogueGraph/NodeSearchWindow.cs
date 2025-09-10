@@ -1,13 +1,14 @@
-using UnityEditor.Experimental.GraphView;
+п»їusing UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEditor;
 using UnityEngine;
 using System;
+using System.Linq;
 
 /// <summary>
-/// Окно поиска узлов для диалогового графа
-/// Позволяет создавать новые узлы через поиск
+/// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+/// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 /// </summary>
 public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
 {
@@ -16,21 +17,21 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     private Texture2D indentationIcon;
 
     /// <summary>
-    /// Инициализация окна поиска
+    /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     /// </summary>
     public void Init(EditorWindow editorWindow, DialogueGraphView graphView)
     {
         this.graphView = graphView;
         this.editorWindow = editorWindow;
 
-        // Создаем прозрачную иконку для отступов
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         indentationIcon = new Texture2D(1, 1);
         indentationIcon.SetPixel(0, 0, new Color(0, 0, 0, 0));
         indentationIcon.Apply();
     }
 
     /// <summary>
-    /// Создает дерево элементов для поиска
+    /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     /// </summary>
     public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
     {
@@ -58,11 +59,11 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     }
 
     /// <summary>
-    /// Обрабатывает выбор элемента в окне поиска
+    /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     /// </summary>
     public bool OnSelectEntry(SearchTreeEntry searchTreeEntry, SearchWindowContext context)
     {
-        // Конвертируем координаты мыши в локальные координаты графа
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         var worldMousePosition = editorWindow.rootVisualElement.ChangeCoordinatesTo(
             editorWindow.rootVisualElement.parent,
             context.screenMousePosition - editorWindow.position.position
@@ -70,9 +71,21 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
 
         var localMousePosition = graphView.contentViewContainer.WorldToLocal(worldMousePosition);
 
-        // Создаем узел выбранного типа
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         if (searchTreeEntry.userData is Type nodeType)
         {
+            // РџСЂРѕРІРµСЂРєР° РЅР° РїРѕРїС‹С‚РєСѓ СЃРѕР·РґР°РЅРёСЏ РІС‚РѕСЂРѕРіРѕ EntryNode
+            if (nodeType == typeof(EntryNode))
+            {
+                var existingEntryNodes = graphView.nodes.ToList().Where(node => node is EntryNode);
+                if (existingEntryNodes.Any())
+                {
+                    EditorUtility.DisplayDialog("Cannot Create Start Node",
+                        "Only one Start Node is allowed in the graph.", "OK");
+                    return false;
+                }
+            }
+
             graphView.CreateNode(nodeType, localMousePosition);
             return true;
         }

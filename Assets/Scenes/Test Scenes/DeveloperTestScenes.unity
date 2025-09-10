@@ -413,7 +413,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0.00084914785}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &245914488
@@ -575,7 +575,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 660482786}
-  - component: {fileID: 660482787}
   - component: {fileID: 660482788}
   m_Layer: 0
   m_Name: DialogueManager
@@ -599,26 +598,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &660482787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 660482785}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1fc4777189721d248abfe49808276a12, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  container: {fileID: 11400000, guid: 764ca6fd8a73ac441bba3dd6488fa9ef, type: 2}
-  chatContent: {fileID: 216657488}
-  optionContent: {fileID: 871629836}
-  scrollRect: {fileID: 2136051657}
-  npcBubblePrefab: {fileID: 1594475501607267945, guid: 59d3f1feba290b048ba0a6088bb3b3b0, type: 3}
-  playerBubblePrefab: {fileID: 5370262335858392320, guid: 1388a8b36b2206c40b84daef7cd65aa5, type: 3}
-  optionButtonPrefab: {fileID: 5370262335858392320, guid: cba84cdd541228c4ea889b17a2db1543, type: 3}
-  audioSource: {fileID: 660482788}
 --- !u!82 &660482788
 AudioSource:
   m_ObjectHideFlags: 0
