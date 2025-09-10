@@ -122,6 +122,64 @@ public class GraphSaveUtility
                     NextDialogueName = endNode.NextDialogueName
                 });
             }
+            else if (node is SpeechNodeText speechNodeText)
+            {
+                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
+                {
+                    Guid = speechNodeText.GUID,
+                    DialogueText = speechNodeText.DialogueText,
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = "" // Audio не поддерживается
+                });
+            }
+            else if (node is SpeechNodeAudio speechNodeAudio)
+            {
+                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
+                {
+                    Guid = speechNodeAudio.GUID,
+                    DialogueText = "", // Text не поддерживается
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = speechNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeAudio.AudioClip)) : ""
+                });
+            }
+            else if (node is SpeechNodeImage speechNodeImage)
+            {
+                dialogueContainer.SpeechNodeImageDatas.Add(new SpeechNodeImageData
+                {
+                    Guid = speechNodeImage.GUID,
+                    Position = node.GetPosition().position,
+                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : ""
+                });
+            }
+            else if (node is OptionNodeText optionNodeText)
+            {
+                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
+                {
+                    Guid = optionNodeText.GUID,
+                    ResponseText = optionNodeText.ResponseText,
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = "" // Audio не поддерживается
+                });
+            }
+            else if (node is OptionNodeAudio optionNodeAudio)
+            {
+                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
+                {
+                    Guid = optionNodeAudio.GUID,
+                    ResponseText = "", // Text не поддерживается
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = optionNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeAudio.AudioClip)) : ""
+                });
+            }
+            else if (node is OptionNodeImage optionNodeImage)
+            {
+                dialogueContainer.OptionNodeImageDatas.Add(new OptionNodeImageData
+                {
+                    Guid = optionNodeImage.GUID,
+                    Position = node.GetPosition().position,
+                    ImageSpriteGuid = optionNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeImage.ImageSprite)) : ""
+                });
+            }
         }
     }
 

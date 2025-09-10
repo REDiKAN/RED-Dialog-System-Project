@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 09.09.2025 22:28:45
+// Generation Time: 10.09.2025 21:56:57
 // Total Files: 30
 // =================================
 
@@ -124,19 +124,8 @@ public class DialogueGraph : EditorWindow
         // ������ ���������� � ��������
         toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
         toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
-        toolbar.Add(new Button(() => OpenNodeEditor()) { text = "Edit Node" });
 
         rootVisualElement.Add(toolbar);
-    }
-
-    private void OpenNodeEditor()
-    {
-        var selectedNodes = graphView.selection.OfType<BaseNode>().ToList();
-        if (selectedNodes.Count != 1)
-        {
-            EditorUtility.DisplayDialog("Edit Node", "Please select a single node to edit.", "OK");
-            return;
-        }
     }
 
     /// <summary>
@@ -2020,9 +2009,9 @@ public class StringConditionNodeData
 
 // ============ Statistics =============
 // Total Files: 30
-// Total Size: 67,07 KB
-// Total Lines: 1954
+// Total Size: 66,68 KB
+// Total Lines: 1943
 // Classes: 28
-// Methods: 123
+// Methods: 122
 // Comments: 287
 // =====================================

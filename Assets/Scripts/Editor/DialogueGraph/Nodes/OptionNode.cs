@@ -12,8 +12,8 @@ public class OptionNode : BaseNode
     public string ResponseText { get; set; } // Текст ответа
     public AudioClip AudioClip { get; set; } // Аудиофайл озвучки
 
-    private TextField responseTextField;
-    private ObjectField audioField;
+    protected TextField responseTextField;
+    protected ObjectField audioField;
 
     /// <summary>
     /// Инициализация узла варианта ответа игрока

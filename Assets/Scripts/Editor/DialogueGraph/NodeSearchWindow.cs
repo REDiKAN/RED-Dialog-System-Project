@@ -38,8 +38,14 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
         new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Speech Node", indentationIcon)) { userData = typeof(SpeechNode), level = 2 },
-        new SearchTreeEntry(new GUIContent("Option Node", indentationIcon)) { userData = typeof(OptionNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Speech Nodes"), 2),
+        new SearchTreeEntry(new GUIContent("Speech (Text)", indentationIcon)) { userData = typeof(SpeechNodeText), level = 3 },
+        new SearchTreeEntry(new GUIContent("Speech (Audio)", indentationIcon)) { userData = typeof(SpeechNodeAudio), level = 3 },
+        new SearchTreeEntry(new GUIContent("Speech (Image)", indentationIcon)) { userData = typeof(SpeechNodeImage), level = 3 },
+        new SearchTreeGroupEntry(new GUIContent("Option Nodes"), 2),
+        new SearchTreeEntry(new GUIContent("Option (Text)", indentationIcon)) { userData = typeof(OptionNodeText), level = 3 },
+        new SearchTreeEntry(new GUIContent("Option (Audio)", indentationIcon)) { userData = typeof(OptionNodeAudio), level = 3 },
+        new SearchTreeEntry(new GUIContent("Option (Image)", indentationIcon)) { userData = typeof(OptionNodeImage), level = 3 },
         new SearchTreeGroupEntry(new GUIContent("Condition Nodes"), 1),
         new SearchTreeEntry(new GUIContent("Condition (Int)", indentationIcon)) { userData = typeof(IntConditionNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Condition (String)", indentationIcon)) { userData = typeof(StringConditionNode), level = 2 },
@@ -47,8 +53,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
         new SearchTreeEntry(new GUIContent("End Node", indentationIcon)) { userData = typeof(EndNode), level = 2 },
         new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
-        new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon))
-        { userData = typeof(ModifyIntNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon)) { userData = typeof(ModifyIntNode), level = 2 },
     };
     }
 

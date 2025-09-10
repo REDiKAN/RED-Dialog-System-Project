@@ -1,0 +1,5 @@
+#node-border {
+    border-width: 2px;
+    border-color: #ff9900;
+    background-color: #fff0e6;
+}

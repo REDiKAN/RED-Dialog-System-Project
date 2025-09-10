@@ -36,4 +36,10 @@ public class DialogueContainer : ScriptableObject
 
     [Header("End Nodes")]
     public List<EndNodeData> EndNodeDatas = new List<EndNodeData>();
+
+    [Header("Speech Image Nodes")]
+    public List<SpeechNodeImageData> SpeechNodeImageDatas = new List<SpeechNodeImageData>();
+
+    [Header("Option Image Nodes")]
+    public List<OptionNodeImageData> OptionNodeImageDatas = new List<OptionNodeImageData>();
 }

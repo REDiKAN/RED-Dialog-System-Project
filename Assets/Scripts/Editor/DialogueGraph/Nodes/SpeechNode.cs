@@ -12,8 +12,8 @@ public class SpeechNode : BaseNode
     public string DialogueText { get; set; } // Текст диалога
     public AudioClip AudioClip { get; set; } // Аудиофайл озвучки
 
-    private TextField dialogueTextField;
-    private ObjectField audioField;
+    protected TextField dialogueTextField;
+    protected ObjectField audioField;
 
 
 

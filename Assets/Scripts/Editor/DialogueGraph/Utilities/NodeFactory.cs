@@ -14,7 +14,13 @@ public static class NodeFactory
         return nodeType.Name switch
         {
             nameof(SpeechNode) => CreateSpeechNode(position),
+            nameof(SpeechNodeText) => CreateSpeechNodeText(position),
+            nameof(SpeechNodeAudio) => CreateSpeechNodeAudio(position),
+            nameof(SpeechNodeImage) => CreateSpeechNodeImage(position),
             nameof(OptionNode) => CreateOptionNode(position),
+            nameof(OptionNodeText) => CreateOptionNodeText(position),
+            nameof(OptionNodeAudio) => CreateOptionNodeAudio(position),
+            nameof(OptionNodeImage) => CreateOptionNodeImage(position),
             nameof(EntryNode) => CreateEntryNode(position),
             nameof(IntConditionNode) => CreateIntConditionNode(position),
             nameof(StringConditionNode) => CreateStringConditionNode(position),
@@ -82,6 +88,50 @@ public static class NodeFactory
         var node = new EndNode();
         node.Initialize(position);
         node.NextDialogueName = nextDialogueName;
+        return node;
+    }
+
+    public static SpeechNodeText CreateSpeechNodeText(Vector2 position, string dialogueText = "New Dialogue")
+    {
+        var node = new SpeechNodeText();
+        node.Initialize(position);
+        node.DialogueText = dialogueText;
+        return node;
+    }
+
+    public static SpeechNodeAudio CreateSpeechNodeAudio(Vector2 position)
+    {
+        var node = new SpeechNodeAudio();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static SpeechNodeImage CreateSpeechNodeImage(Vector2 position)
+    {
+        var node = new SpeechNodeImage();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static OptionNodeText CreateOptionNodeText(Vector2 position, string responseText = "New Response")
+    {
+        var node = new OptionNodeText();
+        node.Initialize(position);
+        node.ResponseText = responseText;
+        return node;
+    }
+
+    public static OptionNodeAudio CreateOptionNodeAudio(Vector2 position)
+    {
+        var node = new OptionNodeAudio();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static OptionNodeImage CreateOptionNodeImage(Vector2 position)
+    {
+        var node = new OptionNodeImage();
+        node.Initialize(position);
         return node;
     }
 }
