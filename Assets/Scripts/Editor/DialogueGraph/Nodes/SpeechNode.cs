@@ -15,6 +15,9 @@ public class SpeechNode : BaseNode
     protected TextField dialogueTextField;
     protected ObjectField audioField;
 
+    public CharacterData Character;
+    private ObjectField characterField;
+
 
 
     /// <summary>
@@ -55,6 +58,14 @@ public class SpeechNode : BaseNode
             AudioClip = evt.newValue as AudioClip;
         });
         mainContainer.Add(audioField);
+
+        characterField = new ObjectField("Character");
+        characterField.objectType = typeof(CharacterData);
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            Character = evt.newValue as CharacterData;
+        });
+        mainContainer.Add(characterField);
 
         // Обновляем визуальное состояние узла
         RefreshExpandedState();

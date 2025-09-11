@@ -1,9 +1,277 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 10.09.2025 23:54:09
-// Total Files: 38
+// Generation Time: 11.09.2025 22:32:52
+// Total Files: 40
 // =================================
 
-//==== File 1 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
+//==== File 1 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterData.cs ====
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "NewCharacter", menuName = "Dialogue System/Character Data")]
+public class CharacterData : ScriptableObject
+{
+    [Header("Basic Info")]
+    public string FirstName = "New";
+    public string LastName = "Character";
+    public Sprite Icon;
+    [TextArea(3, 10)] public string Description = "";
+    public Color NameColor = Color.white;
+
+    [Header("Variables")]
+    public List<CharacterVariable> Variables = new List<CharacterVariable>();
+
+    public void AddVariable(string variableName = "NewVariable", int initialValue = 0)
+    {
+        Variables.Add(new CharacterVariable(variableName, initialValue));
+    }
+
+    public void RemoveVariable(int index)
+    {
+        if (index >= 0 && index < Variables.Count)
+            Variables.RemoveAt(index);
+    }
+
+    public bool TryGetVariable(string variableName, out CharacterVariable variable)
+    {
+        variable = Variables.Find(v => v.VariableName == variableName);
+        return variable != null;
+    }
+}
+
+[System.Serializable]
+public class CharacterVariable
+{
+    public string VariableName = "NewVariable";
+    public int Value = 0;
+
+    public CharacterVariable(string name, int value)
+    {
+        VariableName = name;
+        Value = value;
+    }
+}
+
+//==== File 2 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterEditorWindow.cs ====
+using UnityEditor;
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+public class CharacterEditorWindow : EditorWindow
+{
+    private List<CharacterData> characters = new List<CharacterData>();
+    private CharacterData selectedCharacter;
+    private Vector2 scrollPosition;
+    private string searchString = "";
+
+    // ��������� ���������� ��� ���������
+    private Vector2 characterListScrollPosition;
+    private Vector2 variablesScrollPosition;
+    private int variableToRemove = -1;
+
+    [MenuItem("Dialog System/Character Editor")]
+    public static void ShowWindow()
+    {
+        GetWindow<CharacterEditorWindow>("Character Editor");
+    }
+
+    private void OnEnable()
+    {
+        RefreshCharacterList();
+    }
+
+    private void OnGUI()
+    {
+        DrawToolbar();
+
+        EditorGUILayout.BeginHorizontal();
+        DrawCharacterList();
+        DrawCharacterDetails();
+        EditorGUILayout.EndHorizontal();
+
+        // ������������ �������� ���������� ����� ��������� GUI
+        if (variableToRemove != -1)
+        {
+            selectedCharacter.RemoveVariable(variableToRemove);
+            variableToRemove = -1;
+            GUIUtility.ExitGUI(); // ������� �� �������� GUI �����
+        }
+    }
+
+    private void DrawToolbar()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+        if (GUILayout.Button("Create New", EditorStyles.toolbarButton))
+        {
+            CreateNewCharacter();
+        }
+
+        if (GUILayout.Button("Save", EditorStyles.toolbarButton) && selectedCharacter != null)
+        {
+            SaveCharacter();
+        }
+
+        if (GUILayout.Button("Delete", EditorStyles.toolbarButton) && selectedCharacter != null)
+        {
+            DeleteCharacter();
+        }
+
+        GUILayout.FlexibleSpace();
+
+        searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawCharacterList()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.Width(250));
+        EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
+
+        // ��������� ��������� ��� ������ ����������
+        characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
+
+        var filteredCharacters = string.IsNullOrEmpty(searchString)
+            ? characters
+            : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
+
+        foreach (var character in filteredCharacters)
+        {
+            var isSelected = selectedCharacter == character;
+            if (GUILayout.Toggle(isSelected, character.name, EditorStyles.toolbarButton) && !isSelected)
+            {
+                selectedCharacter = character;
+            }
+        }
+
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawCharacterDetails()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+
+        if (selectedCharacter == null)
+        {
+            EditorGUILayout.HelpBox("Select a character or create a new one", MessageType.Info);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+
+        EditorGUI.BeginChangeCheck();
+
+        // Basic Info
+        EditorGUILayout.LabelField("Basic Information", EditorStyles.boldLabel);
+        selectedCharacter.FirstName = EditorGUILayout.TextField("First Name", selectedCharacter.FirstName);
+        selectedCharacter.LastName = EditorGUILayout.TextField("Last Name", selectedCharacter.LastName);
+        selectedCharacter.Icon = (Sprite)EditorGUILayout.ObjectField("Icon", selectedCharacter.Icon, typeof(Sprite), false);
+        selectedCharacter.Description = EditorGUILayout.TextArea(selectedCharacter.Description, GUILayout.Height(60));
+        selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
+
+        EditorGUILayout.Space();
+
+        // Variables
+        EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
+
+        // ��������� ��������� ��� ������ ����������
+        variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
+
+        for (int i = 0; i < selectedCharacter.Variables.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            selectedCharacter.Variables[i].VariableName = EditorGUILayout.TextField(
+                GUIContent.none,
+                selectedCharacter.Variables[i].VariableName);
+
+            selectedCharacter.Variables[i].Value = EditorGUILayout.IntField(
+                GUIContent.none,
+                selectedCharacter.Variables[i].Value);
+
+            if (GUILayout.Button("X", GUILayout.Width(20)))
+            {
+                // ���������� ������ ��� ��������, �� ������� ����� ��������� GUI
+                variableToRemove = i;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndScrollView();
+
+        if (GUILayout.Button("Add Variable"))
+        {
+            selectedCharacter.AddVariable();
+        }
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            EditorUtility.SetDirty(selectedCharacter);
+        }
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void CreateNewCharacter()
+    {
+        var newCharacter = CreateInstance<CharacterData>();
+        newCharacter.name = "NewCharacter";
+
+        var path = EditorUtility.SaveFilePanelInProject(
+            "Create Character",
+            "NewCharacter",
+            "asset",
+            "Please enter a file name to save the character");
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            AssetDatabase.CreateAsset(newCharacter, path);
+            AssetDatabase.SaveAssets();
+            RefreshCharacterList();
+            selectedCharacter = newCharacter;
+        }
+    }
+
+    private void SaveCharacter()
+    {
+        EditorUtility.SetDirty(selectedCharacter);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Character {selectedCharacter.name} saved successfully");
+    }
+
+    private void DeleteCharacter()
+    {
+        if (EditorUtility.DisplayDialog(
+            "Delete Character",
+            $"Are you sure you want to delete {selectedCharacter.name}?",
+            "Delete",
+            "Cancel"))
+        {
+            var path = AssetDatabase.GetAssetPath(selectedCharacter);
+            AssetDatabase.DeleteAsset(path);
+            RefreshCharacterList();
+            selectedCharacter = null;
+        }
+    }
+
+    private void RefreshCharacterList()
+    {
+        characters.Clear();
+        var guids = AssetDatabase.FindAssets("t:CharacterData");
+
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var character = AssetDatabase.LoadAssetAtPath<CharacterData>(path);
+            if (character != null)
+                characters.Add(character);
+        }
+    }
+}
+
+//==== File 3 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -46,7 +314,7 @@ public class DialogueNode : BaseNode
 }
 
 
-//==== File 2 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
+//==== File 4 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
 using UnityEngine;
 
 [System.Serializable]
@@ -58,7 +326,7 @@ public class DialogueNodeData
 }
 
 
-//==== File 3 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionNodeImageData.cs ====
+//==== File 5 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionNodeImageData.cs ====
 using UnityEngine;
 using System;
 
@@ -70,7 +338,7 @@ public class OptionNodeImageData
     public string ImageSpriteGuid;
 }
 
-//==== File 4 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechNodeImageData.cs ====
+//==== File 6 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechNodeImageData.cs ====
 using UnityEngine;
 using System;
 
@@ -82,7 +350,7 @@ public class SpeechNodeImageData
     public string ImageSpriteGuid;
 }
 
-//==== File 5 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
+//==== File 7 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -179,7 +447,7 @@ public class DialogueGraph : EditorWindow
     }
 }
 
-//==== File 6 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
+//==== File 8 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -718,13 +986,14 @@ public class DialogueGraphView : GraphView
     }
 }
 
-//==== File 7 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
+//==== File 9 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEditor;
 using UnityEngine;
 using System;
+using System.Linq;
 
 /// <summary>
 /// ���� ������ ����� ��� ����������� �����
@@ -794,6 +1063,18 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         // ������� ���� ���������� ����
         if (searchTreeEntry.userData is Type nodeType)
         {
+            // Проверка на попытку создания второго EntryNode
+            if (nodeType == typeof(EntryNode))
+            {
+                var existingEntryNodes = graphView.nodes.ToList().Where(node => node is EntryNode);
+                if (existingEntryNodes.Any())
+                {
+                    EditorUtility.DisplayDialog("Cannot Create Start Node",
+                        "Only one Start Node is allowed in the graph.", "OK");
+                    return false;
+                }
+            }
+
             graphView.CreateNode(nodeType, localMousePosition);
             return true;
         }
@@ -802,7 +1083,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     }
 }
 
-//==== File 8 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
+//==== File 10 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -840,7 +1121,7 @@ public class EndNode : BaseNode
 }
 
 
-//==== File 9 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
+//==== File 11 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -878,7 +1159,7 @@ public class EntryNode : BaseNode
     }
 }
 
-//==== File 10 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
+//==== File 12 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -960,7 +1241,7 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 11 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
+//==== File 13 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using DialogueSystem;
@@ -1072,7 +1353,7 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     }
 }
 
-//==== File 12 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
+//==== File 14 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1138,7 +1419,7 @@ public class OptionNode : BaseNode
     }
 }
 
-//==== File 13 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
+//==== File 15 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1163,7 +1444,7 @@ public class OptionNodeAudio : OptionNode
     }
 }
 
-//==== File 14 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
+//==== File 16 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1209,7 +1490,7 @@ public class OptionNodeImage : OptionNode
 }
 
 
-//==== File 15 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
+//==== File 17 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1234,7 +1515,7 @@ public class OptionNodeText : OptionNode
     }
 }
 
-//==== File 16 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
+//==== File 18 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1251,6 +1532,9 @@ public class SpeechNode : BaseNode
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
+
+    public CharacterData Character;
+    private ObjectField characterField;
 
 
 
@@ -1293,6 +1577,14 @@ public class SpeechNode : BaseNode
         });
         mainContainer.Add(audioField);
 
+        characterField = new ObjectField("Character");
+        characterField.objectType = typeof(CharacterData);
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            Character = evt.newValue as CharacterData;
+        });
+        mainContainer.Add(characterField);
+
         // ��������� ���������� ��������� ����
         RefreshExpandedState();
         RefreshPorts();
@@ -1317,7 +1609,7 @@ public class SpeechNode : BaseNode
     }
 }
 
-//==== File 17 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
+//==== File 19 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1342,7 +1634,7 @@ public class SpeechNodeAudio : SpeechNode
     }
 }
 
-//==== File 18 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
+//==== File 20 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1388,7 +1680,7 @@ public class SpeechNodeImage : SpeechNode
 }
 
 
-//==== File 19 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
+//==== File 21 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1413,7 +1705,7 @@ public class SpeechNodeText : SpeechNode
     }
 }
 
-//==== File 20 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
+//==== File 22 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -1502,7 +1794,7 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 21 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
+//==== File 23 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -1894,7 +2186,7 @@ public class GraphSaveUtility
     #endregion
 }
 
-//==== File 22 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
+//==== File 24 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -2033,7 +2325,7 @@ public static class NodeFactory
     }
 }
 
-//==== File 23 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
+//==== File 25 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -2060,7 +2352,7 @@ public abstract class BaseConditionNode : BaseNode
 }
 
 
-//==== File 24 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
+//==== File 26 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
@@ -2085,13 +2377,13 @@ public abstract class BaseNode : Node
 }
 
 
-//==== File 25 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
+//==== File 27 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
 public interface IPropertyNode
 {
     void RefreshPropertyDropdown();
 }
 
-//==== File 26 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
+//==== File 28 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -2139,7 +2431,7 @@ public class DialogueContainer : ScriptableObject
 }
 
 
-//==== File 27 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
+//==== File 29 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -2152,7 +2444,7 @@ public class ExposedProperty
     public string PropertyValue = "New Value";   // �������� ��������
 }
 
-//==== File 28 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
+//==== File 30 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
 [System.Serializable]
 public class IntExposedProperty
 {
@@ -2163,7 +2455,7 @@ public class IntExposedProperty
 }
 
 
-//==== File 29 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
+//==== File 31 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
 [System.Serializable]
 public class NodeLinkData
 {
@@ -2173,7 +2465,7 @@ public class NodeLinkData
 }
 
 
-//==== File 30 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
+//==== File 32 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
 [System.Serializable]
 public class StringExposedProperty
 {
@@ -2182,7 +2474,7 @@ public class StringExposedProperty
 }
 
 
-//==== File 31 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
+//==== File 33 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
 namespace DialogueSystem
 {
     public enum ComparisonType
@@ -2215,7 +2507,7 @@ namespace DialogueSystem
 }
 
 
-//==== File 32 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+//==== File 34 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2227,7 +2519,7 @@ public class EndNodeData
     public string NextDialogueName;
 }
 
-//==== File 33 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
+//==== File 35 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2245,7 +2537,7 @@ public class EntryNodeData
 }
 
 
-//==== File 34 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+//==== File 36 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -2261,7 +2553,7 @@ public class IntConditionNodeData
 }
 
 
-//==== File 35 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+//==== File 37 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -2277,7 +2569,7 @@ public class ModifyIntNodeData
 }
 
 
-//==== File 36 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
+//==== File 38 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2301,7 +2593,7 @@ public class OptionNodeData
 }
 
 
-//==== File 37 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
+//==== File 39 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2325,7 +2617,7 @@ public class SpeechNodeData
 }
 
 
-//==== File 38 of 38: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
+//==== File 40 of 40: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -2343,10 +2635,10 @@ public class StringConditionNodeData
 
 
 // ============ Statistics =============
-// Total Files: 38
-// Total Size: 77,29 KB
-// Total Lines: 2262
-// Classes: 36
-// Methods: 132
-// Comments: 301
+// Total Files: 40
+// Total Size: 87,11 KB
+// Total Lines: 2550
+// Classes: 39
+// Methods: 151
+// Comments: 309
 // =====================================
