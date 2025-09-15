@@ -14,7 +14,6 @@ public class DialogueGraphView : GraphView
 {
     public readonly Vector2 DefaultNodeSize = new Vector2(250, 300);
     public Blackboard Blackboard;
-    public string BaseCharacterGuid;
 
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
 
@@ -23,6 +22,20 @@ public class DialogueGraphView : GraphView
 
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
+
+    private string _baseCharacterGuid;
+    public string BaseCharacterGuid
+    {
+        get => _baseCharacterGuid;
+        set
+        {
+            if (_baseCharacterGuid != value)
+            {
+                _baseCharacterGuid = value;
+                OnBaseCharacterChanged();
+            }
+        }
+    }
 
     public DialogueGraphView(EditorWindow editorWindow)
     {
@@ -535,5 +548,12 @@ public class DialogueGraphView : GraphView
         // Добавляем обратно секции после очистки
         Blackboard.Add(new BlackboardSection { title = "Int Properties" });
         Blackboard.Add(new BlackboardSection { title = "String Properties" });
+    }
+
+    // Метод для обработки изменений базового персонажа
+    private void OnBaseCharacterChanged()
+    {
+        // Можно добавить дополнительную логику при изменении базового персонажа
+        Debug.Log($"Base character changed to: {BaseCharacterGuid}");
     }
 }

@@ -89,4 +89,13 @@ public class SpeechNode : BaseNode
         }
         return null;
     }
+
+    public void SetSpeaker(CharacterData speaker)
+    {
+        Speaker = speaker;
+        if (speakerField != null)
+        {
+            speakerField.SetValueWithoutNotify(speaker);
+        }
+    }
 }

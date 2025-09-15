@@ -75,11 +75,11 @@ public static class NodeFactory
         node.Initialize(position);
         node.DialogueText = dialogueText;
 
-        // Auto-assign base character if available
-        var graphView = GetGraphView();
-        if (graphView != null && !string.IsNullOrEmpty(graphView.BaseCharacterGuid))
+        // јвтоматическа€ установка базового персонажа
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
         {
-            node.Speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
+            node.SetSpeaker(baseCharacter);
         }
 
         return node;
@@ -119,6 +119,13 @@ public static class NodeFactory
         var node = new SpeechNodeText();
         node.Initialize(position);
         node.DialogueText = dialogueText;
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -126,6 +133,13 @@ public static class NodeFactory
     {
         var node = new SpeechNodeAudio();
         node.Initialize(position);
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -133,6 +147,13 @@ public static class NodeFactory
     {
         var node = new SpeechNodeImage();
         node.Initialize(position);
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -156,6 +177,16 @@ public static class NodeFactory
         var node = new OptionNodeImage();
         node.Initialize(position);
         return node;
+    }
+
+    private static CharacterData GetBaseCharacter()
+    {
+        var graphView = GetGraphView();
+        if (graphView != null && !string.IsNullOrEmpty(graphView.BaseCharacterGuid))
+        {
+            return AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
+        }
+        return null;
     }
 
 }

@@ -13,10 +13,18 @@ MonoBehaviour:
   m_Name: New Narrative
   m_EditorClassIdentifier: 
   EntryNodeData:
-    Guid: 3a7848e4-c30d-4205-9883-52660acb0950
+    Guid: f2e812f5-68d5-4a88-94c7-48ec301a304a
     Position: {x: 100, y: 200}
-  NodeLinks: []
-  SpeechNodeDatas: []
+  NodeLinks:
+  - BaseNodeGuid: f2e812f5-68d5-4a88-94c7-48ec301a304a
+    PortName: Next
+    TargetNodeGuid: cb2ee229-c315-4806-9442-4b554889c963
+  SpeechNodeDatas:
+  - Guid: cb2ee229-c315-4806-9442-4b554889c963
+    DialogueText: New Dialogue
+    Position: {x: 250, y: 200}
+    AudioClipGuid: 
+    SpeakerGuid: 
   OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []

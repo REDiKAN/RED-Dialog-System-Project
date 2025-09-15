@@ -66,11 +66,16 @@ public class DialogueGraph : EditorWindow
             objectType = typeof(CharacterData),
             value = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid)
         };
+
         baseCharacterField.RegisterValueChangedCallback(evt =>
         {
             var character = evt.newValue as CharacterData;
             graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
+
+            // Обновляем все существующие SpeechNode при изменении базового персонажа
+            UpdateAllSpeechNodesSpeaker(character);
         });
+
         toolbar.Add(baseCharacterField);
 
         // Save/Load buttons
@@ -104,5 +109,13 @@ public class DialogueGraph : EditorWindow
     private void OnDisable()
     {
         rootVisualElement.Remove(graphView);
+    }
+
+    private void UpdateAllSpeechNodesSpeaker(CharacterData character)
+    {
+        foreach (var node in graphView.nodes.ToList().OfType<SpeechNode>())
+        {
+            node.SetSpeaker(character);
+        }
     }
 }
