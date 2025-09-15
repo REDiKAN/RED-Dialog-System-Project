@@ -42,4 +42,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Option Image Nodes")]
     public List<OptionNodeImageData> OptionNodeImageDatas = new List<OptionNodeImageData>();
+
+    [Header("Base Character")]
+    public string BaseCharacterGuid;
 }

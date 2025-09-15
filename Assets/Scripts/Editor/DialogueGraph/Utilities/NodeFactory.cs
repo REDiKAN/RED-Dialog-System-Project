@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEditor;
 
 /// <summary>
 /// Фабрика для создания узлов диалогового графа
@@ -6,6 +7,20 @@ using UnityEngine;
 /// </summary>
 public static class NodeFactory
 {
+    /// <summary>
+    /// Создает узел указанного типа в заданной позиции
+    /// </summary>
+    private static DialogueGraphView GetGraphView()
+    {
+        // Получаем все окна типа DialogueGraph
+        var windows = Resources.FindObjectsOfTypeAll<DialogueGraph>();
+        if (windows.Length > 0)
+        {
+            return windows[0].graphView;
+        }
+        return null;
+    }
+
     /// <summary>
     /// Создает узел указанного типа в заданной позиции
     /// </summary>
@@ -59,6 +74,14 @@ public static class NodeFactory
         var node = new SpeechNode();
         node.Initialize(position);
         node.DialogueText = dialogueText;
+
+        // Auto-assign base character if available
+        var graphView = GetGraphView();
+        if (graphView != null && !string.IsNullOrEmpty(graphView.BaseCharacterGuid))
+        {
+            node.Speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
+        }
+
         return node;
     }
 
@@ -134,4 +157,5 @@ public static class NodeFactory
         node.Initialize(position);
         return node;
     }
+
 }

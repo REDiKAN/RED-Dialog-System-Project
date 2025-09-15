@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 /// </summary>
 public class DialogueGraph : EditorWindow
 {
-    private DialogueGraphView graphView;
+    public DialogueGraphView graphView;
     private string fileName = "New Narrative";
 
     /// <summary>
@@ -53,14 +53,27 @@ public class DialogueGraph : EditorWindow
     {
         var toolbar = new Toolbar();
 
-        // Поле для имени файла
+        // File Name field
         var fileNameTextField = new TextField("File Name:");
         fileNameTextField.SetValueWithoutNotify(fileName);
         fileNameTextField.MarkDirtyRepaint();
         fileNameTextField.RegisterValueChangedCallback(evt => fileName = evt.newValue);
         toolbar.Add(fileNameTextField);
 
-        // Кнопки сохранения и загрузки
+        // Base Character field
+        var baseCharacterField = new ObjectField("Base Character")
+        {
+            objectType = typeof(CharacterData),
+            value = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid)
+        };
+        baseCharacterField.RegisterValueChangedCallback(evt =>
+        {
+            var character = evt.newValue as CharacterData;
+            graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
+        });
+        toolbar.Add(baseCharacterField);
+
+        // Save/Load buttons
         toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
         toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
 

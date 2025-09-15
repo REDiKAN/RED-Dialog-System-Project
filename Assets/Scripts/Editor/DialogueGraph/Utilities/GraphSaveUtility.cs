@@ -55,6 +55,8 @@ public class GraphSaveUtility
     /// </summary>
     private void SaveNodes(DialogueContainer dialogueContainer)
     {
+        dialogueContainer.BaseCharacterGuid = targetGraphView.BaseCharacterGuid;
+
         // Сохраняем связи между узлами
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
         foreach (var edge in connectedPorts)

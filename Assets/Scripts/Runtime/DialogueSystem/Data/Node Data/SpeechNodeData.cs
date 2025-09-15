@@ -18,4 +18,7 @@ public class SpeechNodeData
 
     [Tooltip("GUID of the audio clip asset")]
     public string AudioClipGuid;
+
+    [Tooltip("GUID of the speaker character asset")]
+    public string SpeakerGuid;
 }

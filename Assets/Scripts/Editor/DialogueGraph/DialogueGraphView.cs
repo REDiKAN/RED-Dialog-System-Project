@@ -14,6 +14,8 @@ public class DialogueGraphView : GraphView
 {
     public readonly Vector2 DefaultNodeSize = new Vector2(250, 300);
     public Blackboard Blackboard;
+    public string BaseCharacterGuid;
+
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
 
     public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
