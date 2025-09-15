@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.09.2025 19:58:24
+// Generation Time: 15.09.2025 20:17:52
 // Total Files: 42
 // =================================
 
@@ -465,11 +465,16 @@ public class DialogueGraph : EditorWindow
             objectType = typeof(CharacterData),
             value = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid)
         };
+
         baseCharacterField.RegisterValueChangedCallback(evt =>
         {
             var character = evt.newValue as CharacterData;
             graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
+
+            // ��������� ��� ������������ SpeechNode ��� ��������� �������� ���������
+            UpdateAllSpeechNodesSpeaker(character);
         });
+
         toolbar.Add(baseCharacterField);
 
         // Save/Load buttons
@@ -504,6 +509,14 @@ public class DialogueGraph : EditorWindow
     {
         rootVisualElement.Remove(graphView);
     }
+
+    private void UpdateAllSpeechNodesSpeaker(CharacterData character)
+    {
+        foreach (var node in graphView.nodes.ToList().OfType<SpeechNode>())
+        {
+            node.SetSpeaker(character);
+        }
+    }
 }
 
 //==== File 10 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
@@ -523,7 +536,6 @@ public class DialogueGraphView : GraphView
 {
     public readonly Vector2 DefaultNodeSize = new Vector2(250, 300);
     public Blackboard Blackboard;
-    public string BaseCharacterGuid;
 
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
 
@@ -532,6 +544,20 @@ public class DialogueGraphView : GraphView
 
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
+
+    private string _baseCharacterGuid;
+    public string BaseCharacterGuid
+    {
+        get => _baseCharacterGuid;
+        set
+        {
+            if (_baseCharacterGuid != value)
+            {
+                _baseCharacterGuid = value;
+                OnBaseCharacterChanged();
+            }
+        }
+    }
 
     public DialogueGraphView(EditorWindow editorWindow)
     {
@@ -1044,6 +1070,13 @@ public class DialogueGraphView : GraphView
         // ��������� ������� ������ ����� �������
         Blackboard.Add(new BlackboardSection { title = "Int Properties" });
         Blackboard.Add(new BlackboardSection { title = "String Properties" });
+    }
+
+    // ����� ��� ��������� ��������� �������� ���������
+    private void OnBaseCharacterChanged()
+    {
+        // ����� �������� �������������� ������ ��� ��������� �������� ���������
+        Debug.Log($"Base character changed to: {BaseCharacterGuid}");
     }
 }
 
@@ -1667,6 +1700,15 @@ public class SpeechNode : BaseNode
             }
         }
         return null;
+    }
+
+    public void SetSpeaker(CharacterData speaker)
+    {
+        Speaker = speaker;
+        if (speakerField != null)
+        {
+            speakerField.SetValueWithoutNotify(speaker);
+        }
     }
 }
 
@@ -2327,11 +2369,11 @@ public static class NodeFactory
         node.Initialize(position);
         node.DialogueText = dialogueText;
 
-        // Auto-assign base character if available
-        var graphView = GetGraphView();
-        if (graphView != null && !string.IsNullOrEmpty(graphView.BaseCharacterGuid))
+        // �������������� ��������� �������� ���������
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
         {
-            node.Speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
+            node.SetSpeaker(baseCharacter);
         }
 
         return node;
@@ -2371,6 +2413,13 @@ public static class NodeFactory
         var node = new SpeechNodeText();
         node.Initialize(position);
         node.DialogueText = dialogueText;
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -2378,6 +2427,13 @@ public static class NodeFactory
     {
         var node = new SpeechNodeAudio();
         node.Initialize(position);
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -2385,6 +2441,13 @@ public static class NodeFactory
     {
         var node = new SpeechNodeImage();
         node.Initialize(position);
+
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+        {
+            node.SetSpeaker(baseCharacter);
+        }
+
         return node;
     }
 
@@ -2408,6 +2471,16 @@ public static class NodeFactory
         var node = new OptionNodeImage();
         node.Initialize(position);
         return node;
+    }
+
+    private static CharacterData GetBaseCharacter()
+    {
+        var graphView = GetGraphView();
+        if (graphView != null && !string.IsNullOrEmpty(graphView.BaseCharacterGuid))
+        {
+            return AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
+        }
+        return null;
     }
 
 }
