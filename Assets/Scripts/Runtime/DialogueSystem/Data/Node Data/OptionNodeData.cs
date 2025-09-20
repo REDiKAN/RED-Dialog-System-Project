@@ -18,4 +18,6 @@ public class OptionNodeData
 
     [Tooltip("GUID of the audio clip asset")]
     public string AudioClipGuid;
+
+    public string NodeType;
 }

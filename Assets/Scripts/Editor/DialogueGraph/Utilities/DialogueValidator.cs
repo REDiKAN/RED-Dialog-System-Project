@@ -1,5 +1,6 @@
 using UnityEngine;
 
+
 public static class DialogueValidator
 {
     public static void ValidateSpeechNodes(DialogueContainer container)

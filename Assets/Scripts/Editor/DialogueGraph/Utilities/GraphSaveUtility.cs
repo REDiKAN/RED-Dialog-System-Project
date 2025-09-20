@@ -51,7 +51,7 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Сохранение узлов и связей
+    /// Сохраняет узлы в контейнер
     /// </summary>
     private void SaveNodes(DialogueContainer dialogueContainer)
     {
@@ -84,24 +84,93 @@ public class GraphSaveUtility
                     Position = node.GetPosition().position
                 };
             }
-            else if (node is SpeechNode speechNode)
+            else if (node is SpeechNodeText speechNodeText)
             {
                 dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
                 {
-                    Guid = speechNode.GUID,
-                    DialogueText = speechNode.DialogueText,
+                    Guid = speechNodeText.GUID,
+                    DialogueText = speechNodeText.DialogueText,
                     Position = node.GetPosition().position,
-                    AudioClipGuid = speechNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNode.AudioClip)) : ""
+                    AudioClipGuid = "",
+                    SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
+                    NodeType = "SpeechNodeText"
                 });
             }
-            else if (node is OptionNode optionNode)
+            else if (node is SpeechNodeAudio speechNodeAudio)
+            {
+                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
+                {
+                    Guid = speechNodeAudio.GUID,
+                    DialogueText = "",
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = speechNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeAudio.AudioClip)) : "",
+                    SpeakerGuid = speechNodeAudio.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeAudio.Speaker) : "",
+                    NodeType = "SpeechNodeAudio"
+                });
+            }
+            else if (node is SpeechNodeImage speechNodeImage)
+            {
+                dialogueContainer.SpeechNodeImageDatas.Add(new SpeechNodeImageData
+                {
+                    Guid = speechNodeImage.GUID,
+                    Position = node.GetPosition().position,
+                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : "",
+                    SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
+                    NodeType = "SpeechNodeImage"
+                });
+            }
+            else if (node is OptionNodeText optionNodeText)
             {
                 dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
                 {
-                    Guid = optionNode.GUID,
-                    ResponseText = optionNode.ResponseText,
+                    Guid = optionNodeText.GUID,
+                    ResponseText = optionNodeText.ResponseText,
                     Position = node.GetPosition().position,
-                    AudioClipGuid = optionNode.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNode.AudioClip)) : ""
+                    AudioClipGuid = "",
+                    NodeType = "OptionNodeText"
+                });
+            }
+            else if (node is OptionNodeAudio optionNodeAudio)
+            {
+                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
+                {
+                    Guid = optionNodeAudio.GUID,
+                    ResponseText = "",
+                    Position = node.GetPosition().position,
+                    AudioClipGuid = optionNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeAudio.AudioClip)) : "",
+                    NodeType = "OptionNodeAudio"
+                });
+            }
+            else if (node is OptionNodeImage optionNodeImage)
+            {
+                dialogueContainer.OptionNodeImageDatas.Add(new OptionNodeImageData
+                {
+                    Guid = optionNodeImage.GUID,
+                    Position = node.GetPosition().position,
+                    ImageSpriteGuid = optionNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeImage.ImageSprite)) : "",
+                    NodeType = "OptionNodeImage"
+                });
+            }
+            else if (node is IntConditionNode intConditionNode)
+            {
+                dialogueContainer.IntConditionNodeDatas.Add(new IntConditionNodeData
+                {
+                    Guid = intConditionNode.GUID,
+                    Position = node.GetPosition().position,
+                    SelectedProperty = intConditionNode.SelectedProperty,
+                    Comparison = intConditionNode.Comparison,
+                    CompareValue = intConditionNode.CompareValue
+                });
+            }
+            else if (node is StringConditionNode stringConditionNode)
+            {
+                dialogueContainer.StringConditionNodeDatas.Add(new StringConditionNodeData
+                {
+                    Guid = stringConditionNode.GUID,
+                    Position = node.GetPosition().position,
+                    SelectedProperty = stringConditionNode.SelectedProperty,
+                    Comparison = (DialogueSystem.StringComparisonType)stringConditionNode.Comparison,
+                    CompareValue = stringConditionNode.CompareValue
                 });
             }
             else if (node is ModifyIntNode modifyIntNode)
@@ -122,64 +191,6 @@ public class GraphSaveUtility
                     Guid = endNode.GUID,
                     Position = node.GetPosition().position,
                     NextDialogueName = endNode.NextDialogueName
-                });
-            }
-            else if (node is SpeechNodeText speechNodeText)
-            {
-                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
-                {
-                    Guid = speechNodeText.GUID,
-                    DialogueText = speechNodeText.DialogueText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = "" // Audio не поддерживается
-                });
-            }
-            else if (node is SpeechNodeAudio speechNodeAudio)
-            {
-                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
-                {
-                    Guid = speechNodeAudio.GUID,
-                    DialogueText = "", // Text не поддерживается
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = speechNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeAudio.AudioClip)) : ""
-                });
-            }
-            else if (node is SpeechNodeImage speechNodeImage)
-            {
-                dialogueContainer.SpeechNodeImageDatas.Add(new SpeechNodeImageData
-                {
-                    Guid = speechNodeImage.GUID,
-                    Position = node.GetPosition().position,
-                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : ""
-                });
-            }
-            else if (node is OptionNodeText optionNodeText)
-            {
-                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
-                {
-                    Guid = optionNodeText.GUID,
-                    ResponseText = optionNodeText.ResponseText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = "" // Audio не поддерживается
-                });
-            }
-            else if (node is OptionNodeAudio optionNodeAudio)
-            {
-                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
-                {
-                    Guid = optionNodeAudio.GUID,
-                    ResponseText = "", // Text не поддерживается
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = optionNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeAudio.AudioClip)) : ""
-                });
-            }
-            else if (node is OptionNodeImage optionNodeImage)
-            {
-                dialogueContainer.OptionNodeImageDatas.Add(new OptionNodeImageData
-                {
-                    Guid = optionNodeImage.GUID,
-                    Position = node.GetPosition().position,
-                    ImageSpriteGuid = optionNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeImage.ImageSprite)) : ""
                 });
             }
         }
@@ -217,7 +228,7 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Создание узлов из загруженных данных
+    /// Создает узлы из загруженных данных
     /// </summary>
     private void CreateNodes()
     {
@@ -235,14 +246,72 @@ public class GraphSaveUtility
         // Создаем SpeechNode
         foreach (var nodeData in containerCache.SpeechNodeDatas)
         {
-            var tempNode = NodeFactory.CreateSpeechNode(nodeData.Position, nodeData.DialogueText);
+            BaseNode tempNode = null;
+
+            switch (nodeData.NodeType)
+            {
+                case "SpeechNodeText":
+                    tempNode = NodeFactory.CreateSpeechNodeText(nodeData.Position, nodeData.DialogueText);
+                    break;
+                case "SpeechNodeAudio":
+                    tempNode = NodeFactory.CreateSpeechNodeAudio(nodeData.Position);
+                    break;
+                default:
+                    tempNode = NodeFactory.CreateSpeechNode(nodeData.Position, nodeData.DialogueText);
+                    break;
+            }
+
             tempNode.GUID = nodeData.Guid;
 
-            // Загружаем аудиофайл если есть GUID
+            // Восстанавливаем аудио клип по GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
-                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
                     AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
+                if (tempNode is SpeechNode speechNode)
+                {
+                    speechNode.AudioClip = audioClip;
+                }
+            }
+
+            // Восстанавливаем спикера по GUID
+            if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
+            {
+                var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
+                if (tempNode is SpeechNode speechNode)
+                {
+                    speechNode.SetSpeaker(speaker);
+                }
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
+
+        // Создаем SpeechNodeImage
+        foreach (var nodeData in containerCache.SpeechNodeImageDatas)
+        {
+            var tempNode = NodeFactory.CreateSpeechNodeImage(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+
+            // Восстанавливаем изображение по GUID
+            if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
+            {
+                var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                    AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid));
+                if (tempNode is SpeechNodeImage speechNodeImage)
+                {
+                    speechNodeImage.ImageSprite = imageSprite;
+                }
+            }
+
+            // Восстанавливаем спикера по GUID
+            if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
+            {
+                var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
+                if (tempNode is SpeechNodeImage speechNodeImage)
+                {
+                    speechNodeImage.SetSpeaker(speaker);
+                }
             }
 
             targetGraphView.AddElement(tempNode);
@@ -251,29 +320,100 @@ public class GraphSaveUtility
         // Создаем OptionNode
         foreach (var nodeData in containerCache.OptionNodeDatas)
         {
-            var tempNode = NodeFactory.CreateOptionNode(nodeData.Position, nodeData.ResponseText);
+            BaseNode tempNode = null;
+
+            switch (nodeData.NodeType)
+            {
+                case "OptionNodeText":
+                    tempNode = NodeFactory.CreateOptionNodeText(nodeData.Position, nodeData.ResponseText);
+                    break;
+                case "OptionNodeAudio":
+                    tempNode = NodeFactory.CreateOptionNodeAudio(nodeData.Position);
+                    break;
+                default:
+                    tempNode = NodeFactory.CreateOptionNode(nodeData.Position, nodeData.ResponseText);
+                    break;
+            }
+
             tempNode.GUID = nodeData.Guid;
 
-            // Загружаем аудиофайл если есть GUID
+            // Восстанавливаем аудио клип по GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
-                tempNode.AudioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
                     AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
+                if (tempNode is OptionNode optionNode)
+                {
+                    optionNode.AudioClip = audioClip;
+                }
             }
 
             targetGraphView.AddElement(tempNode);
         }
 
+        // Создаем OptionNodeImage
+        foreach (var nodeData in containerCache.OptionNodeImageDatas)
+        {
+            var tempNode = NodeFactory.CreateOptionNodeImage(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+
+            // Восстанавливаем изображение по GUID
+            if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
+            {
+                var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                    AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid));
+                if (tempNode is OptionNodeImage optionNodeImage)
+                {
+                    optionNodeImage.ImageSprite = imageSprite;
+                }
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
+
+        // Создаем IntConditionNode
+        foreach (var nodeData in containerCache.IntConditionNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateIntConditionNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is IntConditionNode intConditionNode)
+            {
+                intConditionNode.SelectedProperty = nodeData.SelectedProperty;
+                intConditionNode.Comparison = nodeData.Comparison;
+                intConditionNode.CompareValue = nodeData.CompareValue;
+            }
+            targetGraphView.AddElement(tempNode);
+        }
+
+        // Создаем StringConditionNode
+        foreach (var nodeData in containerCache.StringConditionNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateStringConditionNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is StringConditionNode stringConditionNode)
+            {
+                stringConditionNode.SelectedProperty = nodeData.SelectedProperty;
+                stringConditionNode.Comparison = (StringConditionNode.StringComparisonType)nodeData.Comparison;
+                stringConditionNode.CompareValue = nodeData.CompareValue;
+            }
+            targetGraphView.AddElement(tempNode);
+        }
+
+        // Создаем ModifyIntNode
         foreach (var nodeData in containerCache.ModifyIntNodeDatas)
         {
             var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
-            tempNode.SelectedProperty = nodeData.SelectedProperty;
-            tempNode.Operator = nodeData.Operator;
-            tempNode.Value = nodeData.Value;
+            if (tempNode is ModifyIntNode modifyIntNode)
+            {
+                modifyIntNode.SelectedProperty = nodeData.SelectedProperty;
+                modifyIntNode.Operator = nodeData.Operator;
+                modifyIntNode.Value = nodeData.Value;
+            }
             targetGraphView.AddElement(tempNode);
         }
 
+        // Создаем EndNode
         foreach (var nodeData in containerCache.EndNodeDatas)
         {
             var tempNode = NodeFactory.CreateEndNode(nodeData.Position, nodeData.NextDialogueName);
