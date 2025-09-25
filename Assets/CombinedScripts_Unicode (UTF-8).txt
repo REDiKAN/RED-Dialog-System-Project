@@ -1,407 +1,1011 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 21.09.2025 1:37:31
-// Total Files: 42
+// Generation Time: 24.09.2025 20:45:45
+// Total Files: 49
 // =================================
 
-//==== File 1 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\AssetDatabaseHelper.cs ====
-using UnityEditor;
+//==== File 1 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\BaseNodeData.cs ====
 using UnityEngine;
-
-public static class AssetDatabaseHelper
-{
-    public static string GetAssetGuid(Object asset)
-    {
-        if (asset == null) return string.Empty;
-        return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
-    }
-
-    public static T LoadAssetFromGuid<T>(string guid) where T : Object
-    {
-        if (string.IsNullOrEmpty(guid)) return null;
-        string path = AssetDatabase.GUIDToAssetPath(guid);
-        return AssetDatabase.LoadAssetAtPath<T>(path);
-    }
-
-    public static bool IsValidGuid(string guid)
-    {
-        if (string.IsNullOrEmpty(guid)) return false;
-        string path = AssetDatabase.GUIDToAssetPath(guid);
-        return !string.IsNullOrEmpty(path) && AssetDatabase.LoadAssetAtPath<Object>(path) != null;
-    }
-}
-
-
-//==== File 2 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterData.cs ====
-using UnityEngine;
-using System.Collections.Generic;
-
-[CreateAssetMenu(fileName = "NewCharacter", menuName = "Dialogue System/Character Data")]
-public class CharacterData : ScriptableObject
-{
-    [Header("Basic Info")]
-    public string FirstName = "New";
-    public string LastName = "Character";
-    public Sprite Icon;
-    [TextArea(3, 10)] public string Description = "";
-    public Color NameColor = Color.white;
-
-    [Header("Variables")]
-    public List<CharacterVariable> Variables = new List<CharacterVariable>();
-
-    public void AddVariable(string variableName = "NewVariable", int initialValue = 0)
-    {
-        Variables.Add(new CharacterVariable(variableName, initialValue));
-    }
-
-    public void RemoveVariable(int index)
-    {
-        if (index >= 0 && index < Variables.Count)
-            Variables.RemoveAt(index);
-    }
-
-    public bool TryGetVariable(string variableName, out CharacterVariable variable)
-    {
-        variable = Variables.Find(v => v.VariableName == variableName);
-        return variable != null;
-    }
-}
+using System;
 
 [System.Serializable]
-public class CharacterVariable
+public abstract class BaseNodeData
 {
-    public string VariableName = "NewVariable";
-    public int Value = 0;
+    public string Guid;
+    public Vector2 Position;
+}
 
-    public CharacterVariable(string name, int value)
+
+//==== File 2 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterManager.cs ====
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CharacterManager : MonoBehaviour
+{
+    private static CharacterManager _instance;
+    public static CharacterManager Instance => _instance;
+
+    private Dictionary<string, CharacterData> characterCache = new Dictionary<string, CharacterData>();
+
+    private void Awake()
     {
-        VariableName = name;
-        Value = value;
+        if (_instance != null)
+            Destroy(gameObject);
+        else
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+            LoadAllCharacters();
+        }
+    }
+
+    /// <summary>
+    /// ��������� ���� ���������� �� Resources/Characters
+    /// </summary>
+    private void LoadAllCharacters()
+    {
+        var characters = Resources.LoadAll<CharacterData>("Characters");
+        foreach (var character in characters)
+            characterCache[character.name] = character;
+    }
+
+    /// <summary>
+    /// �������� ��������� �� �����
+    /// </summary>
+    /// <param name="characterName">��� ���������</param>
+    /// <returns>CharacterData ��� null</returns>
+    public CharacterData GetCharacter(string characterName)
+    {
+        if (characterCache.TryGetValue(characterName, out var character))
+            return character;
+
+        Debug.LogError($"�������� {characterName} �� ������ � Resources/Characters");
+        return null;
     }
 }
 
-//==== File 3 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterEditorWindow.cs ====
-using UnityEditor;
+
+//==== File 3 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\ChatPanel.cs ====
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Linq;
 
-public class CharacterEditorWindow : EditorWindow
+public class ChatPanel : MonoBehaviour
 {
-    private List<CharacterData> characters = new List<CharacterData>();
-    private CharacterData selectedCharacter;
-    private Vector2 scrollPosition;
-    private string searchString = "";
+    [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private GameObject messagePrefab;
+    [SerializeField] private Transform contentContainer;
 
-    // ��������� ���������� ��� ���������
-    private Vector2 characterListScrollPosition;
-    private Vector2 variablesScrollPosition;
-    private int variableToRemove = -1;
-
-    [MenuItem("Dialog System/Character Editor")]
-    public static void ShowWindow()
+    /// <summary>
+    /// ��������� ��������� � ���
+    /// </summary>
+    /// <param name="message">������ ���������</param>
+    public void AddMessage(Message message)
     {
-        GetWindow<CharacterEditorWindow>("Character Editor");
-    }
-
-    private void OnEnable()
-    {
-        RefreshCharacterList();
-    }
-
-    private void OnGUI()
-    {
-        DrawToolbar();
-
-        EditorGUILayout.BeginHorizontal();
-        DrawCharacterList();
-        DrawCharacterDetails();
-        EditorGUILayout.EndHorizontal();
-
-        // ������������ �������� ���������� ����� ��������� GUI
-        if (variableToRemove != -1)
+        // ��������� ������������ ������
+        if (messagePrefab == null)
         {
-            selectedCharacter.RemoveVariable(variableToRemove);
-            variableToRemove = -1;
-            GUIUtility.ExitGUI(); // ������� �� �������� GUI �����
-        }
-    }
-
-    private void DrawToolbar()
-    {
-        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-        if (GUILayout.Button("Create New", EditorStyles.toolbarButton))
-        {
-            CreateNewCharacter();
-        }
-
-        if (GUILayout.Button("Save", EditorStyles.toolbarButton) && selectedCharacter != null)
-        {
-            SaveCharacter();
-        }
-
-        if (GUILayout.Button("Delete", EditorStyles.toolbarButton) && selectedCharacter != null)
-        {
-            DeleteCharacter();
-        }
-
-        GUILayout.FlexibleSpace();
-
-        searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
-
-        EditorGUILayout.EndHorizontal();
-    }
-
-    private void DrawCharacterList()
-    {
-        EditorGUILayout.BeginVertical(GUILayout.Width(250));
-        EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
-
-        // ��������� ��������� ��� ������ ����������
-        characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
-
-        var filteredCharacters = string.IsNullOrEmpty(searchString)
-            ? characters
-            : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
-
-        foreach (var character in filteredCharacters)
-        {
-            var isSelected = selectedCharacter == character;
-            if (GUILayout.Toggle(isSelected, character.name, EditorStyles.toolbarButton) && !isSelected)
-            {
-                selectedCharacter = character;
-            }
-        }
-
-        EditorGUILayout.EndScrollView();
-        EditorGUILayout.EndVertical();
-    }
-
-    private void DrawCharacterDetails()
-    {
-        EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-
-        if (selectedCharacter == null)
-        {
-            EditorGUILayout.HelpBox("Select a character or create a new one", MessageType.Info);
-            EditorGUILayout.EndVertical();
+            Debug.LogError("Message prefab �� �������� � ChatPanel");
             return;
         }
 
-        EditorGUI.BeginChangeCheck();
-
-        // Basic Info
-        EditorGUILayout.LabelField("Basic Information", EditorStyles.boldLabel);
-        selectedCharacter.FirstName = EditorGUILayout.TextField("First Name", selectedCharacter.FirstName);
-        selectedCharacter.LastName = EditorGUILayout.TextField("Last Name", selectedCharacter.LastName);
-        selectedCharacter.Icon = (Sprite)EditorGUILayout.ObjectField("Icon", selectedCharacter.Icon, typeof(Sprite), false);
-        selectedCharacter.Description = EditorGUILayout.TextArea(selectedCharacter.Description, GUILayout.Height(60));
-        selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
-
-        EditorGUILayout.Space();
-
-        // Variables
-        EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
-
-        // ��������� ��������� ��� ������ ����������
-        variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
-
-        for (int i = 0; i < selectedCharacter.Variables.Count; i++)
+        if (contentContainer == null)
         {
-            EditorGUILayout.BeginHorizontal();
+            Debug.LogError("Content container �� �������� � ChatPanel");
+            return;
+        }
 
-            selectedCharacter.Variables[i].VariableName = EditorGUILayout.TextField(
-                GUIContent.none,
-                selectedCharacter.Variables[i].VariableName);
+        if (scrollRect == null)
+        {
+            Debug.LogError("ScrollRect �� �������� � ChatPanel");
+            return;
+        }
 
-            selectedCharacter.Variables[i].Value = EditorGUILayout.IntField(
-                GUIContent.none,
-                selectedCharacter.Variables[i].Value);
+        // ������� ��������� ������� ���������
+        var messageGO = Instantiate(messagePrefab, contentContainer);
 
-            if (GUILayout.Button("X", GUILayout.Width(20)))
+        // �������� ���������� ���������
+        var textComponent = messageGO.GetComponent<Text>();
+        var imageComponent = messageGO.GetComponent<Image>();
+        var characterAvatar = messageGO.transform.Find("Avatar")?.GetComponent<Image>();
+        var characterName = messageGO.transform.Find("Name")?.GetComponent<Text>();
+
+        // ��������� ���� ���������
+        if (message.Type == MessageType.NPC)
+        {
+            // ����� ������� ��� NPC
+            messageGO.transform.SetAsFirstSibling();
+
+            // ��������� ������� � ����� (���� ��� ����������)
+            if (characterAvatar != null && message.Sender != null && message.Sender.Icon != null)
             {
-                // ���������� ������ ��� ��������, �� ������� ����� ��������� GUI
-                variableToRemove = i;
+                characterAvatar.sprite = message.Sender.Icon;
+            }
+            else if (characterAvatar != null && message.Sender == null)
+            {
+                Debug.LogWarning("�������� �� ������ ��� NPC ���������");
             }
 
-            EditorGUILayout.EndHorizontal();
+            if (characterName != null && message.Sender != null)
+            {
+                characterName.text = message.Sender.FirstName;
+                characterName.color = message.Sender.NameColor;
+            }
+
+            // ����������� ������/�����������
+            if (textComponent != null)
+            {
+                if (!string.IsNullOrEmpty(message.Text))
+                    textComponent.text = message.Text;
+                else
+                    textComponent.text = "";
+            }
+
+            if (imageComponent != null)
+            {
+                if (message.Image != null)
+                    imageComponent.sprite = message.Image;
+                else
+                    imageComponent.sprite = null;
+            }
+        }
+        else if (message.Type == MessageType.Player)
+        {
+            // ������ ������� ��� ������
+            messageGO.transform.SetAsLastSibling();
+
+            if (textComponent != null)
+            {
+                textComponent.text = message.Text;
+            }
+        }
+        else if (message.Type == MessageType.System)
+        {
+            // ��������� ���������
+            if (textComponent != null)
+            {
+                textComponent.text = message.Text;
+                // ����� �������� ���������� ��� ��������� ���������
+            }
         }
 
-        EditorGUILayout.EndScrollView();
-
-        if (GUILayout.Button("Add Variable"))
+        // ������������� ����
+        if (scrollRect.content != null)
         {
-            selectedCharacter.AddVariable();
-        }
-
-        if (EditorGUI.EndChangeCheck())
-        {
-            EditorUtility.SetDirty(selectedCharacter);
-        }
-
-        EditorGUILayout.EndVertical();
-    }
-
-    private void CreateNewCharacter()
-    {
-        var newCharacter = CreateInstance<CharacterData>();
-        newCharacter.name = "NewCharacter";
-
-        var path = EditorUtility.SaveFilePanelInProject(
-            "Create Character",
-            "NewCharacter",
-            "asset",
-            "Please enter a file name to save the character");
-
-        if (!string.IsNullOrEmpty(path))
-        {
-            AssetDatabase.CreateAsset(newCharacter, path);
-            AssetDatabase.SaveAssets();
-            RefreshCharacterList();
-            selectedCharacter = newCharacter;
-        }
-    }
-
-    private void SaveCharacter()
-    {
-        EditorUtility.SetDirty(selectedCharacter);
-        AssetDatabase.SaveAssets();
-        Debug.Log($"Character {selectedCharacter.name} saved successfully");
-    }
-
-    private void DeleteCharacter()
-    {
-        if (EditorUtility.DisplayDialog(
-            "Delete Character",
-            $"Are you sure you want to delete {selectedCharacter.name}?",
-            "Delete",
-            "Cancel"))
-        {
-            var path = AssetDatabase.GetAssetPath(selectedCharacter);
-            AssetDatabase.DeleteAsset(path);
-            RefreshCharacterList();
-            selectedCharacter = null;
-        }
-    }
-
-    private void RefreshCharacterList()
-    {
-        characters.Clear();
-        var guids = AssetDatabase.FindAssets("t:CharacterData");
-
-        foreach (var guid in guids)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var character = AssetDatabase.LoadAssetAtPath<CharacterData>(path);
-            if (character != null)
-                characters.Add(character);
+            scrollRect.verticalNormalizedPosition = 0;
         }
     }
 }
 
-//==== File 4 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNode.cs ====
-using UnityEditor.Experimental.GraphView;
-using UnityEngine.UIElements;
+//==== File 4 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\ConditionHandler.cs ====
+using DialogueSystem;
+using System.Collections.Generic;
 using UnityEngine;
-
-public class DialogueNode : BaseNode
+/// <summary>
+/// ���������� ������� ��� ���������� �����
+/// </summary>
+public static class ConditionHandler
 {
-    public string DialogueText { get; set; }
-    private TextField textField;
-
-    public override void Initialize(Vector2 position)
+    /// <summary>
+    /// ��������� �������� �������
+    /// </summary>
+    /// <param name="condition">������ ���� �������</param>
+    /// <param name="variables">������� �������� ����������</param>
+    /// <returns>��������� �������� �������</returns>
+    public static bool EvaluateIntCondition(IntConditionNodeData condition, Dictionary<string, int> variables)
     {
-        base.Initialize(position);
-        title = "Dialogue Node";
-        DialogueText = "New Dialogue";
-
-        // ��������� ������� ����
-        var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
-        inputPort.portName = "Input";
-        inputContainer.Add(inputPort);
-
-        // ��������� �������� ����
-        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        outputPort.portName = "Next";
-        outputContainer.Add(outputPort);
-
-        // ��������� ���� ��� �������
-        textField = new TextField(string.Empty);
-        textField.multiline = true;
-        textField.RegisterValueChangedCallback(evt =>
+        if (!variables.TryGetValue(condition.SelectedProperty, out int value))
         {
-            DialogueText = evt.newValue;
-            title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
-        });
-        textField.SetValueWithoutNotify(DialogueText);
-        mainContainer.Add(textField);
+            Debug.LogError($"���������� {condition.SelectedProperty} �� ������� � �������");
+            return false;
+        }
 
-        RefreshExpandedState();
-        RefreshPorts();
+        switch (condition.Comparison)
+        {
+            case ComparisonType.Equal:
+                return value == condition.CompareValue;
+            case ComparisonType.NotEqual:
+                return value != condition.CompareValue;
+            case ComparisonType.Greater:
+                return value > condition.CompareValue;
+            case ComparisonType.Less:
+                return value < condition.CompareValue;
+            case ComparisonType.GreaterOrEqual:
+                return value >= condition.CompareValue;
+            case ComparisonType.LessOrEqual:
+                return value <= condition.CompareValue;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// ��������� ��������� �������
+    /// </summary>
+    /// <param name="condition">������ ���� �������</param>
+    /// <param name="variables">������� ��������� ����������</param>
+    /// <returns>��������� �������� �������</returns>
+    public static bool EvaluateStringCondition(StringConditionNodeData condition, Dictionary<string, string> variables)
+    {
+        if (!variables.TryGetValue(condition.SelectedProperty, out string value))
+        {
+            Debug.LogError($"���������� {condition.SelectedProperty} �� ������� � �������");
+            return false;
+        }
+
+        switch (condition.Comparison)
+        {
+            case StringComparisonType.Equal:
+                return value == condition.CompareValue;
+            case StringComparisonType.NotEqual:
+                return value != condition.CompareValue;
+            case StringComparisonType.IsNullOrEmpty:
+                return string.IsNullOrEmpty(value);
+            default:
+                return false;
+        }
     }
 }
 
-
-//==== File 5 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueNodeData.cs ====
+//==== File 5 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueManager.cs ====
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
+using System;
+using System.Collections;
+using DialogueSystem;
 
+/// <summary>
+/// ��������� ����������� �������� � �������� �������
+/// </summary>
+public class DialogueManager : MonoBehaviour
+{
+    [Header("UI References")]
+    [SerializeField] private ChatPanel chatPanel;
+    [SerializeField] private OptionPanel optionPanel;
+
+    [Header("Dialogue Settings")]
+    [SerializeField] private float messageDelay = 0.5f; // �������� ����� �����������
+
+    [SerializeField] private DialogueContainer currentDialogue;
+    private object currentNode; // ����������: BaseNodeData -> object (������ 1,9)
+    private Dictionary<string, int> intVariables = new Dictionary<string, int>();
+    private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
+    private List<object> visitedNodes = new List<object>(); // ����������: BaseNodeData -> object
+
+    private void Start()
+    {
+        // ������������� �� ������� ������ �����
+        if (optionPanel != null)
+        {
+            optionPanel.onOptionSelected += HandleOptionSelection;
+        }
+        else
+        {
+            Debug.LogError("OptionPanel not assigned in DialogueManager");
+        }
+
+        if (chatPanel == null)
+        {
+            Debug.LogError("ChatPanel not assigned in DialogueManager");
+        }
+
+        StartDialogue(currentDialogue);
+    }
+    /// <summary>
+    /// ��������� ������ �� ���������� ����������
+    /// </summary>
+    /// <param name="dialogueContainer">��������� ������� ��� �������</param>
+    public void StartDialogue(DialogueContainer dialogueContainer)
+    {
+        currentDialogue = dialogueContainer;
+        ResetVariables();
+        visitedNodes.Clear();
+
+        // ������������� ���������� �� Exposed Properties
+        foreach (var prop in currentDialogue.IntExposedProperties)
+        {
+            intVariables[prop.PropertyName] = prop.IntValue;
+        }
+
+        foreach (var prop in currentDialogue.StringExposedProperties)
+        {
+            stringVariables[prop.PropertyName] = prop.StringValue;
+        }
+
+        // �������� ������ � EntryNode
+        currentNode = currentDialogue.EntryNodeData;
+        ProcessNextNode();
+    }
+
+    /// <summary>
+    /// ���������� ��� ���������� ������� � ��������� �� ���������
+    /// </summary>
+    private void ResetVariables()
+    {
+        intVariables.Clear();
+        stringVariables.Clear();
+    }
+
+    private void ProcessNextNode()
+    {
+        if (currentNode == null)
+            return;
+
+        // ��������� ������� ���� � ������ ����������
+        if (!visitedNodes.Contains(currentNode))
+        {
+            visitedNodes.Add(currentNode);
+        }
+
+        switch (currentNode)
+        {
+            case EntryNodeData entryNode:
+                ProcessEntryNode(entryNode);
+                break;
+            case SpeechNodeData speechNode:
+                ProcessSpeechNode(speechNode);
+                break;
+            case OptionNodeData optionNode:
+                ProcessOptionNode(optionNode);
+                break;
+            case IntConditionNodeData intCondition:
+                ProcessIntCondition(intCondition);
+                break;
+            case StringConditionNodeData stringCondition:
+                ProcessStringCondition(stringCondition);
+                break;
+            case ModifyIntNodeData modifyNode:
+                ProcessModifyIntNode(modifyNode);
+                break;
+            case EndNodeData endNode:
+                ProcessEndNode(endNode);
+                break;
+            case SpeechNodeImageData speechImageNode:
+                ProcessSpeechImageNode(speechImageNode);
+                break;
+            case OptionNodeImageData optionImageNode:
+                ProcessOptionImageNode(optionImageNode);
+                break;
+            default:
+                Debug.LogWarning($"����������� ��� ����: {currentNode.GetType().Name}");
+                currentNode = null;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// ������������ EntryNodeData
+    /// </summary>
+    /// <param name="entryNode">������ ���������� ����</param>
+    private void ProcessEntryNode(EntryNodeData entryNode)
+    {
+        // ������� ��������� ���� ����� EntryNode
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == entryNode.Guid);
+
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            // ���� ��� ���������� ����, ��������� ������
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// ������������ SpeechNodeData
+    /// </summary>
+    /// <param name="speechNode">������ ���� ����</param>
+    private void ProcessSpeechNode(SpeechNodeData speechNode)
+    {
+        // �������� ��������� �� CharacterManager
+        CharacterData speaker = GetCharacterByGuid(speechNode.SpeakerGuid);
+
+        // ������� ��������� ��� ����
+        var message = new Message
+        {
+            Type = MessageType.NPC,
+            Text = speechNode.DialogueText,
+            Image = null, // ��� ��������� ����� ����������� �� ������������
+            Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid), // ����������: AssetLoader
+            Sender = speaker
+        };
+
+        // ��������� ��������� � ���
+        chatPanel.AddMessage(message);
+
+        // ������������ �����, ���� ��� ����
+        if (message.Audio != null)
+        {
+            StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
+        }
+
+        // ������� ��������� ����
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == speechNode.Guid);
+
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// ������������ SpeechNodeImageData
+    /// </summary>
+    /// <param name="speechImageNode">������ ���� ����������� ����</param>
+    private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
+    {
+        // �������� ��������� �� CharacterManager
+        CharacterData speaker = GetCharacterByGuid(speechImageNode.SpeakerGuid);
+
+        // ������� ��������� ��� ����
+        var message = new Message
+        {
+            Type = MessageType.NPC,
+            Text = null, // ��� ����������� ����� �� ������������
+            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid), // ����������: AssetLoader
+            Audio = null,
+            Sender = speaker
+        };
+
+        // ��������� ��������� � ���
+        chatPanel.AddMessage(message);
+
+        // ������� ��������� ����
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == speechImageNode.Guid);
+
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// ������������ OptionNodeData
+    /// </summary>
+    private void ProcessOptionNode(OptionNodeData optionNode)
+    {
+        // ������� ������ ��������� ������
+        var options = new List<Option>();
+
+        // ������� ��� ����� �� ����� ����
+        var optionLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == optionNode.Guid)
+            .ToList();
+
+        foreach (var link in optionLinks)
+        {
+            var targetNode = GetNodeByGuid(link.TargetNodeGuid);
+            string optionText = "������� ������";
+
+            if (targetNode is OptionNodeData optionTarget)
+            {
+                optionText = !string.IsNullOrEmpty(optionTarget.ResponseText) ?
+                    optionTarget.ResponseText : "������� ������";
+            }
+            else if (targetNode is OptionNodeImageData)
+            {
+                optionText = "�����������";
+            }
+
+            options.Add(new Option
+            {
+                Text = optionText,
+                NextNodeGuid = link.TargetNodeGuid
+            });
+        }
+
+        // ���������� �������� ������
+        if (options.Count > 0 && optionPanel != null)
+        {
+            optionPanel.ShowOptions(options);
+            currentNode = optionNode;
+        }
+        else
+        {
+            Debug.LogWarning($"No options found for OptionNode {optionNode.Guid}");
+
+            // �������� ����� ��������� ����
+            var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
+            if (nextLink != null)
+            {
+                currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                ProcessNextNode();
+            }
+            else
+            {
+                currentNode = null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// ������������ OptionNodeImageData
+    /// </summary>
+    /// <param name="optionImageNode">������ ���� ����������� ��������� ������</param>
+    private void ProcessOptionImageNode(OptionNodeImageData optionImageNode)
+    {
+        // �������� �������� ������� �� ����
+        var options = new List<Option>();
+
+        // �������� ��������� OptionNodeData ��� ���� �������
+        var optionLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == optionImageNode.Guid)
+            .ToList();
+
+        foreach (var link in optionLinks)
+        {
+            var targetNode = GetNodeByGuid(link.TargetNodeGuid);
+            if (targetNode is OptionNodeData optionTarget)
+            {
+                options.Add(new Option
+                {
+                    Text = optionTarget.ResponseText,
+                    NextNodeGuid = link.TargetNodeGuid
+                });
+            }
+            else if (targetNode is OptionNodeImageData optionImageTarget)
+            {
+                // ��� ����������� ��������� ������
+                options.Add(new Option
+                {
+                    Text = "�����������", // ����������: OptionNodeImageData �� ����� ResponseText
+                    NextNodeGuid = link.TargetNodeGuid
+                });
+            }
+        }
+
+        // ���������� ������ ��������� �������
+        optionPanel.ShowOptions(options);
+
+        // ������������� ������� ���� ��� OptionNode ��� ����������� ��������� ������
+        currentNode = optionImageNode;
+    }
+
+    /// <summary>
+    /// ������������ IntConditionNodeData
+    /// </summary>
+    /// <param name="intCondition">������ ��������� �������</param>
+    private void ProcessIntCondition(IntConditionNodeData intCondition)
+    {
+        // ��������� �������
+        bool conditionResult = ConditionHandler.EvaluateIntCondition(
+            intCondition, intVariables);
+
+        // ���������� ��������� ���� � ����������� �� ����������
+        var nextLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == intCondition.Guid)
+            .ToList();
+
+        // ������� ���������� �����
+        foreach (var link in nextLinks)
+        {
+            if (link.PortName == "True" && conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+            else if (link.PortName == "False" && !conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
+
+        // ���� ���������� ����� �� ������, ��������� ������
+        Debug.LogWarning($"�� ������ ���������� ����� ��� ������� IntConditionNode {intCondition.Guid}");
+        currentNode = null;
+    }
+
+    /// <summary>
+    /// ������������ StringConditionNodeData
+    /// </summary>
+    /// <param name="stringCondition">������ ���������� �������</param>
+    private void ProcessStringCondition(StringConditionNodeData stringCondition)
+    {
+        // ��������� �������
+        bool conditionResult = ConditionHandler.EvaluateStringCondition(
+            stringCondition, stringVariables);
+
+        // ���������� ��������� ���� � ����������� �� ����������
+        var nextLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == stringCondition.Guid)
+            .ToList();
+
+        // ������� ���������� �����
+        foreach (var link in nextLinks)
+        {
+            if (link.PortName == "True" && conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+            else if (link.PortName == "False" && !conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
+
+        // ���� ���������� ����� �� ������, ��������� ������
+        Debug.LogWarning($"�� ������ ���������� ����� ��� ������� StringConditionNode {stringCondition.Guid}");
+        currentNode = null;
+    }
+
+    /// <summary>
+    /// ������������ ModifyIntNodeData
+    /// </summary>
+    /// <param name="modifyNode">������ ������������ �����</param>
+    private void ProcessModifyIntNode(ModifyIntNodeData modifyNode)
+    {
+        // ��������� ������� ����������
+        if (!intVariables.ContainsKey(modifyNode.SelectedProperty))
+        {
+            Debug.LogError($"���������� {modifyNode.SelectedProperty} �� ������� � intVariables");
+            currentNode = null;
+            return;
+        }
+
+        // ��������� ��������
+        switch (modifyNode.Operator)
+        {
+            case OperatorType.Set:
+                intVariables[modifyNode.SelectedProperty] = modifyNode.Value;
+                break;
+            case OperatorType.Add:
+                intVariables[modifyNode.SelectedProperty] += modifyNode.Value;
+                break;
+            case OperatorType.Subtract:
+                intVariables[modifyNode.SelectedProperty] -= modifyNode.Value;
+                break;
+            case OperatorType.Multiply:
+                intVariables[modifyNode.SelectedProperty] *= modifyNode.Value;
+                break;
+            case OperatorType.Divide:
+                if (modifyNode.Value != 0)
+                    intVariables[modifyNode.SelectedProperty] /= modifyNode.Value;
+                else
+                    Debug.LogWarning("������� �� ���� � ModifyIntNode");
+                break;
+            case OperatorType.Increment:
+                intVariables[modifyNode.SelectedProperty]++;
+                break;
+            case OperatorType.Decrement:
+                intVariables[modifyNode.SelectedProperty]--;
+                break;
+        }
+
+        // ������� ��������� ����
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == modifyNode.Guid);
+
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// ������������ EndNodeData
+    /// </summary>
+    /// <param name="endNode">������ ��������� ����</param>
+    private void ProcessEndNode(EndNodeData endNode)
+    {
+        // ��������� ��������� ��������� � ���������� �������
+        var message = new Message
+        {
+            Type = MessageType.System,
+            Text = "������ ��������"
+        };
+        chatPanel.AddMessage(message);
+
+        // ���� ������ ��������� ������, ��������� ���
+        if (!string.IsNullOrEmpty(endNode.NextDialogueName))
+        {
+            DialogueContainer nextDialogue = Resources.Load<DialogueContainer>(endNode.NextDialogueName);
+            if (nextDialogue != null)
+            {
+                StartDialogue(nextDialogue);
+            }
+            else
+            {
+                Debug.LogError($"������ {endNode.NextDialogueName} �� ������ � ��������");
+            }
+        }
+        else
+        {
+            // ��������� ������� ������
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// ������������ ����� �������� ������
+    /// </summary>
+    public void HandleOptionSelection(string nextNodeGuid)
+    {
+        // ��������� ��������� �� ������ � ���
+        var selectedOption = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.TargetNodeGuid == nextNodeGuid);
+
+        if (selectedOption != null)
+        {
+            // ������� ����� ���������� ��������
+            string optionText = "�����: ";
+            var optionNode = GetNodeByGuid(selectedOption.BaseNodeGuid) as OptionNodeData;
+            if (optionNode != null && !string.IsNullOrEmpty(optionNode.ResponseText))
+            {
+                optionText += optionNode.ResponseText;
+            }
+            else
+            {
+                optionText += "������� ������";
+            }
+
+            var message = new Message
+            {
+                Type = MessageType.Player,
+                Text = optionText
+            };
+            chatPanel.AddMessage(message);
+        }
+
+        // ��������� � ���������� ����
+        currentNode = GetNodeByGuid(nextNodeGuid);
+        ProcessNextNode();
+    }
+    /// <summary>
+    /// �������� ���� �� ��� GUID
+    /// </summary>
+    /// <param name="guid">GUID ����</param>
+    /// <returns>BaseNodeData ��� null</returns>
+    private object GetNodeByGuid(string guid)
+    {
+        if (string.IsNullOrEmpty(guid))
+            return null;
+
+        // ���� � ���� ����� �����
+        var speechNode = currentDialogue.SpeechNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechNode != null) return speechNode;
+
+        var speechImageNode = currentDialogue.SpeechNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechImageNode != null) return speechImageNode;
+
+        var optionNode = currentDialogue.OptionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (optionNode != null) return optionNode;
+
+        var optionImageNode = currentDialogue.OptionNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
+        if (optionImageNode != null) return optionImageNode;
+
+        var intConditionNode = currentDialogue.IntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (intConditionNode != null) return intConditionNode;
+
+        var stringConditionNode = currentDialogue.StringConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (stringConditionNode != null) return stringConditionNode;
+
+        var modifyIntNode = currentDialogue.ModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (modifyIntNode != null) return modifyIntNode;
+
+        var endNode = currentDialogue.EndNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (endNode != null) return endNode;
+
+        return currentDialogue.EntryNodeData;
+    }
+
+    /// <summary>
+    /// ������������� ����� � ��������� ����� ����������� ������
+    /// </summary>
+    /// <param name="audioClip">����� ���� ��� ���������������</param>
+    /// <param name="delay">�������� � ��������</param>
+    /// <returns>�������� ��� ��������������� �����</returns>
+    private IEnumerator PlayAudioAfterDelay(AudioClip audioClip, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position);
+    }
+
+    /// <summary>
+    /// ���������� ������� ������
+    /// </summary>
+    public void ResetDialogue()
+    {
+        currentDialogue = null;
+        currentNode = null;
+        visitedNodes.Clear();
+        ResetVariables();
+    }
+
+    /// <summary>
+    /// �������� ��������� �� GUID (�������� ��� runtime)
+    /// </summary>
+    /// <param name="guid">GUID ���������</param>
+    /// <returns>CharacterData ��� null</returns>
+    private CharacterData GetCharacterByGuid(string guid)
+    {
+        // � runtime ��� AssetDatabase, ������� ���������� ��������
+        // � �������� ������� ����� ����������� �������� �� Resources
+        return null;
+    }
+
+    /// <summary>
+    /// ��������������� ����� ��� �������� ������� � runtime
+    /// </summary>
+    public static class AssetLoader
+    {
+        /// <summary>
+        /// ��������� ����� ���� �� GUID (�������� ��� runtime)
+        /// </summary>
+        /// <param name="guid">GUID �����</param>
+        /// <returns>AudioClip ��� null</returns>
+        public static AudioClip LoadAudioClip(string guid)
+        {
+            // � runtime ��� AssetDatabase, ������� ���������� ��������
+            // � �������� ������� ����� ����������� �������� �� Resources
+            return null;
+        }
+
+        /// <summary>
+        /// ��������� ������ �� GUID (�������� ��� runtime)
+        /// </summary>
+        /// <param name="guid">GUID �������</param>
+        /// <returns>Sprite ��� null</returns>
+        public static Sprite LoadSprite(string guid)
+        {
+            // � runtime ��� AssetDatabase, ������� ���������� ��������
+            // � �������� ������� ����� ����������� �������� �� Resources
+            return null;
+        }
+    }
+}
+
+//==== File 6 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Message.cs ====
+using UnityEngine;
+/// <summary>
+/// ������ ������ ��� ��������� � ����
+/// </summary>
 [System.Serializable]
-public class DialogueNodeData
+public class Message
 {
-    public string Guid;
-    public string DialogueText;
-    public Vector2 Position;
+    /// <summary>
+    /// ��� ���������: NPC, ����� ��� ���������
+    /// </summary>
+    public MessageType Type;
+
+    /// <summary>
+    /// ����� ��������� (��� ��������� ���������)
+    /// </summary>
+    public string Text;
+
+    /// <summary>
+    /// ����������� ��� ��������� (������)
+    /// </summary>
+    public Sprite Image;
+
+    /// <summary>
+    /// ����� ��� ��������� ( AudioClip )
+    /// </summary>
+    public AudioClip Audio;
+
+    /// <summary>
+    /// ��������, ����������� ��������� (��� NPC)
+    /// </summary>
+    public CharacterData Sender;
+}
+
+/// <summary>
+/// ���� ��������� � ����
+/// </summary>
+public enum MessageType
+{
+    NPC,      // ��������� �� NPC
+    Player,   // ��������� �� ������
+    System    // ��������� ��������� (��������, "������ ��������")
 }
 
 
-//==== File 6 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueValidator.cs ====
-using UnityEngine;
+//==== File 7 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Option.cs ====
+using System;
 
-public static class DialogueValidator
+/// <summary>
+/// ������ �������� ������
+/// </summary>
+[Serializable]
+public class Option
 {
-    public static void ValidateSpeechNodes(DialogueContainer container)
+    public string Text; // ����� ��������
+    public string NextNodeGuid; // GUID ���������� ����
+}
+
+//==== File 8 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionPanel.cs ====
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class OptionPanel : MonoBehaviour
+{
+    [SerializeField] private GameObject optionButtonPrefab;
+    [SerializeField] private Transform contentContainer;
+
+    public event Action<string> onOptionSelected;
+
+    /// <summary>
+    /// ���������� ������ � ���������� �������
+    /// </summary>
+    public void ShowOptions(List<Option> options)
     {
-        foreach (var nodeData in container.SpeechNodeDatas)
+        if (optionButtonPrefab == null || contentContainer == null)
         {
-            if (string.IsNullOrEmpty(nodeData.SpeakerGuid) ||
-                !AssetDatabaseHelper.IsValidGuid(nodeData.SpeakerGuid))
+            Debug.LogError("OptionPanel references not set!");
+            return;
+        }
+
+        // ������� ���������� ������
+        foreach (Transform child in contentContainer)
+            Destroy(child.gameObject);
+
+        // ������� ������ ��� ������� ��������
+        foreach (var option in options)
+        {
+            var buttonGO = Instantiate(optionButtonPrefab, contentContainer);
+            var button = buttonGO.GetComponent<Button>();
+            var buttonText = buttonGO.GetComponentInChildren<Text>();
+
+            if (buttonText != null)
+                buttonText.text = option.Text;
+            else
+                Debug.LogError("Text component not found in option button prefab");
+
+            if (button != null)
             {
-                Debug.LogError($"SpeechNode (GUID: {nodeData.Guid}) has no speaker assigned! Text: \"{nodeData.DialogueText}\"");
+                button.onClick.AddListener(() =>
+                {
+                    onOptionSelected?.Invoke(option.NextNodeGuid);
+                    Hide();
+                });
             }
         }
+
+        gameObject.SetActive(true);
+    }
+
+    /// <summary>
+    /// �������� ������ ���������
+    /// </summary>
+    public void Hide()
+    {
+        gameObject.SetActive(false);
     }
 }
 
-//==== File 7 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionNodeImageData.cs ====
-using UnityEngine;
-using System;
-
-[Serializable]
-public class OptionNodeImageData
-{
-    public string Guid;
-    public Vector2 Position;
-    public string ImageSpriteGuid;
-
-    public string NodeType;
-}
-
-//==== File 8 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechNodeImageData.cs ====
-using UnityEngine;
-using System;
-
-[Serializable]
-public class SpeechNodeImageData
-{
-    public string Guid;
-    public Vector2 Position;
-    public string ImageSpriteGuid;
-
-    public string NodeType;
-    public string SpeakerGuid;
-}
-
-//==== File 9 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
+//==== File 9 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -524,7 +1128,7 @@ public class DialogueGraph : EditorWindow
     }
 }
 
-//==== File 10 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
+//==== File 10 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -1085,7 +1689,50 @@ public class DialogueGraphView : GraphView
     }
 }
 
-//==== File 11 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
+//==== File 11 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueNode.cs ====
+using UnityEditor.Experimental.GraphView;
+using UnityEngine.UIElements;
+using UnityEngine;
+
+public class DialogueNode : BaseNode
+{
+    public string DialogueText { get; set; }
+    private TextField textField;
+
+    public override void Initialize(Vector2 position)
+    {
+        base.Initialize(position);
+        title = "Dialogue Node";
+        DialogueText = "New Dialogue";
+
+        // ��������� ������� ����
+        var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
+        inputPort.portName = "Input";
+        inputContainer.Add(inputPort);
+
+        // ��������� �������� ����
+        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        outputPort.portName = "Next";
+        outputContainer.Add(outputPort);
+
+        // ��������� ���� ��� �������
+        textField = new TextField(string.Empty);
+        textField.multiline = true;
+        textField.RegisterValueChangedCallback(evt =>
+        {
+            DialogueText = evt.newValue;
+            title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
+        });
+        textField.SetValueWithoutNotify(DialogueText);
+        mainContainer.Add(textField);
+
+        RefreshExpandedState();
+        RefreshPorts();
+    }
+}
+
+
+//==== File 12 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -1182,7 +1829,275 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     }
 }
 
-//==== File 12 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
+//==== File 13 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\Characters\CharacterData.cs ====
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "NewCharacter", menuName = "Dialogue System/Character Data")]
+public class CharacterData : ScriptableObject
+{
+    [Header("Basic Info")]
+    public string FirstName = "New";
+    public string LastName = "Character";
+    public Sprite Icon;
+    [TextArea(3, 10)] public string Description = "";
+    public Color NameColor = Color.white;
+
+    [Header("Variables")]
+    public List<CharacterVariable> Variables = new List<CharacterVariable>();
+
+    public void AddVariable(string variableName = "NewVariable", int initialValue = 0)
+    {
+        Variables.Add(new CharacterVariable(variableName, initialValue));
+    }
+
+    public void RemoveVariable(int index)
+    {
+        if (index >= 0 && index < Variables.Count)
+            Variables.RemoveAt(index);
+    }
+
+    public bool TryGetVariable(string variableName, out CharacterVariable variable)
+    {
+        variable = Variables.Find(v => v.VariableName == variableName);
+        return variable != null;
+    }
+}
+
+[System.Serializable]
+public class CharacterVariable
+{
+    public string VariableName = "NewVariable";
+    public int Value = 0;
+
+    public CharacterVariable(string name, int value)
+    {
+        VariableName = name;
+        Value = value;
+    }
+}
+
+//==== File 14 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Characters\CharacterEditorWindow.cs ====
+using UnityEditor;
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+public class CharacterEditorWindow : EditorWindow
+{
+    private List<CharacterData> characters = new List<CharacterData>();
+    private CharacterData selectedCharacter;
+    private Vector2 scrollPosition;
+    private string searchString = "";
+
+    // ��������� ���������� ��� ���������
+    private Vector2 characterListScrollPosition;
+    private Vector2 variablesScrollPosition;
+    private int variableToRemove = -1;
+
+    [MenuItem("Dialog System/Character Editor")]
+    public static void ShowWindow()
+    {
+        GetWindow<CharacterEditorWindow>("Character Editor");
+    }
+
+    private void OnEnable()
+    {
+        RefreshCharacterList();
+    }
+
+    private void OnGUI()
+    {
+        DrawToolbar();
+
+        EditorGUILayout.BeginHorizontal();
+        DrawCharacterList();
+        DrawCharacterDetails();
+        EditorGUILayout.EndHorizontal();
+
+        // ������������ �������� ���������� ����� ��������� GUI
+        if (variableToRemove != -1)
+        {
+            selectedCharacter.RemoveVariable(variableToRemove);
+            variableToRemove = -1;
+            GUIUtility.ExitGUI(); // ������� �� �������� GUI �����
+        }
+    }
+
+    private void DrawToolbar()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+        if (GUILayout.Button("Create New", EditorStyles.toolbarButton))
+        {
+            CreateNewCharacter();
+        }
+
+        if (GUILayout.Button("Save", EditorStyles.toolbarButton) && selectedCharacter != null)
+        {
+            SaveCharacter();
+        }
+
+        if (GUILayout.Button("Delete", EditorStyles.toolbarButton) && selectedCharacter != null)
+        {
+            DeleteCharacter();
+        }
+
+        GUILayout.FlexibleSpace();
+
+        searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawCharacterList()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.Width(250));
+        EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
+
+        // ��������� ��������� ��� ������ ����������
+        characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
+
+        var filteredCharacters = string.IsNullOrEmpty(searchString)
+            ? characters
+            : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
+
+        foreach (var character in filteredCharacters)
+        {
+            var isSelected = selectedCharacter == character;
+            if (GUILayout.Toggle(isSelected, character.name, EditorStyles.toolbarButton) && !isSelected)
+            {
+                selectedCharacter = character;
+            }
+        }
+
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawCharacterDetails()
+    {
+        EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+
+        if (selectedCharacter == null)
+        {
+            EditorGUILayout.HelpBox("Select a character or create a new one", UnityEditor.MessageType.Info);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+
+        EditorGUI.BeginChangeCheck();
+
+        // Basic Info
+        EditorGUILayout.LabelField("Basic Information", EditorStyles.boldLabel);
+        selectedCharacter.FirstName = EditorGUILayout.TextField("First Name", selectedCharacter.FirstName);
+        selectedCharacter.LastName = EditorGUILayout.TextField("Last Name", selectedCharacter.LastName);
+        selectedCharacter.Icon = (Sprite)EditorGUILayout.ObjectField("Icon", selectedCharacter.Icon, typeof(Sprite), false);
+        selectedCharacter.Description = EditorGUILayout.TextArea(selectedCharacter.Description, GUILayout.Height(60));
+        selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
+
+        EditorGUILayout.Space();
+
+        // Variables
+        EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
+
+        // ��������� ��������� ��� ������ ����������
+        variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
+
+        for (int i = 0; i < selectedCharacter.Variables.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            selectedCharacter.Variables[i].VariableName = EditorGUILayout.TextField(
+                GUIContent.none,
+                selectedCharacter.Variables[i].VariableName);
+
+            selectedCharacter.Variables[i].Value = EditorGUILayout.IntField(
+                GUIContent.none,
+                selectedCharacter.Variables[i].Value);
+
+            if (GUILayout.Button("X", GUILayout.Width(20)))
+            {
+                // ���������� ������ ��� ��������, �� ������� ����� ��������� GUI
+                variableToRemove = i;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndScrollView();
+
+        if (GUILayout.Button("Add Variable"))
+        {
+            selectedCharacter.AddVariable();
+        }
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            EditorUtility.SetDirty(selectedCharacter);
+        }
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void CreateNewCharacter()
+    {
+        var newCharacter = CreateInstance<CharacterData>();
+        newCharacter.name = "NewCharacter";
+
+        var path = EditorUtility.SaveFilePanelInProject(
+            "Create Character",
+            "NewCharacter",
+            "asset",
+            "Please enter a file name to save the character");
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            AssetDatabase.CreateAsset(newCharacter, path);
+            AssetDatabase.SaveAssets();
+            RefreshCharacterList();
+            selectedCharacter = newCharacter;
+        }
+    }
+
+    private void SaveCharacter()
+    {
+        EditorUtility.SetDirty(selectedCharacter);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Character {selectedCharacter.name} saved successfully");
+    }
+
+    private void DeleteCharacter()
+    {
+        if (EditorUtility.DisplayDialog(
+            "Delete Character",
+            $"Are you sure you want to delete {selectedCharacter.name}?",
+            "Delete",
+            "Cancel"))
+        {
+            var path = AssetDatabase.GetAssetPath(selectedCharacter);
+            AssetDatabase.DeleteAsset(path);
+            RefreshCharacterList();
+            selectedCharacter = null;
+        }
+    }
+
+    private void RefreshCharacterList()
+    {
+        characters.Clear();
+        var guids = AssetDatabase.FindAssets("t:CharacterData");
+
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var character = AssetDatabase.LoadAssetAtPath<CharacterData>(path);
+            if (character != null)
+                characters.Add(character);
+        }
+    }
+}
+
+//==== File 15 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1220,7 +2135,7 @@ public class EndNode : BaseNode
 }
 
 
-//==== File 13 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
+//==== File 16 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -1258,7 +2173,7 @@ public class EntryNode : BaseNode
     }
 }
 
-//==== File 14 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
+//==== File 17 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -1340,7 +2255,7 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 15 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
+//==== File 18 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using DialogueSystem;
@@ -1452,7 +2367,7 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     }
 }
 
-//==== File 16 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
+//==== File 19 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1518,7 +2433,7 @@ public class OptionNode : BaseNode
     }
 }
 
-//==== File 17 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
+//==== File 20 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1543,7 +2458,7 @@ public class OptionNodeAudio : OptionNode
     }
 }
 
-//==== File 18 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
+//==== File 21 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1589,7 +2504,7 @@ public class OptionNodeImage : OptionNode
 }
 
 
-//==== File 19 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
+//==== File 22 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1614,7 +2529,7 @@ public class OptionNodeText : OptionNode
     }
 }
 
-//==== File 20 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
+//==== File 23 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -1717,7 +2632,7 @@ public class SpeechNode : BaseNode
     }
 }
 
-//==== File 21 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
+//==== File 24 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1742,7 +2657,7 @@ public class SpeechNodeAudio : SpeechNode
     }
 }
 
-//==== File 22 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
+//==== File 25 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1788,7 +2703,7 @@ public class SpeechNodeImage : SpeechNode
 }
 
 
-//==== File 23 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
+//==== File 26 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -1813,7 +2728,7 @@ public class SpeechNodeText : SpeechNode
     }
 }
 
-//==== File 24 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
+//==== File 27 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -1902,7 +2817,54 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 25 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
+//==== File 28 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\AssetDatabaseHelper.cs ====
+using UnityEditor;
+using UnityEngine;
+
+public static class AssetDatabaseHelper
+{
+    public static string GetAssetGuid(Object asset)
+    {
+        if (asset == null) return string.Empty;
+        return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
+    }
+
+    public static T LoadAssetFromGuid<T>(string guid) where T : Object
+    {
+        if (string.IsNullOrEmpty(guid)) return null;
+        string path = AssetDatabase.GUIDToAssetPath(guid);
+        return AssetDatabase.LoadAssetAtPath<T>(path);
+    }
+
+    public static bool IsValidGuid(string guid)
+    {
+        if (string.IsNullOrEmpty(guid)) return false;
+        string path = AssetDatabase.GUIDToAssetPath(guid);
+        return !string.IsNullOrEmpty(path) && AssetDatabase.LoadAssetAtPath<Object>(path) != null;
+    }
+}
+
+
+//==== File 29 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\DialogueValidator.cs ====
+using UnityEngine;
+
+
+public static class DialogueValidator
+{
+    public static void ValidateSpeechNodes(DialogueContainer container)
+    {
+        foreach (var nodeData in container.SpeechNodeDatas)
+        {
+            if (string.IsNullOrEmpty(nodeData.SpeakerGuid) ||
+                !AssetDatabaseHelper.IsValidGuid(nodeData.SpeakerGuid))
+            {
+                Debug.LogError($"SpeechNode (GUID: {nodeData.Guid}) has no speaker assigned! Text: \"{nodeData.DialogueText}\"");
+            }
+        }
+    }
+}
+
+//==== File 30 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -2436,7 +3398,7 @@ public class GraphSaveUtility
     #endregion
 }
 
-//==== File 26 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
+//==== File 31 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
 using UnityEngine;
 using UnityEditor;
 
@@ -2630,7 +3592,7 @@ public static class NodeFactory
 
 }
 
-//==== File 27 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
+//==== File 32 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -2657,7 +3619,7 @@ public abstract class BaseConditionNode : BaseNode
 }
 
 
-//==== File 28 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
+//==== File 33 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
@@ -2682,13 +3644,13 @@ public abstract class BaseNode : Node
 }
 
 
-//==== File 29 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
+//==== File 34 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
 public interface IPropertyNode
 {
     void RefreshPropertyDropdown();
 }
 
-//==== File 30 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
+//==== File 35 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -2739,7 +3701,7 @@ public class DialogueContainer : ScriptableObject
 }
 
 
-//==== File 31 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
+//==== File 36 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -2752,7 +3714,7 @@ public class ExposedProperty
     public string PropertyValue = "New Value";   // �������� ��������
 }
 
-//==== File 32 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
+//==== File 37 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
 [System.Serializable]
 public class IntExposedProperty
 {
@@ -2763,7 +3725,7 @@ public class IntExposedProperty
 }
 
 
-//==== File 33 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
+//==== File 38 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
 [System.Serializable]
 public class NodeLinkData
 {
@@ -2773,7 +3735,7 @@ public class NodeLinkData
 }
 
 
-//==== File 34 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
+//==== File 39 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
 [System.Serializable]
 public class StringExposedProperty
 {
@@ -2782,7 +3744,7 @@ public class StringExposedProperty
 }
 
 
-//==== File 35 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
+//==== File 40 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
 namespace DialogueSystem
 {
     public enum ComparisonType
@@ -2815,19 +3777,17 @@ namespace DialogueSystem
 }
 
 
-//==== File 36 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+//==== File 41 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
 using UnityEngine;
 using System;
 
 [Serializable]
-public class EndNodeData
+public class EndNodeData : BaseNodeData
 {
-    public string Guid;
-    public Vector2 Position;
     public string NextDialogueName;
 }
 
-//==== File 37 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
+//==== File 42 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2835,17 +3795,13 @@ using System;
 /// ������ ���������� ���� ��� ������������
 /// </summary>
 [Serializable]
-public class EntryNodeData
+public class EntryNodeData : BaseNodeData
 {
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
 
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
 }
 
 
-//==== File 38 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+//==== File 43 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -2861,23 +3817,21 @@ public class IntConditionNodeData
 }
 
 
-//==== File 39 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+//==== File 44 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
 
 [Serializable]
-public class ModifyIntNodeData
+public class ModifyIntNodeData : BaseNodeData
 {
-    public string Guid;
-    public Vector2 Position;
     public string SelectedProperty;
     public OperatorType Operator;
     public int Value;
 }
 
 
-//==== File 40 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
+//==== File 45 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2885,16 +3839,10 @@ using System;
 /// ������ ���� �������� ������ ������ ��� ������������
 /// </summary>
 [Serializable]
-public class OptionNodeData
+public class OptionNodeData : BaseNodeData
 {
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
-
     [TextArea, Tooltip("Response text content")]
     public string ResponseText;
-
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
 
     [Tooltip("GUID of the audio clip asset")]
     public string AudioClipGuid;
@@ -2903,7 +3851,19 @@ public class OptionNodeData
 }
 
 
-//==== File 41 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
+//==== File 46 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeImageData.cs ====
+using UnityEngine;
+using System;
+
+[Serializable]
+public class OptionNodeImageData : BaseNodeData
+{
+    public string ImageSpriteGuid;
+
+    public string NodeType;
+}
+
+//==== File 47 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -2911,16 +3871,10 @@ using System;
 /// ������ ���� ���� NPC ��� ������������
 /// </summary>
 [Serializable]
-public class SpeechNodeData
+public class SpeechNodeData : BaseNodeData
 {
-    [Tooltip("Unique identifier for the node")]
-    public string Guid;
-
     [TextArea, Tooltip("Dialogue text content")]
     public string DialogueText;
-
-    [Tooltip("Position in the graph view")]
-    public Vector2 Position;
 
     [Tooltip("GUID of the audio clip asset")]
     public string AudioClipGuid;
@@ -2932,16 +3886,27 @@ public class SpeechNodeData
 }
 
 
-//==== File 42 of 42: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
+//==== File 48 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeImageData.cs ====
+using UnityEngine;
+using System;
+
+[Serializable]
+public class SpeechNodeImageData : BaseNodeData
+{
+    public string ImageSpriteGuid;
+
+    public string NodeType;
+    public string SpeakerGuid;
+}
+
+//==== File 49 of 49: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
 
 [Serializable]
-public class StringConditionNodeData
+public class StringConditionNodeData : BaseNodeData
 {
-    public string Guid;
-    public Vector2 Position;
     public string SelectedProperty;
     public StringComparisonType Comparison;
     public string CompareValue;
@@ -2950,10 +3915,10 @@ public class StringConditionNodeData
 
 
 // ============ Statistics =============
-// Total Files: 42
-// Total Size: 97,61 KB
-// Total Lines: 2861
-// Classes: 41
-// Methods: 177
-// Comments: 328
+// Total Files: 49
+// Total Size: 128,64 KB
+// Total Lines: 3812
+// Classes: 49
+// Methods: 233
+// Comments: 526
 // =====================================

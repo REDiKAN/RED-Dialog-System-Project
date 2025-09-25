@@ -2,9 +2,7 @@ using UnityEngine;
 using System;
 
 [Serializable]
-public class EndNodeData
+public class EndNodeData : BaseNodeData
 {
-    public string Guid;
-    public Vector2 Position;
     public string NextDialogueName;
 }

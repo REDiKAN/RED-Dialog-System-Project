@@ -101,7 +101,7 @@ public class CharacterEditorWindow : EditorWindow
 
         if (selectedCharacter == null)
         {
-            EditorGUILayout.HelpBox("Select a character or create a new one", MessageType.Info);
+            EditorGUILayout.HelpBox("Select a character or create a new one", UnityEditor.MessageType.Info);
             EditorGUILayout.EndVertical();
             return;
         }

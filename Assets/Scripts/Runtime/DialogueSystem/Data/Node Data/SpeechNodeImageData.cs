@@ -2,10 +2,8 @@ using UnityEngine;
 using System;
 
 [Serializable]
-public class SpeechNodeImageData
+public class SpeechNodeImageData : BaseNodeData
 {
-    public string Guid;
-    public Vector2 Position;
     public string ImageSpriteGuid;
 
     public string NodeType;

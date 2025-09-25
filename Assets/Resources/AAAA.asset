@@ -10,23 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
-  m_Name: New Narrative
+  m_Name: AAAA
   m_EditorClassIdentifier: 
   EntryNodeData:
-    Guid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
+    Guid: ed137263-8410-448a-8b23-4806e8ee320a
     Position: {x: 100, y: 200}
   NodeLinks:
-  - BaseNodeGuid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
+  - BaseNodeGuid: ed137263-8410-448a-8b23-4806e8ee320a
     PortName: Next
-    TargetNodeGuid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
+    TargetNodeGuid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
+  - BaseNodeGuid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
+    PortName: Next
+    TargetNodeGuid: d39e1e31-1b46-43f2-b7ad-f13034362dff
+  - BaseNodeGuid: d39e1e31-1b46-43f2-b7ad-f13034362dff
+    PortName: Next
+    TargetNodeGuid: fb0725c3-c674-4688-84e9-9e0d7bb75658
   SpeechNodeDatas:
-  - Guid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
-    Position: {x: 237, y: 200}
+  - Guid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
+    Position: {x: 243, y: 200}
+    DialogueText: 111
+    AudioClipGuid: 
+    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
+    NodeType: SpeechNodeText
+  - Guid: fb0725c3-c674-4688-84e9-9e0d7bb75658
+    Position: {x: 955, y: 200}
     DialogueText: New Dialogue
     AudioClipGuid: 
     SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
     NodeType: SpeechNodeText
-  OptionNodeDatas: []
+  OptionNodeDatas:
+  - Guid: d39e1e31-1b46-43f2-b7ad-f13034362dff
+    Position: {x: 665, y: 200}
+    ResponseText: Hi
+    AudioClipGuid: 
+    NodeType: OptionNodeText
   ExposedProperties: []
   IntExposedProperties: []
   StringExposedProperties: []
