@@ -40,7 +40,7 @@ public class OptionNode : BaseNode
         responseTextField.RegisterValueChangedCallback(evt =>
         {
             ResponseText = evt.newValue;
-            title = ResponseText.Length > 15 ? ResponseText.Substring(0, 15) + "..." : ResponseText;
+            //title = ResponseText.Length > 15 ? ResponseText.Substring(0, 15) + "..." : ResponseText;
         });
         responseTextField.SetValueWithoutNotify(ResponseText);
         mainContainer.Add(responseTextField);

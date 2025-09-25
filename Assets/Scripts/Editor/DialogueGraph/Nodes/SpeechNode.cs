@@ -45,7 +45,7 @@ public class SpeechNode : BaseNode
         dialogueTextField.RegisterValueChangedCallback(evt =>
         {
             DialogueText = evt.newValue;
-            title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
+            //title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
         });
         dialogueTextField.SetValueWithoutNotify(DialogueText);
         mainContainer.Add(dialogueTextField);
