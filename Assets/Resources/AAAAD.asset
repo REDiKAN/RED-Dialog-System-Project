@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: AAAAD
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: d45104e1-f9c3-48a5-9885-bace44a79f42
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: d45104e1-f9c3-48a5-9885-bace44a79f42
+    PortName: Next
+    TargetNodeGuid: 879ffc3a-6d25-443b-9fd7-2400f2d8b1b5
+  - BaseNodeGuid: 879ffc3a-6d25-443b-9fd7-2400f2d8b1b5
+    PortName: Next
+    TargetNodeGuid: 1b498699-9e16-480d-9fbc-e2c46687d2f9
+  - BaseNodeGuid: 879ffc3a-6d25-443b-9fd7-2400f2d8b1b5
+    PortName: Next
+    TargetNodeGuid: b86ec194-1a4d-403e-a127-124d00ad74dc
+  - BaseNodeGuid: 1b498699-9e16-480d-9fbc-e2c46687d2f9
+    PortName: Next
+    TargetNodeGuid: 9923bbd8-36f9-40ee-8484-b731826b46f5
+  - BaseNodeGuid: b86ec194-1a4d-403e-a127-124d00ad74dc
+    PortName: Next
+    TargetNodeGuid: 9923bbd8-36f9-40ee-8484-b731826b46f5
+  SpeechNodeDatas:
+  - Guid: 879ffc3a-6d25-443b-9fd7-2400f2d8b1b5
+    Position: {x: 244, y: 200}
+    DialogueText: 1111
+    AudioClipGuid: 
+    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
+    NodeType: SpeechNodeText
+  - Guid: 9923bbd8-36f9-40ee-8484-b731826b46f5
+    Position: {x: 941, y: 232}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 
+    NodeType: SpeechNodeText
+  OptionNodeDatas:
+  - Guid: 1b498699-9e16-480d-9fbc-e2c46687d2f9
+    Position: {x: 675, y: 102}
+    ResponseText: gggg
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: b86ec194-1a4d-403e-a127-124d00ad74dc
+    Position: {x: 695, y: 334}
+    ResponseText: ggggg
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 

@@ -20,6 +20,8 @@ public class DialogueGraphView : GraphView
     public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
     public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
 
+    private VisualElement[] BlackboardSections;
+
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
 
@@ -226,38 +228,67 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Создает черную доску для exposed properties
+    /// Создать черную доску для exposed properties с поддержкой скроллинга
     /// </summary>
     private void GenerateBlackBoard()
     {
         Blackboard = new Blackboard(this);
         Blackboard.title = "Exposed Properties";
 
-        // Создаем отдельные секции для разных типов свойств
-        var intSection = new BlackboardSection { title = "Int Properties" };
-        var stringSection = new BlackboardSection { title = "String Properties" };
+        // Устанавливаем фиксированные размеры для Blackboard
+        Blackboard.style.minWidth = 300;
+        Blackboard.style.maxWidth = 400;
+        Blackboard.style.minHeight = 200;
+        Blackboard.style.maxHeight = 500;
 
-        Blackboard.Add(intSection);
-        Blackboard.Add(stringSection);
+        // Создаем основной скроллвью
+        var scrollView = new ScrollView();
+        scrollView.style.flexGrow = 1;
+        scrollView.verticalScrollerVisibility = ScrollerVisibility.Auto;
+        scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
 
-        // Обработчик добавления нового свойства
+        // Создаем секции для разных типов свойств
+        var intSection = new BlackboardSection { title = "Int Properties (0)" };
+        var stringSection = new BlackboardSection { title = "String Properties (0)" };
+
+        // Добавляем секции в скроллвью
+        scrollView.Add(intSection);
+        scrollView.Add(stringSection);
+
+        // Добавляем скроллвью в Blackboard
+        Blackboard.Add(scrollView);
+
+        // Сохраняем ссылки на секции для последующего использования
+        IntSection = intSection;
+        StringSection = stringSection;
+
+        // Функционал добавления новых свойств
         Blackboard.addItemRequested = blackboard =>
         {
-            // Создаем меню для выбора типа свойства
             var menu = new GenericMenu();
             menu.AddItem(new GUIContent("Add Int Property"), false, () =>
-                AddPropertyToBlackBoard(new IntExposedProperty()));
+            {
+                var newProperty = new IntExposedProperty();
+                IntExposedProperties.Add(newProperty);
+                AddIntPropertyToBlackBoard(newProperty);
+                UpdateSectionTitles();
+            });
             menu.AddItem(new GUIContent("Add String Property"), false, () =>
-                AddPropertyToBlackBoard(new StringExposedProperty()));
+            {
+                var newProperty = new StringExposedProperty();
+                StringExposedProperties.Add(newProperty);
+                AddStringPropertyToBlackBoard(newProperty);
+                UpdateSectionTitles();
+            });
             menu.ShowAsContext();
         };
 
-        // Обработчик редактирования имени свойства (только для старых свойств, если они еще используются)
+        // Функционал редактирования имен свойств
         Blackboard.editTextRequested = (blackboard, element, newValue) =>
         {
             var oldPropertyName = ((BlackboardField)element).text;
 
-            // Проверяем оба типа свойств на уникальность имени
+            // Проверяем уникальность имени свойства
             if (IntExposedProperties.Any(x => x.PropertyName == newValue) ||
                 StringExposedProperties.Any(x => x.PropertyName == newValue))
             {
@@ -265,28 +296,341 @@ public class DialogueGraphView : GraphView
                 return;
             }
 
-            // Ищем свойство в Int свойствах
+            // Обновляем имя в Int свойствах
             var intPropertyIndex = IntExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (intPropertyIndex >= 0)
             {
                 IntExposedProperties[intPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
+
+                // Обновляем все узлы, которые используют это свойство
+                RefreshAllPropertyNodes();
                 return;
             }
 
-            // Ищем свойство в String свойствах
+            // Обновляем имя в String свойствах
             var stringPropertyIndex = StringExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (stringPropertyIndex >= 0)
             {
                 StringExposedProperties[stringPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
+
+                // Обновляем все узлы, которые используют это свойство
+                RefreshAllPropertyNodes();
             }
         };
 
-        // Добавляем черную доску в граф
+        // Добавляем кнопку очистки всех свойств
+        var clearButton = new Button(ClearAllProperties)
+        {
+            text = "Clear All Properties"
+        };
+
+        clearButton.style.marginTop = 5;
+        clearButton.style.marginLeft = 5;
+        clearButton.style.marginRight = 5;
+        clearButton.style.marginBottom = 5;
+        Blackboard.Add(clearButton);
+
+        // Добавляем Blackboard в граф
         Add(Blackboard);
+
+        // Обновляем отображение количества свойств
+        UpdateSectionTitles();
     }
 
+    // Добавьте эти поля в класс DialogueGraphView:
+    private BlackboardSection IntSection;
+    private BlackboardSection StringSection;
+
+    /// <summary>
+    /// Добавить Int свойство на черную доску
+    /// </summary>
+    private void AddIntPropertyToBlackBoard(IntExposedProperty intProperty)
+    {
+        var container = new VisualElement();
+        container.style.marginBottom = 5;
+
+        var blackboardField = new BlackboardField
+        {
+            text = intProperty.PropertyName,
+            typeText = "Int"
+        };
+
+        // Поля для редактирования свойства
+        var nameField = new TextField("Name:") { value = intProperty.PropertyName };
+        var minField = new IntegerField("Min:") { value = intProperty.MinValue };
+        var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
+        var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
+
+        // Обработчики изменений
+        nameField.RegisterValueChangedCallback(evt =>
+        {
+            intProperty.PropertyName = evt.newValue;
+            blackboardField.text = evt.newValue;
+            UpdateSectionTitles();
+            RefreshAllPropertyNodes();
+        });
+
+        minField.RegisterValueChangedCallback(evt =>
+        {
+            intProperty.MinValue = evt.newValue;
+            if (intProperty.IntValue < evt.newValue)
+                valueField.value = evt.newValue;
+        });
+
+        maxField.RegisterValueChangedCallback(evt =>
+        {
+            intProperty.MaxValue = evt.newValue;
+            if (intProperty.IntValue > evt.newValue)
+                valueField.value = evt.newValue;
+        });
+
+        valueField.RegisterValueChangedCallback(evt =>
+        {
+            intProperty.IntValue = Mathf.Clamp(evt.newValue, intProperty.MinValue, intProperty.MaxValue);
+            valueField.value = intProperty.IntValue;
+        });
+
+        container.Add(blackboardField);
+        container.Add(nameField);
+        container.Add(minField);
+        container.Add(maxField);
+        container.Add(valueField);
+
+        // Добавляем в секцию Int свойств
+        IntSection.Add(container);
+
+        // Контекстное меню для удаления
+        blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
+        {
+            evt.menu.AppendAction("Delete", action =>
+            {
+                // Проверяем использование свойства
+                int usageCount = 0;
+                var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
+                var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
+
+                foreach (var node in conditionNodes)
+                {
+                    if (node.SelectedProperty == intProperty.PropertyName)
+                        usageCount++;
+                }
+
+                foreach (var node in modifyNodes)
+                {
+                    if (node.SelectedProperty == intProperty.PropertyName)
+                        usageCount++;
+                }
+
+                // Подтверждение удаления
+                if (EditorUtility.DisplayDialog("Confirm Delete",
+                    $"Property '{intProperty.PropertyName}' is used in {usageCount} nodes.\nDelete anyway?",
+                    "Delete", "Cancel"))
+                {
+                    RemoveIntProperty(intProperty, container);
+                }
+            });
+        }));
+    }
+
+    /// <summary>
+    /// Добавить String свойство на черную доску
+    /// </summary>
+    private void AddStringPropertyToBlackBoard(StringExposedProperty stringProperty)
+    {
+        var container = new VisualElement();
+        container.style.marginBottom = 5;
+
+        var blackboardField = new BlackboardField
+        {
+            text = stringProperty.PropertyName,
+            typeText = "String"
+        };
+
+        var nameField = new TextField("Name:") { value = stringProperty.PropertyName };
+        var valueField = new TextField("Value:") { value = stringProperty.StringValue };
+
+        nameField.RegisterValueChangedCallback(evt =>
+        {
+            stringProperty.PropertyName = evt.newValue;
+            blackboardField.text = evt.newValue;
+            UpdateSectionTitles();
+            RefreshAllPropertyNodes();
+        });
+
+        valueField.RegisterValueChangedCallback(evt =>
+        {
+            stringProperty.StringValue = evt.newValue;
+        });
+
+        container.Add(blackboardField);
+        container.Add(nameField);
+        container.Add(valueField);
+
+        // Добавляем в секцию String свойств
+        StringSection.Add(container);
+
+        // Контекстное меню для удаления
+        blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
+        {
+            evt.menu.AppendAction("Delete", action =>
+            {
+                // Проверяем использование свойства
+                int usageCount = 0;
+                var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
+                foreach (var node in conditionNodes)
+                {
+                    if (node.SelectedProperty == stringProperty.PropertyName)
+                        usageCount++;
+                }
+
+                // Подтверждение удаления
+                if (EditorUtility.DisplayDialog("Confirm Delete",
+                    $"Property '{stringProperty.PropertyName}' is used in {usageCount} condition nodes.\nDelete anyway?",
+                    "Delete", "Cancel"))
+                {
+                    RemoveStringProperty(stringProperty, container);
+                }
+            });
+        }));
+    }
+
+    /// <summary>
+    /// Удалить Int свойство
+    /// </summary>
+    private void RemoveIntProperty(IntExposedProperty property, VisualElement container)
+    {
+        // Удаляем из списка
+        IntExposedProperties.Remove(property);
+
+        // Очищаем узлы, которые использовали это свойство
+        var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
+        var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
+
+        foreach (var node in conditionNodes)
+        {
+            if (node.SelectedProperty == property.PropertyName)
+            {
+                node.SelectedProperty = "";
+                Debug.LogWarning($"Variable {property.PropertyName} was removed but was used in IntConditionNode {node.GUID}");
+            }
+        }
+
+        foreach (var node in modifyNodes)
+        {
+            if (node.SelectedProperty == property.PropertyName)
+            {
+                node.SelectedProperty = "";
+                Debug.LogWarning($"Variable {property.PropertyName} was removed but was used in ModifyIntNode {node.GUID}");
+            }
+        }
+
+        // Обновляем все узлы, которые используют свойства
+        RefreshAllPropertyNodes();
+
+        // Удаляем визуальный элемент
+        IntSection.Remove(container);
+
+        // Обновляем заголовок секции
+        UpdateSectionTitles();
+    }
+
+    /// <summary>
+    /// Удалить String свойство
+    /// </summary>
+    private void RemoveStringProperty(StringExposedProperty property, VisualElement container)
+    {
+        // Удаляем из списка
+        StringExposedProperties.Remove(property);
+
+        // Очищаем узлы, которые использовали это свойство
+        var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
+        foreach (var node in conditionNodes)
+        {
+            if (node.SelectedProperty == property.PropertyName)
+            {
+                node.SelectedProperty = "";
+                Debug.LogWarning($"Variable {property.PropertyName} was removed but was used in StringConditionNode {node.GUID}");
+            }
+        }
+
+        // Обновляем все узлы, которые используют свойства
+        RefreshAllPropertyNodes();
+
+        // Удаляем визуальный элемент
+        StringSection.Remove(container);
+
+        // Обновляем заголовок секции
+        UpdateSectionTitles();
+    }
+
+    /// <summary>
+    /// Вспомогательный метод для обновления заголовков секций с количеством свойств
+    /// </summary>
+    private void UpdateSectionTitles()
+    {
+        if (IntSection != null)
+        {
+            IntSection.title = $"Int Properties ({IntExposedProperties.Count})";
+        }
+
+        if (StringSection != null)
+        {
+            StringSection.title = $"String Properties ({StringExposedProperties.Count})";
+        }
+    }
+
+    /// <summary>
+    /// Вспомогательный метод для обновления всех узлов, использующих свойства
+    /// </summary>
+    private void RefreshAllPropertyNodes()
+    {
+        var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
+        foreach (var node in allPropertyNodes)
+        {
+            node.RefreshPropertyDropdown();
+        }
+    }
+
+    /// <summary>
+    /// Вспомогательный метод для очистки всех свойств
+    /// </summary>
+    private void ClearAllProperties()
+    {
+        if (!EditorUtility.DisplayDialog("Clear All Properties",
+            "Are you sure you want to remove all exposed properties?", "Yes", "No"))
+        {
+            return;
+        }
+
+        // Очищаем списки свойств
+        IntExposedProperties.Clear();
+        StringExposedProperties.Clear();
+
+        // Очищаем визуальное представление
+        if (IntSection != null)
+            IntSection.Clear();
+
+        if (StringSection != null)
+            StringSection.Clear();
+
+        // Обновляем все узлы, которые использовали свойства
+        RefreshAllPropertyNodes();
+
+        // Обновляем заголовки секций
+        UpdateSectionTitles();
+
+        Debug.Log("All exposed properties cleared successfully");
+    }
+
+    /// <summary>
+    /// Очистить черную доску и exposed properties (для совместимости со старым кодом)
+    /// </summary>
+    public void ClearBlackBoardAndExposedProperties()
+    {
+        ClearAllProperties();
+    }
 
     /// <summary>
     /// Добавляет свойство на черную доску
@@ -533,21 +877,6 @@ public class DialogueGraphView : GraphView
                 RemoveElement(edge);
             }
         }
-    }
-
-    // Добавим этот метод в класс DialogueGraphView
-    /// <summary>
-    /// Очистка свойств черной доски
-    /// </summary>
-    public void ClearBlackBoardAndExposedProperties()
-    {
-        IntExposedProperties.Clear();
-        StringExposedProperties.Clear();
-        Blackboard.Clear();
-
-        // Добавляем обратно секции после очистки
-        Blackboard.Add(new BlackboardSection { title = "Int Properties" });
-        Blackboard.Add(new BlackboardSection { title = "String Properties" });
     }
 
     // Метод для обработки изменений базового персонажа
