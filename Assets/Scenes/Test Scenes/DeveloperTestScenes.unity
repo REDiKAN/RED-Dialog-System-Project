@@ -339,7 +339,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00041652308}
+  m_AnchoredPosition: {x: 0, y: -0.000012104412}
   m_SizeDelta: {x: 0, y: 1370}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &216657489
@@ -439,7 +439,7 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: 23e274bbd77023249ac73eda8a2871c1, type: 2}
+  currentDialogue: {fileID: 11400000, guid: 35cb9b7acfe7bbf4fb008552b5a63dcf, type: 2}
 --- !u!4 &541927738
 Transform:
   m_ObjectHideFlags: 0
@@ -580,8 +580,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 2136051657}
-  messagePrefab: {fileID: 3713886175979679301, guid: a72f6272b81284f41a7377fecab980dc, type: 3}
   contentContainer: {fileID: 216657488}
+  speechTextMessagePrefab: {fileID: 2963174678269393073, guid: a72f6272b81284f41a7377fecab980dc, type: 3}
+  optionTextMessagePrefab: {fileID: -5449972692767794335, guid: 0b3479bcb8555f748863fcd3f5979f6e, type: 3}
 --- !u!1 &865566015
 GameObject:
   m_ObjectHideFlags: 0
@@ -2102,7 +2103,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 542612191}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999989
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

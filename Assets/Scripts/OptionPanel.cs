@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,7 +31,7 @@ public class OptionPanel : MonoBehaviour
         {
             var buttonGO = Instantiate(optionButtonPrefab, contentContainer);
             var button = buttonGO.GetComponent<Button>();
-            var buttonText = buttonGO.GetComponentInChildren<Text>();
+            var buttonText = buttonGO.GetComponentInChildren<TMP_Text>();
 
             if (buttonText != null)
                 buttonText.text = option.Text;

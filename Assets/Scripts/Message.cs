@@ -1,4 +1,5 @@
 using UnityEngine;
+
 /// <summary>
 /// Модель данных для сообщения в чате
 /// </summary>
@@ -8,7 +9,7 @@ public class Message
     /// <summary>
     /// Тип сообщения: NPC, Игрок или Системное
     /// </summary>
-    public MessageType Type;
+    public SenderType Type;
 
     /// <summary>
     /// Текст сообщения (для текстовых сообщений)
@@ -34,9 +35,18 @@ public class Message
 /// <summary>
 /// Типы сообщений в чате
 /// </summary>
-public enum MessageType
+public enum SenderType
 {
     NPC,      // Сообщение от NPC
     Player,   // Сообщение от игрока
     System    // Системное сообщение (например, "Диалог завершён")
 }
+
+public enum MessageType
+{
+    System,
+    Speech, SpeechText, SpeechImage, SpeechAudio,
+    OptionText, OptionImage, OptionAudio,
+    Event, Log
+}
+

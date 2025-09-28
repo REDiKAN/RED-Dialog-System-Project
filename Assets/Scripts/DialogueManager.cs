@@ -161,7 +161,7 @@ public class DialogueManager : MonoBehaviour
         // Создаем сообщение для чата
         var message = new Message
         {
-            Type = MessageType.NPC,
+            Type = SenderType.NPC,
             Text = speechNode.DialogueText,
             Image = null, // Для текстовых речей изображение не используется
             Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid), // Исправлено: AssetLoader
@@ -169,7 +169,7 @@ public class DialogueManager : MonoBehaviour
         };
 
         // Добавляем сообщение в чат
-        chatPanel.AddMessage(message);
+        chatPanel.AddMessage(message, MessageType.Speech);
 
         // Обрабатываем аудио, если оно есть
         if (message.Audio != null)
@@ -204,7 +204,7 @@ public class DialogueManager : MonoBehaviour
         // Создаем сообщение для чата
         var message = new Message
         {
-            Type = MessageType.NPC,
+            Type = SenderType.NPC,
             Text = null, // Для изображений текст не используется
             Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid), // Исправлено: AssetLoader
             Audio = null,
@@ -212,7 +212,7 @@ public class DialogueManager : MonoBehaviour
         };
 
         // Добавляем сообщение в чат
-        chatPanel.AddMessage(message);
+        chatPanel.AddMessage(message, MessageType.SpeechImage);
 
         // Находим следующий узел
         var nextLink = currentDialogue.NodeLinks
@@ -472,10 +472,10 @@ public class DialogueManager : MonoBehaviour
         // Добавляем системное сообщение о завершении диалога
         var message = new Message
         {
-            Type = MessageType.System,
+            Type = SenderType.System,
             Text = "Диалог завершен"
         };
-        chatPanel.AddMessage(message);
+        chatPanel.AddMessage(message, MessageType.System);
 
         // Если указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
@@ -522,16 +522,17 @@ public class DialogueManager : MonoBehaviour
 
             var message = new Message
             {
-                Type = MessageType.Player,
+                Type = SenderType.Player,
                 Text = optionText
             };
-            chatPanel.AddMessage(message);
+            chatPanel.AddMessage(message, MessageType.OptionText);
         }
 
         // Переходим к следующему узлу
         currentNode = GetNodeByGuid(nextNodeGuid);
         ProcessNextNode();
     }
+
     /// <summary>
     /// Получает узел по его GUID
     /// </summary>

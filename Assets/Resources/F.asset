@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: F
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: cf59938a-28d4-4aac-ae8a-b7769f5678fa
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: cf59938a-28d4-4aac-ae8a-b7769f5678fa
+    PortName: Next
+    TargetNodeGuid: 80206e5f-7dde-4020-abd3-3ffea6348093
+  - BaseNodeGuid: 80206e5f-7dde-4020-abd3-3ffea6348093
+    PortName: Next
+    TargetNodeGuid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
+  - BaseNodeGuid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
+    PortName: Next
+    TargetNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+  SpeechNodeDatas:
+  - Guid: 80206e5f-7dde-4020-abd3-3ffea6348093
+    Position: {x: 224, y: 200}
+    DialogueText: RED
+    AudioClipGuid: 
+    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
+    NodeType: SpeechNodeText
+  - Guid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+    Position: {x: 908, y: 200}
+    DialogueText: Newsadfsdijgfoasuhdgpiasygdfusgfiugas
+    AudioClipGuid: 
+    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
+    NodeType: SpeechNodeText
+  OptionNodeDatas:
+  - Guid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
+    Position: {x: 609, y: 200}
+    ResponseText: Resource
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 7a1e5d764246410439bdd451455b69ea

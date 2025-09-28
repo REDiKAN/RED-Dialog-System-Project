@@ -1,21 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 public class ChatPanel : MonoBehaviour
 {
     [SerializeField] private ScrollRect scrollRect;
-    [SerializeField] private GameObject messagePrefab;
     [SerializeField] private Transform contentContainer;
+
+    [Header("Prefabs")]
+    [SerializeField] private SpeechTextMessage speechTextMessagePrefab;
+    [SerializeField] private OptionTextMessage optionTextMessagePrefab;
 
     /// <summary>
     /// Добавляет сообщение в чат
     /// </summary>
     /// <param name="message">Данные сообщения</param>
-    public void AddMessage(Message message)
+    public void AddMessage(Message message, MessageType messageType)
     {
         // Проверяем обязательные ссылки
-        if (messagePrefab == null)
+        if (speechTextMessagePrefab == null)
         {
             Debug.LogError("Message prefab не назначен в ChatPanel");
             return;
@@ -33,72 +35,36 @@ public class ChatPanel : MonoBehaviour
             return;
         }
 
-        // Создаем экземпляр префаба сообщения
-        var messageGO = Instantiate(messagePrefab, contentContainer);
-
-        // Получаем компоненты сообщения
-        var textComponent = messageGO.GetComponent<Text>();
-        var imageComponent = messageGO.GetComponent<Image>();
-        var characterAvatar = messageGO.transform.Find("Avatar")?.GetComponent<Image>();
-        var characterName = messageGO.transform.Find("Name")?.GetComponent<Text>();
-
         // Обработка типа сообщения
-        if (message.Type == MessageType.NPC)
+        if (message.Type == SenderType.NPC)
         {
+            GameObject messageGO = Instantiate(speechTextMessagePrefab.gameObject, contentContainer);
+
             // Левая сторона для NPC
             messageGO.transform.SetAsFirstSibling();
 
-            // Установка аватара и имени (если они существуют)
-            if (characterAvatar != null && message.Sender != null && message.Sender.Icon != null)
-            {
-                characterAvatar.sprite = message.Sender.Icon;
-            }
-            else if (characterAvatar != null && message.Sender == null)
-            {
-                Debug.LogWarning("Персонаж не указан для NPC сообщения");
-            }
-
-            if (characterName != null && message.Sender != null)
-            {
-                characterName.text = message.Sender.FirstName;
-                characterName.color = message.Sender.NameColor;
-            }
-
-            // Отображение текста/изображения
-            if (textComponent != null)
-            {
-                if (!string.IsNullOrEmpty(message.Text))
-                    textComponent.text = message.Text;
-                else
-                    textComponent.text = "";
-            }
-
-            if (imageComponent != null)
-            {
-                if (message.Image != null)
-                    imageComponent.sprite = message.Image;
-                else
-                    imageComponent.sprite = null;
-            }
+            if (messageGO.TryGetComponent(out SpeechTextMessage speechText))
+                speechText.InitializationContent(message);
         }
-        else if (message.Type == MessageType.Player)
+        else if (message.Type == SenderType.Player)
         {
+            GameObject messageGO = Instantiate(optionTextMessagePrefab.gameObject, contentContainer);
+
             // Правая сторона для игрока
             messageGO.transform.SetAsLastSibling();
 
-            if (textComponent != null)
-            {
-                textComponent.text = message.Text;
-            }
+            if (messageGO.TryGetComponent(out OptionTextMessage optionText))
+                optionText.InitializationContent(message);
         }
-        else if (message.Type == MessageType.System)
+        else if (message.Type == SenderType.System)
         {
             // Системное сообщение
-            if (textComponent != null)
-            {
-                textComponent.text = message.Text;
-                // Можно добавить стилизацию для системных сообщений
-            }
+            //if (textComponent != null)
+            //{
+            //    textComponent.text = message.Text;
+            //    Debug.Log(textComponent.text);
+            //    // Можно добавить стилизацию для системных сообщений
+            //}
         }
 
         // Автопрокрутка вниз
