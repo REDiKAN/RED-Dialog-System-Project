@@ -43,7 +43,8 @@ public class OptionPanel : MonoBehaviour
                 button.onClick.AddListener(() =>
                 {
                     onOptionSelected?.Invoke(option.NextNodeGuid);
-                    Hide();
+                    Destroy(button.gameObject);
+                    //Hide();
                 });
             }
         }
@@ -56,6 +57,6 @@ public class OptionPanel : MonoBehaviour
     /// </summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
+        //gameObject.SetActive(false);
     }
 }

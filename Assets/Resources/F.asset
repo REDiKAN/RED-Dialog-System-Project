@@ -25,23 +25,40 @@ MonoBehaviour:
   - BaseNodeGuid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
     PortName: Next
     TargetNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+  - BaseNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+    PortName: Next
+    TargetNodeGuid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
+  - BaseNodeGuid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
+    PortName: Next
+    TargetNodeGuid: 7906265d-b843-4158-a09c-b73ae93352bc
   SpeechNodeDatas:
-  - Guid: 80206e5f-7dde-4020-abd3-3ffea6348093
-    Position: {x: 224, y: 200}
-    DialogueText: RED
+  - Guid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+    Position: {x: 908, y: 200}
+    DialogueText: 3
     AudioClipGuid: 
     SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
     NodeType: SpeechNodeText
-  - Guid: b0d8cad5-8347-4f42-87dd-87d795f86af2
-    Position: {x: 908, y: 200}
-    DialogueText: Newsadfsdijgfoasuhdgpiasygdfusgfiugas
+  - Guid: 80206e5f-7dde-4020-abd3-3ffea6348093
+    Position: {x: 224, y: 200}
+    DialogueText: 1
+    AudioClipGuid: 
+    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
+    NodeType: SpeechNodeText
+  - Guid: 7906265d-b843-4158-a09c-b73ae93352bc
+    Position: {x: 1598, y: 200}
+    DialogueText: 5
     AudioClipGuid: 
     SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
     NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
     Position: {x: 609, y: 200}
-    ResponseText: Resource
+    ResponseText: 2
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
+    Position: {x: 1304, y: 200}
+    ResponseText: 4
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
