@@ -19,15 +19,15 @@ MonoBehaviour:
   - BaseNodeGuid: cf59938a-28d4-4aac-ae8a-b7769f5678fa
     PortName: Next
     TargetNodeGuid: 80206e5f-7dde-4020-abd3-3ffea6348093
+  - BaseNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
+    PortName: Next
+    TargetNodeGuid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
   - BaseNodeGuid: 80206e5f-7dde-4020-abd3-3ffea6348093
     PortName: Next
     TargetNodeGuid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
   - BaseNodeGuid: acc46ff4-a5bb-40c8-8a2d-63ae9a1201e7
     PortName: Next
     TargetNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
-  - BaseNodeGuid: b0d8cad5-8347-4f42-87dd-87d795f86af2
-    PortName: Next
-    TargetNodeGuid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
   - BaseNodeGuid: 567c1cf2-a707-48d8-a367-c2182a6e53f3
     PortName: Next
     TargetNodeGuid: 7906265d-b843-4158-a09c-b73ae93352bc

@@ -498,17 +498,15 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает выбор варианта ответа
+    /// Обработка выбора опции игроком с задержкой перед следующим сообщением
     /// </summary>
     public void HandleOptionSelection(string nextNodeGuid)
     {
-        // Добавляем сообщение от игрока в чат
+        // Добавляем сообщение игрока в чат
         var selectedOption = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.TargetNodeGuid == nextNodeGuid);
-
         if (selectedOption != null)
         {
-            // Находим текст выбранного варианта
             string optionText = "Выбор: ";
             var optionNode = GetNodeByGuid(selectedOption.BaseNodeGuid) as OptionNodeData;
             if (optionNode != null && !string.IsNullOrEmpty(optionNode.ResponseText))
@@ -517,7 +515,7 @@ public class DialogueManager : MonoBehaviour
             }
             else
             {
-                optionText += "Вариант ответа";
+                optionText += "Неизвестный выбор";
             }
 
             var message = new Message
@@ -528,8 +526,19 @@ public class DialogueManager : MonoBehaviour
             chatPanel.AddMessage(message, MessageType.OptionText);
         }
 
-        // Переходим к следующему узлу
+        // Устанавливаем следующий узел
         currentNode = GetNodeByGuid(nextNodeGuid);
+
+        // Запускаем задержку перед обработкой следующего узла
+        StartCoroutine(DelayedProcessNextNode());
+    }
+
+    /// <summary>
+    /// Задержка перед обработкой следующего узла (для плавности диалога)
+    /// </summary>
+    private IEnumerator DelayedProcessNextNode()
+    {
+        yield return new WaitForSeconds(messageDelay);
         ProcessNextNode();
     }
 

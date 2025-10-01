@@ -35,24 +35,20 @@ public class ChatPanel : MonoBehaviour
             return;
         }
 
-        // Обработка типа сообщения
+        // Обработка сообщений
         if (message.Type == SenderType.NPC)
         {
             GameObject messageGO = Instantiate(speechTextMessagePrefab.gameObject, contentContainer);
-
-            // Левая сторона для NPC
-            messageGO.transform.SetAsFirstSibling();
-
+            // ИСПРАВЛЕНО: добавляем NPC сообщения в конец списка (а не в начало)
+            messageGO.transform.SetAsLastSibling();
             if (messageGO.TryGetComponent(out SpeechTextMessage speechText))
                 speechText.InitializationContent(message);
         }
         else if (message.Type == SenderType.Player)
         {
             GameObject messageGO = Instantiate(optionTextMessagePrefab.gameObject, contentContainer);
-
-            // Правая сторона для игрока
+            // Добавляем сообщения игрока в конец списка
             messageGO.transform.SetAsLastSibling();
-
             if (messageGO.TryGetComponent(out OptionTextMessage optionText))
                 optionText.InitializationContent(message);
         }
@@ -69,8 +65,6 @@ public class ChatPanel : MonoBehaviour
 
         // Автопрокрутка вниз
         if (scrollRect.content != null)
-        {
-            scrollRect.verticalNormalizedPosition = 0;
-        }
+            scrollRect.verticalNormalizedPosition = 1;
     }
 }
