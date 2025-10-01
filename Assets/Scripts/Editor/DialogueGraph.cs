@@ -47,42 +47,171 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Создает тулбар с кнопками управления
+    /// Генерация тулбара с новыми элементами управления
     /// </summary>
     private void GenerateToolbar()
     {
         var toolbar = new Toolbar();
 
-        // File Name field
-        var fileNameTextField = new TextField("File Name:");
-        fileNameTextField.SetValueWithoutNotify(fileName);
-        fileNameTextField.MarkDirtyRepaint();
-        fileNameTextField.RegisterValueChangedCallback(evt => fileName = evt.newValue);
-        toolbar.Add(fileNameTextField);
+        // Поле выбора существующего файла диалога
+        var dialogueAssetField = new ObjectField("Dialogue File")
+        {
+            objectType = typeof(DialogueContainer),
+            value = null
+        };
+        dialogueAssetField.name = "Dialogue File"; // важно для поиска через Q
+        dialogueAssetField.RegisterValueChangedCallback(evt =>
+        {
+            if (evt.newValue is DialogueContainer container)
+            {
+                LoadDialogueFromFile(container);
+            }
+        });
+        toolbar.Add(dialogueAssetField);
 
-        // Base Character field
+        // Кнопка создания нового диалога
+        toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
+
+        // Кнопка загрузки через проводник
+        toolbar.Add(new Button(LoadDialogueFromFileBrowser) { text = "Load File..." });
+
+        // Кнопка сохранения
+        toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
+
+        // Base Character field (в конце)
         var baseCharacterField = new ObjectField("Base Character")
         {
             objectType = typeof(CharacterData),
             value = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid)
         };
-
         baseCharacterField.RegisterValueChangedCallback(evt =>
         {
             var character = evt.newValue as CharacterData;
             graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
-
-            // Обновляем все существующие SpeechNode при изменении базового персонажа
             UpdateAllSpeechNodesSpeaker(character);
         });
-
         toolbar.Add(baseCharacterField);
 
-        // Save/Load buttons
-        toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
-        toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
-
         rootVisualElement.Add(toolbar);
+    }
+
+    /// <summary>
+    /// Создаёт новый диалог и сохраняет его по указанному пользователем пути
+    /// </summary>
+    private void CreateNewDialogue()
+    {
+        string path = EditorUtility.SaveFilePanelInProject(
+            "Create New Dialogue",
+            "NewDialogue",
+            "asset",
+            "Choose location and name for the new dialogue file"
+        );
+
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        graphView.ClearGraph();
+
+        // Создаём новый контейнер
+        var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+        AssetDatabase.CreateAsset(newContainer, path);
+        AssetDatabase.SaveAssets();
+
+        // Обновляем ObjectField
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        if (assetField != null)
+            assetField.SetValueWithoutNotify(newContainer);
+
+        // Загружаем его (пустой)
+        LoadDialogueFromFile(newContainer);
+
+        Debug.Log($"Created new dialogue: {path}");
+    }
+
+    /// <summary>
+    /// Загружает диалог из выбранного в ObjectField контейнера
+    /// </summary>
+    private void LoadDialogueFromFile(DialogueContainer container)
+    {
+        if (container == null) return;
+
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
+        saveUtility.LoadGraphFromContainer(container);
+
+        // Обновляем GUID базового персонажа в графе
+        graphView.BaseCharacterGuid = container.BaseCharacterGuid;
+
+        // Обновляем отображение Base Character в тулбаре
+        var baseCharField = rootVisualElement.Q<ObjectField>("Base Character");
+        if (baseCharField != null)
+        {
+            baseCharField.SetValueWithoutNotify(
+                AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(container.BaseCharacterGuid)
+            );
+        }
+    }
+
+    /// <summary>
+    /// Открывает проводник для выбора существующего .asset файла диалога
+    /// </summary>
+    private void LoadDialogueFromFileBrowser()
+    {
+        string path = EditorUtility.OpenFilePanel(
+            "Load Dialogue File",
+            Application.dataPath,
+            "asset"
+        );
+
+        if (string.IsNullOrEmpty(path)) return;
+
+        // Преобразуем абсолютный путь в относительный от Assets
+        if (!path.StartsWith(Application.dataPath))
+        {
+            EditorUtility.DisplayDialog("Invalid Path", "Please select a file inside the Assets folder.", "OK");
+            return;
+        }
+
+        string relativePath = "Assets" + path.Substring(Application.dataPath.Length);
+        var container = AssetDatabase.LoadAssetAtPath<DialogueContainer>(relativePath);
+
+        if (container == null)
+        {
+            EditorUtility.DisplayDialog("Invalid File", "Selected file is not a valid DialogueContainer.", "OK");
+            return;
+        }
+
+        // Обновляем ObjectField
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        if (assetField != null)
+            assetField.SetValueWithoutNotify(container);
+
+        LoadDialogueFromFile(container);
+    }
+
+    /// <summary>
+    /// Сохраняет текущий граф в уже загруженный/созданный файл
+    /// </summary>
+    private void SaveCurrentDialogue()
+    {
+        var container = GetCurrentLoadedContainer();
+        if (container == null)
+        {
+            EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded. Please create or load one first.", "OK");
+            return;
+        }
+
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
+        saveUtility.SaveGraphToExistingContainer(container);
+        EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
+    }
+
+    /// <summary>
+    /// Вспомогательный метод: получает текущий загруженный контейнер по пути
+    /// </summary> 
+    private DialogueContainer GetCurrentLoadedContainer()
+    {
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        return assetField?.value as DialogueContainer;
     }
 
     /// <summary>
@@ -118,4 +247,6 @@ public class DialogueGraph : EditorWindow
             node.SetSpeaker(character);
         }
     }
+
+
 }

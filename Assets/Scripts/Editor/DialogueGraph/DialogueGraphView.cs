@@ -885,4 +885,29 @@ public class DialogueGraphView : GraphView
         // Можно добавить дополнительную логику при изменении базового персонажа
         Debug.Log($"Base character changed to: {BaseCharacterGuid}");
     }
+
+    /// <summary>
+    /// Публичный метод для полной очистки графа (кроме EntryNode)
+    /// </summary>
+    public void ClearGraph()
+    {
+        // Удаляем все узлы, кроме EntryPoint
+        var nodesToRemove = nodes.ToList().Where(node => !(node is EntryNode)).ToList();
+        foreach (var node in nodesToRemove)
+        {
+            // Удаляем связанные рёбра
+            var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+            foreach (var edge in edgesToRemove)
+            {
+                RemoveElement(edge);
+            }
+            RemoveElement(node);
+        }
+
+        // Очищаем Blackboard и exposed properties
+        ClearBlackBoardAndExposedProperties();
+
+        // Сбрасываем BaseCharacterGuid
+        BaseCharacterGuid = string.Empty;
+    }
 }

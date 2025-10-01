@@ -529,4 +529,54 @@ public class GraphSaveUtility
         }
     }
     #endregion
+
+    /// <summary>
+    /// Загружает граф из уже загруженного DialogueContainer
+    /// </summary>
+    public void LoadGraphFromContainer(DialogueContainer container)
+    {
+        if (container == null)
+        {
+            Debug.LogError("Cannot load null container");
+            return;
+        }
+
+        containerCache = container;
+        ClearGraph();
+        CreateNodes();
+        ConnectNodes();
+        CreateExposedProperties();
+    }
+
+    /// <summary>
+    /// Сохраняет граф в существующий DialogueContainer
+    /// </summary>
+    public void SaveGraphToExistingContainer(DialogueContainer existingContainer)
+    {
+        if (existingContainer == null)
+        {
+            Debug.LogError("Cannot save to null container");
+            return;
+        }
+
+        // Очищаем старые данные
+        existingContainer.NodeLinks.Clear();
+        existingContainer.SpeechNodeDatas.Clear();
+        existingContainer.OptionNodeDatas.Clear();
+        existingContainer.IntConditionNodeDatas.Clear();
+        existingContainer.StringConditionNodeDatas.Clear();
+        existingContainer.ModifyIntNodeDatas.Clear();
+        existingContainer.EndNodeDatas.Clear();
+        existingContainer.SpeechNodeImageDatas.Clear();
+        existingContainer.OptionNodeImageDatas.Clear();
+        existingContainer.IntExposedProperties.Clear();
+        existingContainer.StringExposedProperties.Clear();
+
+        // Сохраняем новые данные
+        SaveNodes(existingContainer);
+        SaveExposedProperties(existingContainer);
+
+        EditorUtility.SetDirty(existingContainer);
+        AssetDatabase.SaveAssets();
+    }
 }
