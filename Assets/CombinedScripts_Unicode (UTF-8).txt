@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 01.10.2025 21:48:46
+// Generation Time: 02.10.2025 21:41:29
 // Total Files: 52
 // =================================
 
@@ -1122,42 +1122,171 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// ������� ������ � �������� ����������
+    /// ��������� ������� � ������ ���������� ����������
     /// </summary>
     private void GenerateToolbar()
     {
         var toolbar = new Toolbar();
 
-        // File Name field
-        var fileNameTextField = new TextField("File Name:");
-        fileNameTextField.SetValueWithoutNotify(fileName);
-        fileNameTextField.MarkDirtyRepaint();
-        fileNameTextField.RegisterValueChangedCallback(evt => fileName = evt.newValue);
-        toolbar.Add(fileNameTextField);
+        // ���� ������ ������������� ����� �������
+        var dialogueAssetField = new ObjectField("Dialogue File")
+        {
+            objectType = typeof(DialogueContainer),
+            value = null
+        };
+        dialogueAssetField.name = "Dialogue File"; // ����� ��� ������ ����� Q
+        dialogueAssetField.RegisterValueChangedCallback(evt =>
+        {
+            if (evt.newValue is DialogueContainer container)
+            {
+                LoadDialogueFromFile(container);
+            }
+        });
+        toolbar.Add(dialogueAssetField);
 
-        // Base Character field
+        // ������ �������� ������ �������
+        toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
+
+        // ������ �������� ����� ���������
+        toolbar.Add(new Button(LoadDialogueFromFileBrowser) { text = "Load File..." });
+
+        // ������ ����������
+        toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
+
+        // Base Character field (� �����)
         var baseCharacterField = new ObjectField("Base Character")
         {
             objectType = typeof(CharacterData),
             value = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid)
         };
-
         baseCharacterField.RegisterValueChangedCallback(evt =>
         {
             var character = evt.newValue as CharacterData;
             graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
-
-            // ��������� ��� ������������ SpeechNode ��� ��������� �������� ���������
             UpdateAllSpeechNodesSpeaker(character);
         });
-
         toolbar.Add(baseCharacterField);
 
-        // Save/Load buttons
-        toolbar.Add(new Button(() => RequestDataOperation(true)) { text = "Save Data" });
-        toolbar.Add(new Button(() => RequestDataOperation(false)) { text = "Load Data" });
-
         rootVisualElement.Add(toolbar);
+    }
+
+    /// <summary>
+    /// ������ ����� ������ � ��������� ��� �� ���������� ������������� ����
+    /// </summary>
+    private void CreateNewDialogue()
+    {
+        string path = EditorUtility.SaveFilePanelInProject(
+            "Create New Dialogue",
+            "NewDialogue",
+            "asset",
+            "Choose location and name for the new dialogue file"
+        );
+
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        graphView.ClearGraph();
+
+        // ������ ����� ���������
+        var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+        AssetDatabase.CreateAsset(newContainer, path);
+        AssetDatabase.SaveAssets();
+
+        // ��������� ObjectField
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        if (assetField != null)
+            assetField.SetValueWithoutNotify(newContainer);
+
+        // ��������� ��� (������)
+        LoadDialogueFromFile(newContainer);
+
+        Debug.Log($"Created new dialogue: {path}");
+    }
+
+    /// <summary>
+    /// ��������� ������ �� ���������� � ObjectField ����������
+    /// </summary>
+    private void LoadDialogueFromFile(DialogueContainer container)
+    {
+        if (container == null) return;
+
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
+        saveUtility.LoadGraphFromContainer(container);
+
+        // ��������� GUID �������� ��������� � �����
+        graphView.BaseCharacterGuid = container.BaseCharacterGuid;
+
+        // ��������� ����������� Base Character � �������
+        var baseCharField = rootVisualElement.Q<ObjectField>("Base Character");
+        if (baseCharField != null)
+        {
+            baseCharField.SetValueWithoutNotify(
+                AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(container.BaseCharacterGuid)
+            );
+        }
+    }
+
+    /// <summary>
+    /// ��������� ��������� ��� ������ ������������� .asset ����� �������
+    /// </summary>
+    private void LoadDialogueFromFileBrowser()
+    {
+        string path = EditorUtility.OpenFilePanel(
+            "Load Dialogue File",
+            Application.dataPath,
+            "asset"
+        );
+
+        if (string.IsNullOrEmpty(path)) return;
+
+        // ����������� ���������� ���� � ������������� �� Assets
+        if (!path.StartsWith(Application.dataPath))
+        {
+            EditorUtility.DisplayDialog("Invalid Path", "Please select a file inside the Assets folder.", "OK");
+            return;
+        }
+
+        string relativePath = "Assets" + path.Substring(Application.dataPath.Length);
+        var container = AssetDatabase.LoadAssetAtPath<DialogueContainer>(relativePath);
+
+        if (container == null)
+        {
+            EditorUtility.DisplayDialog("Invalid File", "Selected file is not a valid DialogueContainer.", "OK");
+            return;
+        }
+
+        // ��������� ObjectField
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        if (assetField != null)
+            assetField.SetValueWithoutNotify(container);
+
+        LoadDialogueFromFile(container);
+    }
+
+    /// <summary>
+    /// ��������� ������� ���� � ��� �����������/��������� ����
+    /// </summary>
+    private void SaveCurrentDialogue()
+    {
+        var container = GetCurrentLoadedContainer();
+        if (container == null)
+        {
+            EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded. Please create or load one first.", "OK");
+            return;
+        }
+
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
+        saveUtility.SaveGraphToExistingContainer(container);
+        EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
+    }
+
+    /// <summary>
+    /// ��������������� �����: �������� ������� ����������� ��������� �� ����
+    /// </summary> 
+    private DialogueContainer GetCurrentLoadedContainer()
+    {
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        return assetField?.value as DialogueContainer;
     }
 
     /// <summary>
@@ -1193,6 +1322,8 @@ public class DialogueGraph : EditorWindow
             node.SetSpeaker(character);
         }
     }
+
+
 }
 
 //==== File 13 of 52: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
@@ -2082,6 +2213,31 @@ public class DialogueGraphView : GraphView
     {
         // ����� �������� �������������� ������ ��� ��������� �������� ���������
         Debug.Log($"Base character changed to: {BaseCharacterGuid}");
+    }
+
+    /// <summary>
+    /// ��������� ����� ��� ������ ������� ����� (����� EntryNode)
+    /// </summary>
+    public void ClearGraph()
+    {
+        // ������� ��� ����, ����� EntryPoint
+        var nodesToRemove = nodes.ToList().Where(node => !(node is EntryNode)).ToList();
+        foreach (var node in nodesToRemove)
+        {
+            // ������� ��������� ����
+            var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+            foreach (var edge in edgesToRemove)
+            {
+                RemoveElement(edge);
+            }
+            RemoveElement(node);
+        }
+
+        // ������� Blackboard � exposed properties
+        ClearBlackBoardAndExposedProperties();
+
+        // ���������� BaseCharacterGuid
+        BaseCharacterGuid = string.Empty;
     }
 }
 
@@ -3792,6 +3948,56 @@ public class GraphSaveUtility
         }
     }
     #endregion
+
+    /// <summary>
+    /// ��������� ���� �� ��� ������������ DialogueContainer
+    /// </summary>
+    public void LoadGraphFromContainer(DialogueContainer container)
+    {
+        if (container == null)
+        {
+            Debug.LogError("Cannot load null container");
+            return;
+        }
+
+        containerCache = container;
+        ClearGraph();
+        CreateNodes();
+        ConnectNodes();
+        CreateExposedProperties();
+    }
+
+    /// <summary>
+    /// ��������� ���� � ������������ DialogueContainer
+    /// </summary>
+    public void SaveGraphToExistingContainer(DialogueContainer existingContainer)
+    {
+        if (existingContainer == null)
+        {
+            Debug.LogError("Cannot save to null container");
+            return;
+        }
+
+        // ������� ������ ������
+        existingContainer.NodeLinks.Clear();
+        existingContainer.SpeechNodeDatas.Clear();
+        existingContainer.OptionNodeDatas.Clear();
+        existingContainer.IntConditionNodeDatas.Clear();
+        existingContainer.StringConditionNodeDatas.Clear();
+        existingContainer.ModifyIntNodeDatas.Clear();
+        existingContainer.EndNodeDatas.Clear();
+        existingContainer.SpeechNodeImageDatas.Clear();
+        existingContainer.OptionNodeImageDatas.Clear();
+        existingContainer.IntExposedProperties.Clear();
+        existingContainer.StringExposedProperties.Clear();
+
+        // ��������� ����� ������
+        SaveNodes(existingContainer);
+        SaveExposedProperties(existingContainer);
+
+        EditorUtility.SetDirty(existingContainer);
+        AssetDatabase.SaveAssets();
+    }
 }
 
 //==== File 34 of 52: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
@@ -4312,9 +4518,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 52
-// Total Size: 141,47 KB
-// Total Lines: 4202
+// Total Size: 148,30 KB
+// Total Lines: 4408
 // Classes: 51
-// Methods: 266
-// Comments: 586
+// Methods: 276
+// Comments: 624
 // =====================================

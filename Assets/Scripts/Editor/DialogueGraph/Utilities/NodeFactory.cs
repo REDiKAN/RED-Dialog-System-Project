@@ -106,11 +106,10 @@ public static class NodeFactory
         return node;
     }
 
-    public static EndNode CreateEndNode(Vector2 position, string nextDialogueName = "")
+    public static EndNode CreateEndNode(Vector2 position)
     {
         var node = new EndNode();
         node.Initialize(position);
-        node.NextDialogueName = nextDialogueName;
         return node;
     }
 

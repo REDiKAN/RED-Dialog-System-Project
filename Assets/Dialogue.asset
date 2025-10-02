@@ -10,22 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
-  m_Name: New Narrative
+  m_Name: Dialogue
   m_EditorClassIdentifier: 
   EntryNodeData:
-    Guid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
-    Position: {x: 100, y: 200}
-  NodeLinks:
-  - BaseNodeGuid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
-    PortName: Next
-    TargetNodeGuid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
-  SpeechNodeDatas:
-  - Guid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
-    Position: {x: 237, y: 200}
-    DialogueText: "\u043B\u043B\u043B\u043B\n"
-    AudioClipGuid: 
-    SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
-    NodeType: SpeechNodeText
+    Guid: 
+    Position: {x: 0, y: 0}
+  NodeLinks: []
+  SpeechNodeDatas: []
   OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []

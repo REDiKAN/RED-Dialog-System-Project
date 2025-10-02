@@ -25,6 +25,12 @@ MonoBehaviour:
   - BaseNodeGuid: ede5b95a-ddd9-4449-a308-48d393d96cc7
     PortName: Next
     TargetNodeGuid: 0f06a703-15ab-4786-a61a-4899b0f21e56
+  - BaseNodeGuid: 0f06a703-15ab-4786-a61a-4899b0f21e56
+    PortName: Next
+    TargetNodeGuid: 660428a3-7ad1-43dc-82b7-8f63dfa087ca
+  - BaseNodeGuid: 660428a3-7ad1-43dc-82b7-8f63dfa087ca
+    PortName: Next
+    TargetNodeGuid: da0fb626-46ae-47bb-a82e-7c33bf9d1f9f
   SpeechNodeDatas:
   - Guid: e3312bcb-c7d7-4aa4-a578-c8115101adc4
     Position: {x: 122, y: 0}
@@ -44,13 +50,21 @@ MonoBehaviour:
     ResponseText: 2
     AudioClipGuid: 
     NodeType: OptionNodeText
+  - Guid: 660428a3-7ad1-43dc-82b7-8f63dfa087ca
+    Position: {x: 1175, y: 0}
+    ResponseText: New Response
+    AudioClipGuid: 
+    NodeType: OptionNodeText
   ExposedProperties: []
   IntExposedProperties: []
   StringExposedProperties: []
   IntConditionNodeDatas: []
   StringConditionNodeDatas: []
   ModifyIntNodeDatas: []
-  EndNodeDatas: []
+  EndNodeDatas:
+  - Guid: da0fb626-46ae-47bb-a82e-7c33bf9d1f9f
+    Position: {x: 1423, y: 0}
+    NextDialogueName: New Narrative
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []
   BaseCharacterGuid: 7a1e5d764246410439bdd451455b69ea

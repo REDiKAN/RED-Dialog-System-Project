@@ -1,4 +1,4 @@
-using UnityEditor.Experimental.GraphView;
+п»їusing UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -7,7 +7,7 @@ using UnityEditor;
 using System;
 
 /// <summary>
-/// Утилита для сохранения и загрузки диалоговых графов
+/// РЈС‚РёР»РёС‚Р° РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ Рё Р·Р°РіСЂСѓР·РєРё РґРёР°Р»РѕРіРѕРІС‹С… РіСЂР°С„РѕРІ
 /// </summary>
 public class GraphSaveUtility
 {
@@ -17,7 +17,7 @@ public class GraphSaveUtility
     private List<BaseNode> Nodes => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
 
     /// <summary>
-    /// Получение экземпляра утилиты для сохранения
+    /// РџРѕР»СѓС‡РµРЅРёРµ СЌРєР·РµРјРїР»СЏСЂР° СѓС‚РёР»РёС‚С‹ РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ
     /// </summary>
     public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
     {
@@ -26,24 +26,24 @@ public class GraphSaveUtility
 
     #region Saving
     /// <summary>
-    /// Сохранение графа в файл
+    /// РЎРѕС…СЂР°РЅРµРЅРёРµ РіСЂР°С„Р° РІ С„Р°Р№Р»
     /// </summary>
     public void SaveGraph(string fileName)
     {
-        // Создаем контейнер для данных диалога
+        // РЎРѕР·РґР°РµРј РєРѕРЅС‚РµР№РЅРµСЂ РґР»СЏ РґР°РЅРЅС‹С… РґРёР°Р»РѕРіР°
         var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
 
-        // Сохраняем узлы и связи
+        // РЎРѕС…СЂР°РЅСЏРµРј СѓР·Р»С‹ Рё СЃРІСЏР·Рё
         SaveNodes(dialogueContainer);
 
-        // Сохраняем свойства черной доски
+        // РЎРѕС…СЂР°РЅСЏРµРј СЃРІРѕР№СЃС‚РІР° С‡РµСЂРЅРѕР№ РґРѕСЃРєРё
         SaveExposedProperties(dialogueContainer);
 
-        // Создаем папку Resources если не существует
+        // РЎРѕР·РґР°РµРј РїР°РїРєСѓ Resources РµСЃР»Рё РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚
         if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             AssetDatabase.CreateFolder("Assets", "Resources");
 
-        // Сохраняем ассет
+        // РЎРѕС…СЂР°РЅСЏРµРј Р°СЃСЃРµС‚
         AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
         AssetDatabase.SaveAssets();
 
@@ -51,13 +51,13 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Сохраняет узлы в контейнер
+    /// РЎРѕС…СЂР°РЅСЏРµС‚ СѓР·Р»С‹ РІ РєРѕРЅС‚РµР№РЅРµСЂ
     /// </summary>
     private void SaveNodes(DialogueContainer dialogueContainer)
     {
         dialogueContainer.BaseCharacterGuid = targetGraphView.BaseCharacterGuid;
 
-        // Сохраняем связи между узлами
+        // РЎРѕС…СЂР°РЅСЏРµРј СЃРІСЏР·Рё РјРµР¶РґСѓ СѓР·Р»Р°РјРё
         var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
         foreach (var edge in connectedPorts)
         {
@@ -72,12 +72,12 @@ public class GraphSaveUtility
             });
         }
 
-        // Сохраняем данные узлов
+        // РЎРѕС…СЂР°РЅСЏРµРј РґР°РЅРЅС‹Рµ СѓР·Р»РѕРІ
         foreach (var node in Nodes)
         {
             if (node.EntryPoint)
             {
-                // Сохраняем данные EntryNode
+                // РЎРѕС…СЂР°РЅСЏРµРј РґР°РЅРЅС‹Рµ EntryNode
                 dialogueContainer.EntryNodeData = new EntryNodeData
                 {
                     Guid = node.GUID,
@@ -190,14 +190,14 @@ public class GraphSaveUtility
                 {
                     Guid = endNode.GUID,
                     Position = node.GetPosition().position,
-                    NextDialogueName = endNode.NextDialogueName
+                    NextDialogueName = endNode.GetNextDialoguePath()
                 });
             }
         }
     }
 
     /// <summary>
-    /// Сохранение свойств черной доски
+    /// РЎРѕС…СЂР°РЅРµРЅРёРµ СЃРІРѕР№СЃС‚РІ С‡РµСЂРЅРѕР№ РґРѕСЃРєРё
     /// </summary>
     private void SaveExposedProperties(DialogueContainer dialogueContainer)
     {
@@ -208,7 +208,7 @@ public class GraphSaveUtility
 
     #region Loading
     /// <summary>
-    /// Загрузка графа из файла
+    /// Р—Р°РіСЂСѓР·РєР° РіСЂР°С„Р° РёР· С„Р°Р№Р»Р°
     /// </summary>
     public void LoadGraph(string fileName)
     {
@@ -228,11 +228,11 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Создает узлы из загруженных данных
+    /// РЎРѕР·РґР°РµС‚ СѓР·Р»С‹ РёР· Р·Р°РіСЂСѓР¶РµРЅРЅС‹С… РґР°РЅРЅС‹С…
     /// </summary>
     private void CreateNodes()
     {
-        // Восстанавливаем EntryNode
+        // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј EntryNode
         if (containerCache.EntryNodeData != null)
         {
             var entryNode = Nodes.Find(x => x.EntryPoint);
@@ -243,7 +243,7 @@ public class GraphSaveUtility
             }
         }
 
-        // Создаем SpeechNode
+        // РЎРѕР·РґР°РµРј SpeechNode
         foreach (var nodeData in containerCache.SpeechNodeDatas)
         {
             BaseNode tempNode = null;
@@ -263,7 +263,7 @@ public class GraphSaveUtility
 
             tempNode.GUID = nodeData.Guid;
 
-            // Восстанавливаем аудио клип по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р°СѓРґРёРѕ РєР»РёРї РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
                 var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
@@ -274,7 +274,7 @@ public class GraphSaveUtility
                 }
             }
 
-            // Восстанавливаем спикера по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРїРёРєРµСЂР° РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
             {
                 var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
@@ -287,13 +287,13 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем SpeechNodeImage
+        // РЎРѕР·РґР°РµРј SpeechNodeImage
         foreach (var nodeData in containerCache.SpeechNodeImageDatas)
         {
             var tempNode = NodeFactory.CreateSpeechNodeImage(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
 
-            // Восстанавливаем изображение по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
             {
                 var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
@@ -304,7 +304,7 @@ public class GraphSaveUtility
                 }
             }
 
-            // Восстанавливаем спикера по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРїРёРєРµСЂР° РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
             {
                 var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
@@ -317,7 +317,7 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем OptionNode
+        // РЎРѕР·РґР°РµРј OptionNode
         foreach (var nodeData in containerCache.OptionNodeDatas)
         {
             BaseNode tempNode = null;
@@ -337,7 +337,7 @@ public class GraphSaveUtility
 
             tempNode.GUID = nodeData.Guid;
 
-            // Восстанавливаем аудио клип по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р°СѓРґРёРѕ РєР»РёРї РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
                 var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
@@ -351,13 +351,13 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем OptionNodeImage
+        // РЎРѕР·РґР°РµРј OptionNodeImage
         foreach (var nodeData in containerCache.OptionNodeImageDatas)
         {
             var tempNode = NodeFactory.CreateOptionNodeImage(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
 
-            // Восстанавливаем изображение по GUID
+            // Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РїРѕ GUID
             if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
             {
                 var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
@@ -371,7 +371,7 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем IntConditionNode
+        // РЎРѕР·РґР°РµРј IntConditionNode
         foreach (var nodeData in containerCache.IntConditionNodeDatas)
         {
             var tempNode = NodeFactory.CreateIntConditionNode(nodeData.Position);
@@ -385,7 +385,7 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем StringConditionNode
+        // РЎРѕР·РґР°РµРј StringConditionNode
         foreach (var nodeData in containerCache.StringConditionNodeDatas)
         {
             var tempNode = NodeFactory.CreateStringConditionNode(nodeData.Position);
@@ -399,7 +399,7 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем ModifyIntNode
+        // РЎРѕР·РґР°РµРј ModifyIntNode
         foreach (var nodeData in containerCache.ModifyIntNodeDatas)
         {
             var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
@@ -413,17 +413,21 @@ public class GraphSaveUtility
             targetGraphView.AddElement(tempNode);
         }
 
-        // Создаем EndNode
+        // РЎРѕР·РґР°РµРј EndNode
         foreach (var nodeData in containerCache.EndNodeDatas)
         {
-            var tempNode = NodeFactory.CreateEndNode(nodeData.Position, nodeData.NextDialogueName);
+            var tempNode = NodeFactory.CreateEndNode(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
+            if (tempNode is EndNode endNodeEditor)
+            {
+                endNodeEditor.SetNextDialogueFromPath(nodeData.NextDialogueName);
+            }
             targetGraphView.AddElement(tempNode);
         }
     }
 
     /// <summary>
-    /// Восстановление связей между узлами
+    /// Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ СЃРІСЏР·РµР№ РјРµР¶РґСѓ СѓР·Р»Р°РјРё
     /// </summary>
     private void ConnectNodes()
     {
@@ -438,12 +442,12 @@ public class GraphSaveUtility
                     var targetNodeGuid = connection.TargetNodeGuid;
                     var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
 
-                    // Находим соответствующий порт
+                    // РќР°С…РѕРґРёРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ РїРѕСЂС‚
                     Port outputPort = null;
 
                     if (Nodes[i] is SpeechNode speechNode)
                     {
-                        // Ищем порт с нужным именем
+                        // РС‰РµРј РїРѕСЂС‚ СЃ РЅСѓР¶РЅС‹Рј РёРјРµРЅРµРј
                         foreach (var port in speechNode.outputContainer.Children())
                         {
                             if (port is Port portElement && portElement.portName == connection.PortName)
@@ -453,7 +457,7 @@ public class GraphSaveUtility
                             }
                         }
 
-                        // Если порт не найден, создаем его
+                        // Р•СЃР»Рё РїРѕСЂС‚ РЅРµ РЅР°Р№РґРµРЅ, СЃРѕР·РґР°РµРј РµРіРѕ
                         if (outputPort == null)
                         {
                             outputPort = speechNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
@@ -488,7 +492,7 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Связывание двух портов
+    /// РЎРІСЏР·С‹РІР°РЅРёРµ РґРІСѓС… РїРѕСЂС‚РѕРІ
     /// </summary>
     private void LinkNodes(Port output, Port input)
     {
@@ -499,7 +503,7 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Восстановление свойств черной доски
+    /// Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ СЃРІРѕР№СЃС‚РІ С‡РµСЂРЅРѕР№ РґРѕСЃРєРё
     /// </summary>
     private void CreateExposedProperties()
     {
@@ -511,14 +515,14 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Очистка текущего графа перед загрузкой
+    /// РћС‡РёСЃС‚РєР° С‚РµРєСѓС‰РµРіРѕ РіСЂР°С„Р° РїРµСЂРµРґ Р·Р°РіСЂСѓР·РєРѕР№
     /// </summary>
     private void ClearGraph()
     {
-        // Удаляем все узлы кроме стартового
+        // РЈРґР°Р»СЏРµРј РІСЃРµ СѓР·Р»С‹ РєСЂРѕРјРµ СЃС‚Р°СЂС‚РѕРІРѕРіРѕ
         foreach (var node in Nodes.Where(node => !node.EntryPoint).ToList())
         {
-            // Удаляем связанные связи
+            // РЈРґР°Р»СЏРµРј СЃРІСЏР·Р°РЅРЅС‹Рµ СЃРІСЏР·Рё
             var edgesToRemove = Edges.Where(x => x.input.node == node || x.output.node == node).ToList();
             foreach (var edge in edgesToRemove)
             {
@@ -531,7 +535,7 @@ public class GraphSaveUtility
     #endregion
 
     /// <summary>
-    /// Загружает граф из уже загруженного DialogueContainer
+    /// Р—Р°РіСЂСѓР¶Р°РµС‚ РіСЂР°С„ РёР· СѓР¶Рµ Р·Р°РіСЂСѓР¶РµРЅРЅРѕРіРѕ DialogueContainer
     /// </summary>
     public void LoadGraphFromContainer(DialogueContainer container)
     {
@@ -549,7 +553,7 @@ public class GraphSaveUtility
     }
 
     /// <summary>
-    /// Сохраняет граф в существующий DialogueContainer
+    /// РЎРѕС…СЂР°РЅСЏРµС‚ РіСЂР°С„ РІ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№ DialogueContainer
     /// </summary>
     public void SaveGraphToExistingContainer(DialogueContainer existingContainer)
     {
@@ -559,7 +563,7 @@ public class GraphSaveUtility
             return;
         }
 
-        // Очищаем старые данные
+        // РћС‡РёС‰Р°РµРј СЃС‚Р°СЂС‹Рµ РґР°РЅРЅС‹Рµ
         existingContainer.NodeLinks.Clear();
         existingContainer.SpeechNodeDatas.Clear();
         existingContainer.OptionNodeDatas.Clear();
@@ -572,7 +576,7 @@ public class GraphSaveUtility
         existingContainer.IntExposedProperties.Clear();
         existingContainer.StringExposedProperties.Clear();
 
-        // Сохраняем новые данные
+        // РЎРѕС…СЂР°РЅСЏРµРј РЅРѕРІС‹Рµ РґР°РЅРЅС‹Рµ
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
 
