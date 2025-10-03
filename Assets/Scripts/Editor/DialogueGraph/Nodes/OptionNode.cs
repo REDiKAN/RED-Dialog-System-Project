@@ -61,4 +61,11 @@ public class OptionNode : BaseNode
         // Добавляем специальный стиль для OptionNode
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
     }
+
+    public void SetResponseText(string text)
+    {
+        ResponseText = text;
+        if (responseTextField != null)
+            responseTextField.SetValueWithoutNotify(text);
+    }
 }

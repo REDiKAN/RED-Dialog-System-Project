@@ -247,20 +247,26 @@ public class GraphSaveUtility
         foreach (var nodeData in containerCache.SpeechNodeDatas)
         {
             BaseNode tempNode = null;
-
             switch (nodeData.NodeType)
             {
                 case "SpeechNodeText":
-                    tempNode = NodeFactory.CreateSpeechNodeText(nodeData.Position, nodeData.DialogueText);
+                    tempNode = NodeFactory.CreateSpeechNodeText(nodeData.Position);
+                    if (tempNode is SpeechNode speechNodeText)
+                    {
+                        speechNodeText.SetDialogueText(nodeData.DialogueText);
+                    }
                     break;
                 case "SpeechNodeAudio":
                     tempNode = NodeFactory.CreateSpeechNodeAudio(nodeData.Position);
                     break;
                 default:
-                    tempNode = NodeFactory.CreateSpeechNode(nodeData.Position, nodeData.DialogueText);
+                    tempNode = NodeFactory.CreateSpeechNode(nodeData.Position);
+                    if (tempNode is SpeechNode speechNode)
+                    {
+                        speechNode.SetDialogueText(nodeData.DialogueText);
+                    }
                     break;
             }
-
             tempNode.GUID = nodeData.Guid;
 
             // Восстанавливаем аудио клип по GUID
@@ -321,20 +327,26 @@ public class GraphSaveUtility
         foreach (var nodeData in containerCache.OptionNodeDatas)
         {
             BaseNode tempNode = null;
-
             switch (nodeData.NodeType)
             {
                 case "OptionNodeText":
-                    tempNode = NodeFactory.CreateOptionNodeText(nodeData.Position, nodeData.ResponseText);
+                    tempNode = NodeFactory.CreateOptionNodeText(nodeData.Position);
+                    if (tempNode is OptionNode optionNodeText)
+                    {
+                        optionNodeText.SetResponseText(nodeData.ResponseText);
+                    }
                     break;
                 case "OptionNodeAudio":
                     tempNode = NodeFactory.CreateOptionNodeAudio(nodeData.Position);
                     break;
                 default:
-                    tempNode = NodeFactory.CreateOptionNode(nodeData.Position, nodeData.ResponseText);
+                    tempNode = NodeFactory.CreateOptionNode(nodeData.Position);
+                    if (tempNode is OptionNode optionNode)
+                    {
+                        optionNode.SetResponseText(nodeData.ResponseText);
+                    }
                     break;
             }
-
             tempNode.GUID = nodeData.Guid;
 
             // Восстанавливаем аудио клип по GUID

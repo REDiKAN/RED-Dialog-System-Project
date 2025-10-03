@@ -98,4 +98,11 @@ public class SpeechNode : BaseNode
             speakerField.SetValueWithoutNotify(speaker);
         }
     }
+
+    public void SetDialogueText(string text)
+    {
+        DialogueText = text;
+        if (dialogueTextField != null)
+            dialogueTextField.SetValueWithoutNotify(text);
+    }
 }
