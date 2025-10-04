@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
@@ -9,7 +9,7 @@ using System.Collections;
 using DialogueSystem;
 
 /// <summary>
-/// Управляет выполнением диалогов в реальном времени
+/// РЈРїСЂР°РІР»СЏРµС‚ РІС‹РїРѕР»РЅРµРЅРёРµРј РґРёР°Р»РѕРіРѕРІ РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё
 /// </summary>
 public class DialogueManager : MonoBehaviour
 {
@@ -18,17 +18,17 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private OptionPanel optionPanel;
 
     [Header("Dialogue Settings")]
-    [SerializeField] private float messageDelay = 0.5f; // Задержка между сообщениями
+    [SerializeField] private float messageDelay = 0.5f; // Р—Р°РґРµСЂР¶РєР° РјРµР¶РґСѓ СЃРѕРѕР±С‰РµРЅРёСЏРјРё
 
     [SerializeField] private DialogueContainer currentDialogue;
-    private object currentNode; // Исправлено: BaseNodeData -> object (ошибки 1,9)
+    private object currentNode; // РСЃРїСЂР°РІР»РµРЅРѕ: BaseNodeData -> object (РѕС€РёР±РєРё 1,9)
     private Dictionary<string, int> intVariables = new Dictionary<string, int>();
     private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
-    private List<object> visitedNodes = new List<object>(); // Исправлено: BaseNodeData -> object
+    private List<object> visitedNodes = new List<object>(); // РСЃРїСЂР°РІР»РµРЅРѕ: BaseNodeData -> object
 
     private void Start()
     {
-        // Подписываемся на событие выбора опции
+        // РџРѕРґРїРёСЃС‹РІР°РµРјСЃСЏ РЅР° СЃРѕР±С‹С‚РёРµ РІС‹Р±РѕСЂР° РѕРїС†РёРё
         if (optionPanel != null)
         {
             optionPanel.onOptionSelected += HandleOptionSelection;
@@ -46,16 +46,16 @@ public class DialogueManager : MonoBehaviour
         StartDialogue(currentDialogue);
     }
     /// <summary>
-    /// Запускает диалог по указанному контейнеру
+    /// Р—Р°РїСѓСЃРєР°РµС‚ РґРёР°Р»РѕРі РїРѕ СѓРєР°Р·Р°РЅРЅРѕРјСѓ РєРѕРЅС‚РµР№РЅРµСЂСѓ
     /// </summary>
-    /// <param name="dialogueContainer">Контейнер диалога для запуска</param>
+    /// <param name="dialogueContainer">РљРѕРЅС‚РµР№РЅРµСЂ РґРёР°Р»РѕРіР° РґР»СЏ Р·Р°РїСѓСЃРєР°</param>
     public void StartDialogue(DialogueContainer dialogueContainer)
     {
         currentDialogue = dialogueContainer;
         ResetVariables();
         visitedNodes.Clear();
 
-        // Инициализация переменных из Exposed Properties
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїРµСЂРµРјРµРЅРЅС‹С… РёР· Exposed Properties
         foreach (var prop in currentDialogue.IntExposedProperties)
         {
             intVariables[prop.PropertyName] = prop.IntValue;
@@ -66,13 +66,13 @@ public class DialogueManager : MonoBehaviour
             stringVariables[prop.PropertyName] = prop.StringValue;
         }
 
-        // Начинаем диалог с EntryNode
+        // РќР°С‡РёРЅР°РµРј РґРёР°Р»РѕРі СЃ EntryNode
         currentNode = currentDialogue.EntryNodeData;
         ProcessNextNode();
     }
 
     /// <summary>
-    /// Сбрасывает все переменные диалога к значениям по умолчанию
+    /// РЎР±СЂР°СЃС‹РІР°РµС‚ РІСЃРµ РїРµСЂРµРјРµРЅРЅС‹Рµ РґРёР°Р»РѕРіР° Рє Р·РЅР°С‡РµРЅРёСЏРј РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
     /// </summary>
     private void ResetVariables()
     {
@@ -85,7 +85,6 @@ public class DialogueManager : MonoBehaviour
         if (currentNode == null)
             return;
 
-        // Добавляем текущий узел в список пройденных
         if (!visitedNodes.Contains(currentNode))
         {
             visitedNodes.Add(currentNode);
@@ -99,8 +98,8 @@ public class DialogueManager : MonoBehaviour
             case SpeechNodeData speechNode:
                 ProcessSpeechNode(speechNode);
                 break;
-            case OptionNodeData optionNode:
-                ProcessOptionNode(optionNode);
+            case SpeechNodeImageData speechImageNode:
+                ProcessSpeechImageNode(speechImageNode);
                 break;
             case IntConditionNodeData intCondition:
                 ProcessIntCondition(intCondition);
@@ -114,26 +113,21 @@ public class DialogueManager : MonoBehaviour
             case EndNodeData endNode:
                 ProcessEndNode(endNode);
                 break;
-            case SpeechNodeImageData speechImageNode:
-                ProcessSpeechImageNode(speechImageNode);
-                break;
-            case OptionNodeImageData optionImageNode:
-                ProcessOptionImageNode(optionImageNode);
-                break;
+            // вљ пёЏ РЈР‘Р РђРќРћ: OptionNodeData Рё OptionNodeImageData РќР• РѕР±СЂР°Р±Р°С‚С‹РІР°СЋС‚СЃСЏ РєР°Рє РёСЃРїРѕР»РЅСЏРµРјС‹Рµ СѓР·Р»С‹
             default:
-                Debug.LogWarning($"Неизвестный тип узла: {currentNode.GetType().Name}");
+                Debug.LogWarning($"РќРµРёР·РІРµСЃС‚РЅС‹Р№ С‚РёРї СѓР·Р»Р°: {currentNode?.GetType().Name}");
                 currentNode = null;
                 break;
         }
     }
 
     /// <summary>
-    /// Обрабатывает EntryNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ EntryNodeData
     /// </summary>
-    /// <param name="entryNode">Данные начального узла</param>
+    /// <param name="entryNode">Р”Р°РЅРЅС‹Рµ РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СѓР·Р»Р°</param>
     private void ProcessEntryNode(EntryNodeData entryNode)
     {
-        // Находим следующий узел после EntryNode
+        // РќР°С…РѕРґРёРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР» РїРѕСЃР»Рµ EntryNode
         var nextLink = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.BaseNodeGuid == entryNode.Guid);
 
@@ -144,46 +138,93 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            // Если нет следующего узла, завершаем диалог
+            // Р•СЃР»Рё РЅРµС‚ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓР·Р»Р°, Р·Р°РІРµСЂС€Р°РµРј РґРёР°Р»РѕРі
             currentNode = null;
         }
     }
 
     /// <summary>
-    /// Обрабатывает SpeechNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ SpeechNodeData
     /// </summary>
-    /// <param name="speechNode">Данные узла речи</param>
+    /// <param name="speechNode">Р”Р°РЅРЅС‹Рµ СѓР·Р»Р° СЂРµС‡Рё</param>
     private void ProcessSpeechNode(SpeechNodeData speechNode)
     {
-        // Получаем персонажа из CharacterManager
         CharacterData speaker = GetCharacterByGuid(speechNode.SpeakerGuid);
-
-        // Создаем сообщение для чата
         var message = new Message
         {
             Type = SenderType.NPC,
             Text = speechNode.DialogueText,
-            Image = null, // Для текстовых речей изображение не используется
-            Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid), // Исправлено: AssetLoader
+            Image = null,
+            Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid),
             Sender = speaker
         };
-
-        // Добавляем сообщение в чат
         chatPanel.AddMessage(message, MessageType.Speech);
 
-        // Обрабатываем аудио, если оно есть
         if (message.Audio != null)
         {
             StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
         }
 
-        // Находим следующий узел
-        var nextLink = currentDialogue.NodeLinks
-            .FirstOrDefault(l => l.BaseNodeGuid == speechNode.Guid);
+        // === РќРћР’РђРЇ Р›РћР“РРљРђ: РѕР±СЂР°Р±РѕС‚РєР° РІР°СЂРёР°РЅС‚РѕРІ РѕС‚РІРµС‚Р° ===
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechNode.Guid)
+            .ToList();
 
-        if (nextLink != null)
+        // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РёСЃС…РѕРґСЏС‰РёРµ СЃРІСЏР·Рё Рє OptionNode
+        var optionLinks = outgoingLinks.Where(link =>
         {
-            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                // РџРѕР»СѓС‡Р°РµРј С‚РµРєСЃС‚ РѕРїС†РёРё
+                string text = "РР·РѕР±СЂР°Р¶РµРЅРёРµ";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "РќРµРёР·РІРµСЃС‚РЅС‹Р№ РІР°СЂРёР°РЅС‚";
+
+                // РќР°С…РѕРґРёРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР» РџРћРЎР›Р• OptionNode
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid); // в†ђ РљР°СЃС‚ Рє BaseNodeData
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning($"OptionNode {((BaseNodeData)optionNode).Guid} РЅРµ РёРјРµРµС‚ РёСЃС…РѕРґСЏС‰РёС… СЃРІСЏР·РµР№!");
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("РќРµС‚ РІР°Р»РёРґРЅС‹С… РІР°СЂРёР°РЅС‚РѕРІ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ!");
+                currentNode = null;
+            }
+            return; // в†ђ РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІС‹РїРѕР»РЅРµРЅРёРµ вЂ” РІС‹Р±РѕСЂ СЃРґРµР»Р°РµС‚ РёРіСЂРѕРє
+        }
+
+        // Р•СЃР»Рё РЅРµС‚ Option Node вЂ” РїСЂРѕРґРѕР»Р¶Р°РµРј Р»РёРЅРµР№РЅРѕ
+        var nextLinearLink = outgoingLinks.FirstOrDefault(); // в†ђ РСЃРїРѕР»СЊР·СѓРµРј РґСЂСѓРіРѕРµ РёРјСЏ РїРµСЂРµРјРµРЅРЅРѕР№
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
             ProcessNextNode();
         }
         else
@@ -193,28 +234,28 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает SpeechNodeImageData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ SpeechNodeImageData
     /// </summary>
-    /// <param name="speechImageNode">Данные узла изображения речи</param>
+    /// <param name="speechImageNode">Р”Р°РЅРЅС‹Рµ СѓР·Р»Р° РёР·РѕР±СЂР°Р¶РµРЅРёСЏ СЂРµС‡Рё</param>
     private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
     {
-        // Получаем персонажа из CharacterManager
+        // РџРѕР»СѓС‡Р°РµРј РїРµСЂСЃРѕРЅР°Р¶Р° РёР· CharacterManager
         CharacterData speaker = GetCharacterByGuid(speechImageNode.SpeakerGuid);
 
-        // Создаем сообщение для чата
+        // РЎРѕР·РґР°РµРј СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ С‡Р°С‚Р°
         var message = new Message
         {
             Type = SenderType.NPC,
-            Text = null, // Для изображений текст не используется
-            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid), // Исправлено: AssetLoader
+            Text = null, // Р”Р»СЏ РёР·РѕР±СЂР°Р¶РµРЅРёР№ С‚РµРєСЃС‚ РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ
+            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid), // РСЃРїСЂР°РІР»РµРЅРѕ: AssetLoader
             Audio = null,
             Sender = speaker
         };
 
-        // Добавляем сообщение в чат
+        // Р”РѕР±Р°РІР»СЏРµРј СЃРѕРѕР±С‰РµРЅРёРµ РІ С‡Р°С‚
         chatPanel.AddMessage(message, MessageType.SpeechImage);
 
-        // Находим следующий узел
+        // РќР°С…РѕРґРёРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР»
         var nextLink = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.BaseNodeGuid == speechImageNode.Guid);
 
@@ -230,14 +271,14 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает OptionNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ OptionNodeData
     /// </summary>
     private void ProcessOptionNode(OptionNodeData optionNode)
     {
-        // Создаем список вариантов ответа
+        // РЎРѕР·РґР°РµРј СЃРїРёСЃРѕРє РІР°СЂРёР°РЅС‚РѕРІ РѕС‚РІРµС‚Р°
         var options = new List<Option>();
 
-        // Находим все связи от этого узла
+        // РќР°С…РѕРґРёРј РІСЃРµ СЃРІСЏР·Рё РѕС‚ СЌС‚РѕРіРѕ СѓР·Р»Р°
         var optionLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == optionNode.Guid)
             .ToList();
@@ -245,16 +286,16 @@ public class DialogueManager : MonoBehaviour
         foreach (var link in optionLinks)
         {
             var targetNode = GetNodeByGuid(link.TargetNodeGuid);
-            string optionText = "Вариант ответа";
+            string optionText = "Р’Р°СЂРёР°РЅС‚ РѕС‚РІРµС‚Р°";
 
             if (targetNode is OptionNodeData optionTarget)
             {
                 optionText = !string.IsNullOrEmpty(optionTarget.ResponseText) ?
-                    optionTarget.ResponseText : "Вариант ответа";
+                    optionTarget.ResponseText : "Р’Р°СЂРёР°РЅС‚ РѕС‚РІРµС‚Р°";
             }
             else if (targetNode is OptionNodeImageData)
             {
-                optionText = "Изображение";
+                optionText = "РР·РѕР±СЂР°Р¶РµРЅРёРµ";
             }
 
             options.Add(new Option
@@ -264,7 +305,7 @@ public class DialogueManager : MonoBehaviour
             });
         }
 
-        // Показываем варианты ответа
+        // РџРѕРєР°Р·С‹РІР°РµРј РІР°СЂРёР°РЅС‚С‹ РѕС‚РІРµС‚Р°
         if (options.Count > 0 && optionPanel != null)
         {
             optionPanel.ShowOptions(options);
@@ -274,7 +315,7 @@ public class DialogueManager : MonoBehaviour
         {
             Debug.LogWarning($"No options found for OptionNode {optionNode.Guid}");
 
-            // Пытаемся найти следующий узел
+            // РџС‹С‚Р°РµРјСЃСЏ РЅР°Р№С‚Рё СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР»
             var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
             if (nextLink != null)
             {
@@ -289,15 +330,15 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает OptionNodeImageData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ OptionNodeImageData
     /// </summary>
-    /// <param name="optionImageNode">Данные узла изображения вариантов ответа</param>
+    /// <param name="optionImageNode">Р”Р°РЅРЅС‹Рµ СѓР·Р»Р° РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РІР°СЂРёР°РЅС‚РѕРІ РѕС‚РІРµС‚Р°</param>
     private void ProcessOptionImageNode(OptionNodeImageData optionImageNode)
     {
-        // Получаем варианты ответов из узла
+        // РџРѕР»СѓС‡Р°РµРј РІР°СЂРёР°РЅС‚С‹ РѕС‚РІРµС‚РѕРІ РёР· СѓР·Р»Р°
         var options = new List<Option>();
 
-        // Получаем связанные OptionNodeData для всех выходов
+        // РџРѕР»СѓС‡Р°РµРј СЃРІСЏР·Р°РЅРЅС‹Рµ OptionNodeData РґР»СЏ РІСЃРµС… РІС‹С…РѕРґРѕРІ
         var optionLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == optionImageNode.Guid)
             .ToList();
@@ -315,38 +356,38 @@ public class DialogueManager : MonoBehaviour
             }
             else if (targetNode is OptionNodeImageData optionImageTarget)
             {
-                // Для изображений вариантов ответа
+                // Р”Р»СЏ РёР·РѕР±СЂР°Р¶РµРЅРёР№ РІР°СЂРёР°РЅС‚РѕРІ РѕС‚РІРµС‚Р°
                 options.Add(new Option
                 {
-                    Text = "Изображение", // Исправлено: OptionNodeImageData не имеет ResponseText
+                    Text = "РР·РѕР±СЂР°Р¶РµРЅРёРµ", // РСЃРїСЂР°РІР»РµРЅРѕ: OptionNodeImageData РЅРµ РёРјРµРµС‚ ResponseText
                     NextNodeGuid = link.TargetNodeGuid
                 });
             }
         }
 
-        // Показываем панель вариантов ответов
+        // РџРѕРєР°Р·С‹РІР°РµРј РїР°РЅРµР»СЊ РІР°СЂРёР°РЅС‚РѕРІ РѕС‚РІРµС‚РѕРІ
         optionPanel.ShowOptions(options);
 
-        // Устанавливаем текущий узел как OptionNode для последующей обработки выбора
+        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С‚РµРєСѓС‰РёР№ СѓР·РµР» РєР°Рє OptionNode РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµР№ РѕР±СЂР°Р±РѕС‚РєРё РІС‹Р±РѕСЂР°
         currentNode = optionImageNode;
     }
 
     /// <summary>
-    /// Обрабатывает IntConditionNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ IntConditionNodeData
     /// </summary>
-    /// <param name="intCondition">Данные числового условия</param>
+    /// <param name="intCondition">Р”Р°РЅРЅС‹Рµ С‡РёСЃР»РѕРІРѕРіРѕ СѓСЃР»РѕРІРёСЏ</param>
     private void ProcessIntCondition(IntConditionNodeData intCondition)
     {
-        // Проверяем условие
+        // РџСЂРѕРІРµСЂСЏРµРј СѓСЃР»РѕРІРёРµ
         bool conditionResult = ConditionHandler.EvaluateIntCondition(
             intCondition, intVariables);
 
-        // Определяем следующий узел в зависимости от результата
+        // РћРїСЂРµРґРµР»СЏРµРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР» РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЂРµР·СѓР»СЊС‚Р°С‚Р°
         var nextLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == intCondition.Guid)
             .ToList();
 
-        // Находим подходящий выход
+        // РќР°С…РѕРґРёРј РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ
         foreach (var link in nextLinks)
         {
             if (link.PortName == "True" && conditionResult)
@@ -363,27 +404,27 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-        // Если подходящий выход не найден, завершаем диалог
-        Debug.LogWarning($"Не найден подходящий выход для условия IntConditionNode {intCondition.Guid}");
+        // Р•СЃР»Рё РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ РЅРµ РЅР°Р№РґРµРЅ, Р·Р°РІРµСЂС€Р°РµРј РґРёР°Р»РѕРі
+        Debug.LogWarning($"РќРµ РЅР°Р№РґРµРЅ РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ РґР»СЏ СѓСЃР»РѕРІРёСЏ IntConditionNode {intCondition.Guid}");
         currentNode = null;
     }
 
     /// <summary>
-    /// Обрабатывает StringConditionNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ StringConditionNodeData
     /// </summary>
-    /// <param name="stringCondition">Данные строкового условия</param>
+    /// <param name="stringCondition">Р”Р°РЅРЅС‹Рµ СЃС‚СЂРѕРєРѕРІРѕРіРѕ СѓСЃР»РѕРІРёСЏ</param>
     private void ProcessStringCondition(StringConditionNodeData stringCondition)
     {
-        // Проверяем условие
+        // РџСЂРѕРІРµСЂСЏРµРј СѓСЃР»РѕРІРёРµ
         bool conditionResult = ConditionHandler.EvaluateStringCondition(
             stringCondition, stringVariables);
 
-        // Определяем следующий узел в зависимости от результата
+        // РћРїСЂРµРґРµР»СЏРµРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР» РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЂРµР·СѓР»СЊС‚Р°С‚Р°
         var nextLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == stringCondition.Guid)
             .ToList();
 
-        // Находим подходящий выход
+        // РќР°С…РѕРґРёРј РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ
         foreach (var link in nextLinks)
         {
             if (link.PortName == "True" && conditionResult)
@@ -400,26 +441,26 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-        // Если подходящий выход не найден, завершаем диалог
-        Debug.LogWarning($"Не найден подходящий выход для условия StringConditionNode {stringCondition.Guid}");
+        // Р•СЃР»Рё РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ РЅРµ РЅР°Р№РґРµРЅ, Р·Р°РІРµСЂС€Р°РµРј РґРёР°Р»РѕРі
+        Debug.LogWarning($"РќРµ РЅР°Р№РґРµРЅ РїРѕРґС…РѕРґСЏС‰РёР№ РІС‹С…РѕРґ РґР»СЏ СѓСЃР»РѕРІРёСЏ StringConditionNode {stringCondition.Guid}");
         currentNode = null;
     }
 
     /// <summary>
-    /// Обрабатывает ModifyIntNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ ModifyIntNodeData
     /// </summary>
-    /// <param name="modifyNode">Данные модификатора числа</param>
+    /// <param name="modifyNode">Р”Р°РЅРЅС‹Рµ РјРѕРґРёС„РёРєР°С‚РѕСЂР° С‡РёСЃР»Р°</param>
     private void ProcessModifyIntNode(ModifyIntNodeData modifyNode)
     {
-        // Проверяем наличие переменной
+        // РџСЂРѕРІРµСЂСЏРµРј РЅР°Р»РёС‡РёРµ РїРµСЂРµРјРµРЅРЅРѕР№
         if (!intVariables.ContainsKey(modifyNode.SelectedProperty))
         {
-            Debug.LogError($"Переменная {modifyNode.SelectedProperty} не найдена в intVariables");
+            Debug.LogError($"РџРµСЂРµРјРµРЅРЅР°СЏ {modifyNode.SelectedProperty} РЅРµ РЅР°Р№РґРµРЅР° РІ intVariables");
             currentNode = null;
             return;
         }
 
-        // Применяем операцию
+        // РџСЂРёРјРµРЅСЏРµРј РѕРїРµСЂР°С†РёСЋ
         switch (modifyNode.Operator)
         {
             case OperatorType.Set:
@@ -438,7 +479,7 @@ public class DialogueManager : MonoBehaviour
                 if (modifyNode.Value != 0)
                     intVariables[modifyNode.SelectedProperty] /= modifyNode.Value;
                 else
-                    Debug.LogWarning("Деление на ноль в ModifyIntNode");
+                    Debug.LogWarning("Р”РµР»РµРЅРёРµ РЅР° РЅРѕР»СЊ РІ ModifyIntNode");
                 break;
             case OperatorType.Increment:
                 intVariables[modifyNode.SelectedProperty]++;
@@ -448,7 +489,7 @@ public class DialogueManager : MonoBehaviour
                 break;
         }
 
-        // Находим следующий узел
+        // РќР°С…РѕРґРёРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР»
         var nextLink = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.BaseNodeGuid == modifyNode.Guid);
 
@@ -464,20 +505,20 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Обрабатывает EndNodeData
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ EndNodeData
     /// </summary>
-    /// <param name="endNode">Данные конечного узла</param>
+    /// <param name="endNode">Р”Р°РЅРЅС‹Рµ РєРѕРЅРµС‡РЅРѕРіРѕ СѓР·Р»Р°</param>
     private void ProcessEndNode(EndNodeData endNode)
     {
-        // Добавляем системное сообщение о завершении диалога
+        // Р”РѕР±Р°РІР»СЏРµРј СЃРёСЃС‚РµРјРЅРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ Рѕ Р·Р°РІРµСЂС€РµРЅРёРё РґРёР°Р»РѕРіР°
         var message = new Message
         {
             Type = SenderType.System,
-            Text = "Диалог завершен"
+            Text = "Р”РёР°Р»РѕРі Р·Р°РІРµСЂС€РµРЅ"
         };
         chatPanel.AddMessage(message, MessageType.System);
 
-        // Если указан следующий диалог, запускаем его
+        // Р•СЃР»Рё СѓРєР°Р·Р°РЅ СЃР»РµРґСѓСЋС‰РёР№ РґРёР°Р»РѕРі, Р·Р°РїСѓСЃРєР°РµРј РµРіРѕ
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
         {
             DialogueContainer nextDialogue = Resources.Load<DialogueContainer>(endNode.NextDialogueName);
@@ -487,54 +528,52 @@ public class DialogueManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"Диалог {endNode.NextDialogueName} не найден в ресурсах");
+                Debug.LogError($"Р”РёР°Р»РѕРі {endNode.NextDialogueName} РЅРµ РЅР°Р№РґРµРЅ РІ СЂРµСЃСѓСЂСЃР°С…");
             }
         }
         else
         {
-            // Завершаем текущий диалог
+            // Р—Р°РІРµСЂС€Р°РµРј С‚РµРєСѓС‰РёР№ РґРёР°Р»РѕРі
             currentNode = null;
         }
     }
 
     /// <summary>
-    /// Обработка выбора опции игроком с задержкой перед следующим сообщением
+    /// РћР±СЂР°Р±РѕС‚РєР° РІС‹Р±РѕСЂР° РѕРїС†РёРё РёРіСЂРѕРєРѕРј СЃ Р·Р°РґРµСЂР¶РєРѕР№ РїРµСЂРµРґ СЃР»РµРґСѓСЋС‰РёРј СЃРѕРѕР±С‰РµРЅРёРµРј
     /// </summary>
     public void HandleOptionSelection(string nextNodeGuid)
     {
-        // Добавляем сообщение игрока в чат
-        var selectedOption = currentDialogue.NodeLinks
+        // РЎСЂР°Р·Сѓ СЃРєСЂС‹РІР°РµРј РїР°РЅРµР»СЊ
+        if (optionPanel != null)
+            optionPanel.Hide();
+
+        // РџРѕР»СѓС‡Р°РµРј С‚РµРєСЃС‚ РѕРїС†РёРё С‡РµСЂРµР· РѕР±СЂР°С‚РЅСѓСЋ СЃРІСЏР·СЊ
+        var linkToNext = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.TargetNodeGuid == nextNodeGuid);
-        if (selectedOption != null)
+
+        if (linkToNext != null)
         {
-            string optionText = "Выбор: ";
-            var optionNode = GetNodeByGuid(selectedOption.BaseNodeGuid) as OptionNodeData;
-            if (optionNode != null && !string.IsNullOrEmpty(optionNode.ResponseText))
-            {
-                optionText += optionNode.ResponseText;
-            }
-            else
-            {
-                optionText += "Неизвестный выбор";
-            }
+            var optionNode = GetNodeByGuid(linkToNext.BaseNodeGuid);
+            string optionText = "РР·РѕР±СЂР°Р¶РµРЅРёРµ";
+
+            if (optionNode is OptionNodeData opt)
+                optionText = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "РќРµРёР·РІРµСЃС‚РЅС‹Р№ РІР°СЂРёР°РЅС‚";
 
             var message = new Message
             {
                 Type = SenderType.Player,
-                Text = optionText
+                Text = optionText // в†ђ Р±РµР· РїСЂРµС„РёРєСЃР°!
             };
             chatPanel.AddMessage(message, MessageType.OptionText);
         }
 
-        // Устанавливаем следующий узел
+        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃР»РµРґСѓСЋС‰РёР№ СѓР·РµР» Рё РїСЂРѕРґРѕР»Р¶Р°РµРј
         currentNode = GetNodeByGuid(nextNodeGuid);
-
-        // Запускаем задержку перед обработкой следующего узла
-        StartCoroutine(DelayedProcessNextNode());
+        ProcessNextNode(); // в†ђ СЃСЂР°Р·Сѓ, Р±РµР· Р·Р°РґРµСЂР¶РєРё
     }
 
     /// <summary>
-    /// Задержка перед обработкой следующего узла (для плавности диалога)
+    /// Р—Р°РґРµСЂР¶РєР° РїРµСЂРµРґ РѕР±СЂР°Р±РѕС‚РєРѕР№ СЃР»РµРґСѓСЋС‰РµРіРѕ СѓР·Р»Р° (РґР»СЏ РїР»Р°РІРЅРѕСЃС‚Рё РґРёР°Р»РѕРіР°)
     /// </summary>
     private IEnumerator DelayedProcessNextNode()
     {
@@ -543,16 +582,16 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Получает узел по его GUID
+    /// РџРѕР»СѓС‡Р°РµС‚ СѓР·РµР» РїРѕ РµРіРѕ GUID
     /// </summary>
-    /// <param name="guid">GUID узла</param>
-    /// <returns>BaseNodeData или null</returns>
+    /// <param name="guid">GUID СѓР·Р»Р°</param>
+    /// <returns>BaseNodeData РёР»Рё null</returns>
     private object GetNodeByGuid(string guid)
     {
         if (string.IsNullOrEmpty(guid))
             return null;
 
-        // Ищем в всех типах узлов
+        // РС‰РµРј РІ РІСЃРµС… С‚РёРїР°С… СѓР·Р»РѕРІ
         var speechNode = currentDialogue.SpeechNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechNode != null) return speechNode;
 
@@ -581,11 +620,11 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Воспроизводит аудио с задержкой после отображения текста
+    /// Р’РѕСЃРїСЂРѕРёР·РІРѕРґРёС‚ Р°СѓРґРёРѕ СЃ Р·Р°РґРµСЂР¶РєРѕР№ РїРѕСЃР»Рµ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ С‚РµРєСЃС‚Р°
     /// </summary>
-    /// <param name="audioClip">Аудио клип для воспроизведения</param>
-    /// <param name="delay">Задержка в секундах</param>
-    /// <returns>Корутину для воспроизведения аудио</returns>
+    /// <param name="audioClip">РђСѓРґРёРѕ РєР»РёРї РґР»СЏ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ</param>
+    /// <param name="delay">Р—Р°РґРµСЂР¶РєР° РІ СЃРµРєСѓРЅРґР°С…</param>
+    /// <returns>РљРѕСЂСѓС‚РёРЅСѓ РґР»СЏ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ Р°СѓРґРёРѕ</returns>
     private IEnumerator PlayAudioAfterDelay(AudioClip audioClip, float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -593,7 +632,7 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Сбрасывает текущий диалог
+    /// РЎР±СЂР°СЃС‹РІР°РµС‚ С‚РµРєСѓС‰РёР№ РґРёР°Р»РѕРі
     /// </summary>
     public void ResetDialogue()
     {
@@ -604,43 +643,43 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Получает персонажа по GUID (заглушка для runtime)
+    /// РџРѕР»СѓС‡Р°РµС‚ РїРµСЂСЃРѕРЅР°Р¶Р° РїРѕ GUID (Р·Р°РіР»СѓС€РєР° РґР»СЏ runtime)
     /// </summary>
-    /// <param name="guid">GUID персонажа</param>
-    /// <returns>CharacterData или null</returns>
+    /// <param name="guid">GUID РїРµСЂСЃРѕРЅР°Р¶Р°</param>
+    /// <returns>CharacterData РёР»Рё null</returns>
     private CharacterData GetCharacterByGuid(string guid)
     {
-        // В runtime нет AssetDatabase, поэтому используем заглушку
-        // В реальной системе нужно реализовать загрузку из Resources
+        // Р’ runtime РЅРµС‚ AssetDatabase, РїРѕСЌС‚РѕРјСѓ РёСЃРїРѕР»СЊР·СѓРµРј Р·Р°РіР»СѓС€РєСѓ
+        // Р’ СЂРµР°Р»СЊРЅРѕР№ СЃРёСЃС‚РµРјРµ РЅСѓР¶РЅРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ Р·Р°РіСЂСѓР·РєСѓ РёР· Resources
         return null;
     }
 
     /// <summary>
-    /// Вспомогательный класс для загрузки ассетов в runtime
+    /// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ Р·Р°РіСЂСѓР·РєРё Р°СЃСЃРµС‚РѕРІ РІ runtime
     /// </summary>
     public static class AssetLoader
     {
         /// <summary>
-        /// Загружает аудио клип по GUID (заглушка для runtime)
+        /// Р—Р°РіСЂСѓР¶Р°РµС‚ Р°СѓРґРёРѕ РєР»РёРї РїРѕ GUID (Р·Р°РіР»СѓС€РєР° РґР»СЏ runtime)
         /// </summary>
-        /// <param name="guid">GUID аудио</param>
-        /// <returns>AudioClip или null</returns>
+        /// <param name="guid">GUID Р°СѓРґРёРѕ</param>
+        /// <returns>AudioClip РёР»Рё null</returns>
         public static AudioClip LoadAudioClip(string guid)
         {
-            // В runtime нет AssetDatabase, поэтому используем заглушку
-            // В реальной системе нужно реализовать загрузку из Resources
+            // Р’ runtime РЅРµС‚ AssetDatabase, РїРѕСЌС‚РѕРјСѓ РёСЃРїРѕР»СЊР·СѓРµРј Р·Р°РіР»СѓС€РєСѓ
+            // Р’ СЂРµР°Р»СЊРЅРѕР№ СЃРёСЃС‚РµРјРµ РЅСѓР¶РЅРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ Р·Р°РіСЂСѓР·РєСѓ РёР· Resources
             return null;
         }
 
         /// <summary>
-        /// Загружает спрайт по GUID (заглушка для runtime)
+        /// Р—Р°РіСЂСѓР¶Р°РµС‚ СЃРїСЂР°Р№С‚ РїРѕ GUID (Р·Р°РіР»СѓС€РєР° РґР»СЏ runtime)
         /// </summary>
-        /// <param name="guid">GUID спрайта</param>
-        /// <returns>Sprite или null</returns>
+        /// <param name="guid">GUID СЃРїСЂР°Р№С‚Р°</param>
+        /// <returns>Sprite РёР»Рё null</returns>
         public static Sprite LoadSprite(string guid)
         {
-            // В runtime нет AssetDatabase, поэтому используем заглушку
-            // В реальной системе нужно реализовать загрузку из Resources
+            // Р’ runtime РЅРµС‚ AssetDatabase, РїРѕСЌС‚РѕРјСѓ РёСЃРїРѕР»СЊР·СѓРµРј Р·Р°РіР»СѓС€РєСѓ
+            // Р’ СЂРµР°Р»СЊРЅРѕР№ СЃРёСЃС‚РµРјРµ РЅСѓР¶РЅРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ Р·Р°РіСЂСѓР·РєСѓ РёР· Resources
             return null;
         }
     }

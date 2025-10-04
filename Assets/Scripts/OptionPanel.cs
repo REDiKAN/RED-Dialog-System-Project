@@ -43,9 +43,9 @@ public class OptionPanel : MonoBehaviour
                 button.onClick.AddListener(() =>
                 {
                     onOptionSelected?.Invoke(option.NextNodeGuid);
-                    Destroy(button.gameObject);
-                    //Hide();
-                });
+                    // ”дал€ем ¬—≈ кнопки и скрываем панель Ч но делаем это в DialogueManager
+                    // «десь просто вызываем событие Ч очистка будет в HandleOptionSelection
+                }); ;
             }
         }
 
@@ -57,6 +57,6 @@ public class OptionPanel : MonoBehaviour
     /// </summary>
     public void Hide()
     {
-        //gameObject.SetActive(false);
+        gameObject.SetActive(false);
     }
 }
