@@ -62,7 +62,7 @@ public class OptionNode : BaseNode
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
     }
 
-    public void SetResponseText(string text)
+    public virtual void SetResponseText(string text)
     {
         ResponseText = text;
         if (responseTextField != null)

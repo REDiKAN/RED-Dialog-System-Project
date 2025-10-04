@@ -99,7 +99,7 @@ public class SpeechNode : BaseNode
         }
     }
 
-    public void SetDialogueText(string text)
+    public virtual void SetDialogueText(string text)
     {
         DialogueText = text;
         if (dialogueTextField != null)
