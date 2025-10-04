@@ -21,24 +21,22 @@ public class SpeechNodeText : SpeechNode
             dialogueTextField = null;
         }
 
-        // Создаём компактный превью-лейбл
+        // Создаём превью-лейбл с поддержкой роста по высоте
         _previewLabel = new Label(DialogueText)
         {
             style =
             {
                 whiteSpace = WhiteSpace.Normal,
-                overflow = Overflow.Hidden,
-                maxHeight = 40, // ~2 строки
-                flexGrow = 1
+                overflow = Overflow.Visible, // ← Важно: не Hidden!
+                flexGrow = 1,
+                flexShrink = 0,
+                alignSelf = Align.Stretch
             }
         };
         _previewLabel.AddToClassList("speech-text-preview");
 
         // Кнопка редактирования
-        _editButton = new Button(OpenTextEditor)
-        {
-            text = "✎"
-        };
+        _editButton = new Button(OpenTextEditor) { text = "✎" };
         _editButton.style.position = Position.Absolute;
         _editButton.style.top = 2;
         _editButton.style.right = 2;
@@ -46,9 +44,8 @@ public class SpeechNodeText : SpeechNode
         _editButton.style.height = 20;
         _editButton.style.fontSize = 10;
 
-        // Добавляем в mainContainer
         mainContainer.Add(_previewLabel);
-        titleContainer.Add(_editButton); // кнопка поверх заголовка
+        titleContainer.Add(_editButton);
 
         // Убираем аудио-поле
         if (audioField != null)
@@ -59,6 +56,21 @@ public class SpeechNodeText : SpeechNode
         }
 
         styleSheets.Add(Resources.Load<StyleSheet>("SpeechNodeText"));
+
+        // Подписываемся на изменение геометрии, чтобы обновлять высоту узла
+        _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
+    }
+
+    private void OnPreviewLabelResized(GeometryChangedEvent evt)
+    {
+        // Обновляем высоту узла на основе содержимого
+        var contentHeight = _previewLabel.layout.height;
+        var minHeight = 80f; // минимум для заголовка + отступов
+        var newHeight = Mathf.Max(minHeight, contentHeight + 60); // + отступы и кнопка
+
+        var rect = GetPosition();
+        rect.height = newHeight;
+        SetPosition(rect);
     }
 
     private void OpenTextEditor()
@@ -66,25 +78,17 @@ public class SpeechNodeText : SpeechNode
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
 
-        // Закрываем предыдущее окно, если открыто
         if (_modalWindow != null)
-        {
             _modalWindow.Close();
-        }
 
         _modalWindow = new TextEditorModalWindow(DialogueText, GUID, newText =>
         {
             DialogueText = newText;
-            _previewLabel.text = DialogueText.Length > 100
-                ? DialogueText.Substring(0, 100) + "..."
-                : DialogueText;
+            _previewLabel.text = DialogueText;
         });
-
-        // Позиционируем как Blackboard — в правом верхнем углу
         _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30; // под тулбаром
+        _modalWindow.style.top = 30;
         _modalWindow.style.right = 0;
-
         graphView.Add(_modalWindow);
     }
 
@@ -92,10 +96,6 @@ public class SpeechNodeText : SpeechNode
     {
         DialogueText = text ?? "";
         if (_previewLabel != null)
-        {
-            _previewLabel.text = DialogueText.Length > 100
-                ? DialogueText.Substring(0, 100) + "..."
-                : DialogueText;
-        }
+            _previewLabel.text = DialogueText;
     }
 }

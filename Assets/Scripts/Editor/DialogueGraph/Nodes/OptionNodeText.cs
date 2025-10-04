@@ -14,31 +14,26 @@ public class OptionNodeText : OptionNode
         base.Initialize(position);
         title = "Option (Text)";
 
-        // Удаляем стандартное текстовое поле
         if (responseTextField != null)
         {
             mainContainer.Remove(responseTextField);
             responseTextField = null;
         }
 
-        // Превью
         _previewLabel = new Label(ResponseText)
         {
             style =
             {
                 whiteSpace = WhiteSpace.Normal,
-                overflow = Overflow.Hidden,
-                maxHeight = 40,
-                flexGrow = 1
+                overflow = Overflow.Visible,
+                flexGrow = 1,
+                flexShrink = 0,
+                alignSelf = Align.Stretch
             }
         };
         _previewLabel.AddToClassList("option-text-preview");
 
-        // Кнопка редактирования
-        _editButton = new Button(OpenTextEditor)
-        {
-            text = "✎"
-        };
+        _editButton = new Button(OpenTextEditor) { text = "✎" };
         _editButton.style.position = Position.Absolute;
         _editButton.style.top = 2;
         _editButton.style.right = 2;
@@ -49,7 +44,6 @@ public class OptionNodeText : OptionNode
         mainContainer.Add(_previewLabel);
         titleContainer.Add(_editButton);
 
-        // Убираем аудио-поле
         if (audioField != null)
         {
             mainContainer.Remove(audioField);
@@ -58,6 +52,19 @@ public class OptionNodeText : OptionNode
         }
 
         styleSheets.Add(Resources.Load<StyleSheet>("OptionNodeText"));
+
+        _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
+    }
+
+    private void OnPreviewLabelResized(GeometryChangedEvent evt)
+    {
+        var contentHeight = _previewLabel.layout.height;
+        var minHeight = 80f;
+        var newHeight = Mathf.Max(minHeight, contentHeight + 60);
+
+        var rect = GetPosition();
+        rect.height = newHeight;
+        SetPosition(rect);
     }
 
     private void OpenTextEditor()
@@ -66,22 +73,16 @@ public class OptionNodeText : OptionNode
         if (graphView == null) return;
 
         if (_modalWindow != null)
-        {
             _modalWindow.Close();
-        }
 
         _modalWindow = new TextEditorModalWindow(ResponseText, GUID, newText =>
         {
             ResponseText = newText;
-            _previewLabel.text = ResponseText.Length > 100 
-                ? ResponseText.Substring(0, 100) + "..." 
-                : ResponseText;
+            _previewLabel.text = ResponseText;
         });
-
         _modalWindow.style.position = Position.Absolute;
         _modalWindow.style.top = 30;
         _modalWindow.style.right = 0;
-
         graphView.Add(_modalWindow);
     }
 
@@ -89,10 +90,6 @@ public class OptionNodeText : OptionNode
     {
         ResponseText = text ?? "";
         if (_previewLabel != null)
-        {
-            _previewLabel.text = ResponseText.Length > 100 
-                ? ResponseText.Substring(0, 100) + "..." 
-                : ResponseText;
-        }
+            _previewLabel.text = ResponseText;
     }
 }

@@ -9,3 +9,13 @@
     color: white;
     padding: 4px;
 }
+
+.speech-text-preview,
+.option-text-preview {
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    white-space: normal;
+    overflow: visible;
+    align-self: stretch;
+}
