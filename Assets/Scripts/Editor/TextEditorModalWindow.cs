@@ -1,0 +1,210 @@
+﻿using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEditor;
+using UnityEditor.UIElements;
+using System;
+
+public class TextEditorModalWindow : VisualElement
+{
+    private IMGUIContainer _imguiContainer;
+    private string _text;
+    private int _selectionStart;
+    private int _selectionEnd;
+    private Label _guidLabel;
+    private string _nodeGuid;
+    private Action<string> _onTextChanged;
+
+    public TextEditorModalWindow(string initialText, string nodeGuid, Action<string> onTextChanged)
+    {
+        _text = initialText ?? "";
+        _nodeGuid = nodeGuid;
+        _onTextChanged = onTextChanged;
+
+        style.flexDirection = FlexDirection.Column;
+        style.backgroundColor = new StyleColor(new Color(0.15f, 0.15f, 0.15f));
+        style.borderTopWidth = style.borderBottomWidth = style.borderLeftWidth = style.borderRightWidth = 1;
+        style.borderTopColor = style.borderBottomColor = style.borderLeftColor = style.borderRightColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f));
+        style.paddingTop = style.paddingBottom = 8;
+        style.paddingLeft = style.paddingRight = 8;
+        style.minWidth = 400;
+        style.maxWidth = 700;
+        style.minHeight = 300;
+        style.maxHeight = 600;
+
+        // Заголовок
+        var header = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, alignItems = Align.Center, marginBottom = 5 } };
+        var title = new Label("Edit Text") { style = { fontSize = 12, unityFontStyleAndWeight = FontStyle.Bold } };
+        var closeButton = new Button(() => Close()) { text = "×" };
+        closeButton.style.width = 24;
+        closeButton.style.height = 20;
+        closeButton.style.marginLeft = 10;
+        header.Add(title);
+        header.Add(closeButton);
+        Add(header);
+
+        // === Панель форматирования ===
+        var formatToolbar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 8 } };
+        var btnB = new Button(() => WrapSelection("<b>", "</b>", "жирный текст")) { text = "B" };
+        var btnI = new Button(() => WrapSelection("<i>", "</i>", "курсив")) { text = "I" };
+        var btnS = new Button(() => WrapSelection("<s>", "</s>", "зачёркнутый")) { text = "S" };
+        var btnU = new Button(() => WrapSelection("<u>", "</u>", "подчёркнутый")) { text = "U" };
+        var btnColor = new Button(OpenColorPicker) { text = "Цвет" };
+
+        foreach (var btn in new[] { btnB, btnI, btnS, btnU, btnColor })
+        {
+            btn.style.marginRight = 4;
+            btn.style.width = 40;
+            btn.style.height = 24;
+        }
+
+        formatToolbar.Add(btnB);
+        formatToolbar.Add(btnI);
+        formatToolbar.Add(btnS);
+        formatToolbar.Add(btnU);
+        formatToolbar.Add(btnColor);
+        Add(formatToolbar);
+
+        // IMGUI Container для текстового поля с поддержкой выделения
+        _imguiContainer = new IMGUIContainer(() =>
+        {
+            EditorGUI.BeginChangeCheck();
+            var rect = GUILayoutUtility.GetRect(0, 1000, 200, 600);
+            var newText = EditorGUI.TextArea(rect, _text);
+            if (Event.current.type == EventType.Repaint)
+            {
+                var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                _selectionStart = editor.cursorIndex;
+                _selectionEnd = editor.selectIndex;
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                _text = newText;
+                _onTextChanged?.Invoke(_text);
+            }
+        });
+        _imguiContainer.style.flexGrow = 1;
+        Add(_imguiContainer);
+
+        // Кнопки
+        var buttonRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
+        var copyBtn = new Button(() => EditorGUIUtility.systemCopyBuffer = _text) { text = "Copy" };
+        var pasteBtn = new Button(() =>
+        {
+            if (!string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer))
+            {
+                _text = EditorGUIUtility.systemCopyBuffer;
+                _onTextChanged?.Invoke(_text);
+            }
+        })
+        { text = "Paste" };
+        var clearBtn = new Button(() =>
+        {
+            _text = "";
+            _onTextChanged?.Invoke("");
+        })
+        { text = "Clear" };
+        buttonRow.Add(copyBtn);
+        buttonRow.Add(pasteBtn);
+        buttonRow.Add(clearBtn);
+        Add(buttonRow);
+
+        // GUID
+        _guidLabel = new Label($"Node GUID: {_nodeGuid}") { style = { fontSize = 9, color = Color.gray, marginTop = 8 } };
+        Add(_guidLabel);
+    }
+
+    private void WrapSelection(string openTag, string closeTag, string placeholder)
+    {
+        string selected = _text.Substring(Math.Min(_selectionStart, _selectionEnd), Math.Abs(_selectionEnd - _selectionStart));
+        bool hadSelection = !string.IsNullOrEmpty(selected);
+
+        if (!hadSelection)
+        {
+            selected = placeholder;
+            _selectionStart = _selectionEnd;
+        }
+
+        string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
+        _text = newText;
+
+        int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
+        _selectionStart = newCursorPos;
+        _selectionEnd = newCursorPos + selected.Length;
+
+        _onTextChanged?.Invoke(_text);
+        _imguiContainer.MarkDirtyRepaint();
+    }
+
+    private void OpenColorPicker()
+    {
+        string selected = _text.Substring(Math.Min(_selectionStart, _selectionEnd), Math.Abs(_selectionEnd - _selectionStart));
+        bool hadSelection = !string.IsNullOrEmpty(selected);
+        if (!hadSelection)
+        {
+            selected = "цветной текст";
+            _selectionStart = _selectionEnd;
+        }
+
+        var modal = new VisualElement
+        {
+            style =
+            {
+                backgroundColor = new StyleColor(new Color(0.2f, 0.2f, 0.2f)),
+                paddingTop = 10,
+                paddingBottom = 10,
+                paddingLeft = 10,
+                paddingRight = 10,
+                marginTop = 10,
+                marginBottom = 10,
+                borderTopLeftRadius = 4,
+                borderTopRightRadius = 4,
+                borderBottomLeftRadius = 4,
+                borderBottomRightRadius = 4
+            }
+        };
+
+        var colorField = new ColorField("Цвет текста") { value = Color.white };
+        var confirmBtn = new Button(() =>
+        {
+            Color c = colorField.value;
+            string hex = ColorUtility.ToHtmlStringRGB(c);
+            string openTag = $"<color=#{hex}>";
+            string closeTag = "</color>";
+
+            string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
+            _text = newText;
+
+            int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
+            _selectionStart = newCursorPos;
+            _selectionEnd = newCursorPos + selected.Length;
+
+            _onTextChanged?.Invoke(_text);
+            modal.RemoveFromHierarchy();
+            _imguiContainer.MarkDirtyRepaint();
+        })
+        { text = "OK" };
+
+        var cancelBtn = new Button(() => modal.RemoveFromHierarchy()) { text = "Отмена" };
+
+        var btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
+        btnRow.Add(confirmBtn);
+        btnRow.Add(cancelBtn);
+
+        modal.Add(new Label("Выберите цвет:"));
+        modal.Add(colorField);
+        modal.Add(btnRow);
+
+        this.parent?.Add(modal);
+    }
+
+    public void UpdateText(string newText)
+    {
+        _text = newText ?? "";
+        _imguiContainer.MarkDirtyRepaint();
+    }
+
+    public void Close()
+    {
+        this.RemoveFromHierarchy();
+    }
+}
