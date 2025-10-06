@@ -1,9 +1,14 @@
-// Assets/Scripts/Editor/Utilities/MarkdownToTMP.cs
+п»ї// Assets/Scripts/Editor/Utilities/MarkdownToTMP.cs
 using System.Text.RegularExpressions;
 using System;
 
 public static class MarkdownToTMP
 {
+    /// <summary>
+    /// РљРѕРЅРІРµСЂС‚РёСЂСѓРµС‚ Markdown-СЂР°Р·РјРµС‚РєСѓ РІ TextMeshPro (TMP) СЂР°Р·РјРµС‚РєСѓ.
+    /// РџРѕРґРґРµСЂР¶РёРІР°РµС‚: Р¶РёСЂРЅС‹Р№, РєСѓСЂСЃРёРІ, Р·Р°С‡С‘СЂРєРЅСѓС‚С‹Р№, РїРѕРґС‡С‘СЂРєРЅСѓС‚С‹Р№, Р·Р°РіРѕР»РѕРІРєРё,
+    /// СЃРїРёСЃРєРё, С†РёС‚Р°С‚С‹, РёРЅР»Р°Р№РЅ- Рё Р±Р»РѕС‡РЅС‹Р№ РєРѕРґ, СЃСЃС‹Р»РєРё, РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅС‹Рµ Р»РёРЅРёРё.
+    /// </summary>
     public static string Convert(string markdown)
     {
         if (string.IsNullOrEmpty(markdown))
@@ -11,10 +16,10 @@ public static class MarkdownToTMP
 
         string result = markdown;
 
-        // --- Горизонтальная линия
+        // --- Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ Р»РёРЅРёСЏ (---)
         result = Regex.Replace(result, @"^\s*---\s*$", "<sprite name=\"Divider\">", RegexOptions.Multiline);
 
-        // --- Заголовки
+        // --- Р—Р°РіРѕР»РѕРІРєРё (H1вЂ“H6)
         result = Regex.Replace(result, @"^######\s+(.*)$", "<size=90%><b>$1</b></size>", RegexOptions.Multiline);
         result = Regex.Replace(result, @"^#####\s+(.*)$", "<size=100%><b>$1</b></size>", RegexOptions.Multiline);
         result = Regex.Replace(result, @"^####\s+(.*)$", "<size=105%><b>$1</b></size>", RegexOptions.Multiline);
@@ -22,31 +27,31 @@ public static class MarkdownToTMP
         result = Regex.Replace(result, @"^##\s+(.*)$", "<size=115%><b>$1</b></size>", RegexOptions.Multiline);
         result = Regex.Replace(result, @"^#\s+(.*)$", "<size=120%><b>$1</b></size>", RegexOptions.Multiline);
 
-        // --- Списки
-        result = Regex.Replace(result, @"^\s*-\s+(.+)$", "• $1\n", RegexOptions.Multiline);
-        result = Regex.Replace(result, @"^\s*\d+\.\s+(.+)$", "$0\n", RegexOptions.Multiline); // оставляем как есть, но добавляем \n
+        // --- РЎРїРёСЃРєРё
+        result = Regex.Replace(result, @"^\s*-\s+(.+)$", "вЂў $1\n", RegexOptions.Multiline);
+        result = Regex.Replace(result, @"^\s*\d+\.\s+(.+)$", "$0\n", RegexOptions.Multiline);
 
-        // --- Цитаты
-        result = Regex.Replace(result, @"^\s*>\s+(.+)$", "<i><color=#888888>«$1»</color></i>", RegexOptions.Multiline);
+        // --- Р¦РёС‚Р°С‚С‹
+        result = Regex.Replace(result, @"^\s*>\s+(.+)$", "<i><color=#888888>В«$1В»</color></i>", RegexOptions.Multiline);
 
-        // --- Код (блок)
+        // --- Р‘Р»РѕРє РєРѕРґР° (``` ... ```)
         result = Regex.Replace(result, @"```([\s\S]*?)```", match =>
         {
             string code = match.Groups[1].Value;
-            return $"<font=\"Consolas\"><color=#ddd>{EscapeTMP(code)}</color></font>";
+            return $"<color=#ddd>{EscapeTMP(code)}</color>";
         }, RegexOptions.Multiline);
 
-        // --- Инлайн-код
-        result = Regex.Replace(result, @"`([^`]+)`", "<font=\"Consolas\"><color=#aaa>$1</color></font>");
+        // --- РРЅР»Р°Р№РЅ-РєРѕРґ (`code`)
+        result = Regex.Replace(result, @"`([^`]+)`", "<color=#aaa>$1</color>");
 
-        // --- Ссылки
+        // --- РЎСЃС‹Р»РєРё: [С‚РµРєСЃС‚](url) в†’ <link="url"><u>С‚РµРєСЃС‚</u></link>
         result = Regex.Replace(result, @"\[([^\]]+)\]\(([^)]+)\)", "<link=\"$2\"><u>$1</u></link>");
 
-        // --- Изображения
+        // --- РР·РѕР±СЂР°Р¶РµРЅРёСЏ: ![alt](url) в†’ <sprite name="alt">
         result = Regex.Replace(result, @"!\[([^\]]*)\]\(([^)]+)\)", "<sprite name=\"$1\">");
 
-        // --- Стили: жирный, курсив, зачёркнутый, подчёркнутый (с вложенностью)
-        // Обрабатываем рекурсивно через несколько проходов
+        // --- РЎС‚РёР»Рё: Р¶РёСЂРЅС‹Р№, РєСѓСЂСЃРёРІ, Р·Р°С‡С‘СЂРєРЅСѓС‚С‹Р№, РїРѕРґС‡С‘СЂРєРЅСѓС‚С‹Р№ (СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РІР»РѕР¶РµРЅРЅРѕСЃС‚Рё)
+        // Р’С‹РїРѕР»РЅСЏРµРј 3 РїСЂРѕС…РѕРґР° РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕР№ РѕР±СЂР°Р±РѕС‚РєРё РІР»РѕР¶РµРЅРЅРѕСЃС‚Рё
         for (int i = 0; i < 3; i++)
         {
             result = Regex.Replace(result, @"\*\*([^*]+)\*\*", "<b>$1</b>");
@@ -55,14 +60,19 @@ public static class MarkdownToTMP
             result = Regex.Replace(result, @"__([^_]+)__", "<u>$1</u>");
         }
 
-        // Удаляем лишние переносы в конце
+        // РЈРґР°Р»СЏРµРј Р»РёС€РЅРёРµ РїРµСЂРµРЅРѕСЃС‹ РІ РєРѕРЅС†Рµ
         result = result.TrimEnd('\n');
 
         return result;
     }
 
+    /// <summary>
+    /// Р­РєСЂР°РЅРёСЂСѓРµС‚ СЃРёРјРІРѕР»С‹ < Рё >, С‡С‚РѕР±С‹ TMP РЅРµ РёРЅС‚РµСЂРїСЂРµС‚РёСЂРѕРІР°Р» РёС… РєР°Рє С‚РµРіРё.
+    /// </summary>
     private static string EscapeTMP(string text)
     {
+        if (string.IsNullOrEmpty(text))
+            return text;
         return text.Replace("<", "<").Replace(">", ">");
     }
 }
