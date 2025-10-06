@@ -63,7 +63,6 @@ public class GraphSaveUtility
         {
             var outputNode = edge.output.node as BaseNode;
             var inputNode = edge.input.node as BaseNode;
-
             dialogueContainer.NodeLinks.Add(new NodeLinkData
             {
                 BaseNodeGuid = outputNode.GUID,
@@ -77,7 +76,6 @@ public class GraphSaveUtility
         {
             if (node.EntryPoint)
             {
-                // Сохраняем данные EntryNode
                 dialogueContainer.EntryNodeData = new EntryNodeData
                 {
                     Guid = node.GUID,
@@ -89,7 +87,7 @@ public class GraphSaveUtility
                 dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
                 {
                     Guid = speechNodeText.GUID,
-                    DialogueText = speechNodeText.DialogueText,
+                    DialogueText = speechNodeText.DialogueText, // ← без конвертации!
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
@@ -124,7 +122,7 @@ public class GraphSaveUtility
                 dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
                 {
                     Guid = optionNodeText.GUID,
-                    ResponseText = optionNodeText.ResponseText,
+                    ResponseText = optionNodeText.ResponseText, // ← без конвертации!
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     NodeType = "OptionNodeText"
