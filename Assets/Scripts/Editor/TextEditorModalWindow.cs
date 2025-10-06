@@ -32,7 +32,7 @@ public class TextEditorModalWindow : VisualElement
         style.minHeight = 300;
         style.maxHeight = 600;
 
-        // Заголовок
+        // Заголовок окна
         var header = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, alignItems = Align.Center, marginBottom = 5 } };
         var title = new Label("Edit Text") { style = { fontSize = 12, unityFontStyleAndWeight = FontStyle.Bold } };
         var closeButton = new Button(() => Close()) { text = "×" };
@@ -47,23 +47,34 @@ public class TextEditorModalWindow : VisualElement
         var formatHeader = new Label("Formatting Tools")
         {
             style =
-            {
-                fontSize = 10,
-                color = Color.gray,
-                alignSelf = Align.FlexStart,
-                marginBottom = 4
-            }
+        {
+            fontSize = 10,
+            color = Color.gray,
+            alignSelf = Align.FlexStart,
+            marginBottom = 4
+        }
         };
         Add(formatHeader);
 
         var formatToolbar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 8 } };
 
-        // КНОПКИ ТЕПЕРЬ ВСТАВЛЯЮТ MARKDOWN!
+        // Кнопки вставляют Markdown-синтаксис
         var btnB = new Button(() => WrapSelection("**", "**", "жирный текст")) { text = "B" };
         var btnI = new Button(() => WrapSelection("*", "*", "курсив")) { text = "I" };
         var btnS = new Button(() => WrapSelection("~~", "~~", "зачёркнутый")) { text = "S" };
         var btnU = new Button(() => WrapSelection("__", "__", "подчёркнутый")) { text = "U" };
         var btnColor = new Button(OpenColorPicker) { text = "Цвет" };
+
+        // Кнопки конвертации
+        var btnConvert = new Button(ConvertToTMP) { text = "→ TMP" };
+        btnConvert.style.backgroundColor = new StyleColor(new Color(0.2f, 0.4f, 0.6f));
+        btnConvert.style.color = Color.white;
+        btnConvert.style.marginLeft = 10;
+
+        var btnConvertBack = new Button(ConvertToMarkdown) { text = "← MD" };
+        btnConvertBack.style.backgroundColor = new StyleColor(new Color(0.4f, 0.2f, 0.6f));
+        btnConvertBack.style.color = Color.white;
+        btnConvertBack.style.marginLeft = 4;
 
         foreach (var btn in new[] { btnB, btnI, btnS, btnU, btnColor })
         {
@@ -77,9 +88,12 @@ public class TextEditorModalWindow : VisualElement
         formatToolbar.Add(btnS);
         formatToolbar.Add(btnU);
         formatToolbar.Add(btnColor);
+        formatToolbar.Add(new VisualElement { style = { flexGrow = 1 } }); // отступ
+        formatToolbar.Add(btnConvert);
+        formatToolbar.Add(btnConvertBack);
         Add(formatToolbar);
 
-        // IMGUI Container для текстового поля с поддержкой выделения
+        // IMGUI Container для текстового поля
         _imguiContainer = new IMGUIContainer(() =>
         {
             EditorGUI.BeginChangeCheck();
@@ -100,7 +114,7 @@ public class TextEditorModalWindow : VisualElement
         _imguiContainer.style.flexGrow = 1;
         Add(_imguiContainer);
 
-        // Кнопки
+        // Кнопки Copy / Paste / Clear
         var buttonRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
         var copyBtn = new Button(() => EditorGUIUtility.systemCopyBuffer = _text) { text = "Copy" };
         var pasteBtn = new Button(() =>
@@ -123,7 +137,7 @@ public class TextEditorModalWindow : VisualElement
         buttonRow.Add(clearBtn);
         Add(buttonRow);
 
-        // GUID
+        // GUID узла
         _guidLabel = new Label($"Node GUID: {_nodeGuid}") { style = { fontSize = 9, color = Color.gray, marginTop = 8 } };
         Add(_guidLabel);
     }
@@ -209,4 +223,27 @@ public class TextEditorModalWindow : VisualElement
     {
         this.RemoveFromHierarchy();
     }
+
+    private void ConvertToTMP()
+    {
+        if (string.IsNullOrEmpty(_text))
+            return;
+
+        string tmpText = MarkdownToTMP.Convert(_text);
+        _text = tmpText;
+        _onTextChanged?.Invoke(_text);
+        _imguiContainer.MarkDirtyRepaint();
+    }
+
+    private void ConvertToMarkdown()
+    {
+        if (string.IsNullOrEmpty(_text))
+            return;
+
+        string markdown = TMPToMarkdown.Convert(_text);
+        _text = markdown;
+        _onTextChanged?.Invoke(_text);
+        _imguiContainer.MarkDirtyRepaint();
+    }
+
 }

@@ -87,7 +87,7 @@ public class GraphSaveUtility
                 dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
                 {
                     Guid = speechNodeText.GUID,
-                    DialogueText = MarkdownToTMP.Convert(speechNodeText.DialogueText), // ← Конвертация Markdown → TMP
+                    DialogueText = speechNodeText.DialogueText,
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
@@ -122,7 +122,7 @@ public class GraphSaveUtility
                 dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
                 {
                     Guid = optionNodeText.GUID,
-                    ResponseText = MarkdownToTMP.Convert(optionNodeText.ResponseText), // ← Конвертация Markdown → TMP
+                    ResponseText = optionNodeText.ResponseText,
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     NodeType = "OptionNodeText"
