@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 05.10.2025 23:03:41
+// Generation Time: 06.10.2025 20:22:09
 // Total Files: 53
 // =================================
 
@@ -1407,13 +1407,17 @@ using System;
 
 public class TextEditorModalWindow : VisualElement
 {
-    private TextField _textField;
+    private IMGUIContainer _imguiContainer;
+    private string _text;
+    private int _selectionStart;
+    private int _selectionEnd;
     private Label _guidLabel;
     private string _nodeGuid;
     private Action<string> _onTextChanged;
 
     public TextEditorModalWindow(string initialText, string nodeGuid, Action<string> onTextChanged)
     {
+        _text = initialText ?? "";
         _nodeGuid = nodeGuid;
         _onTextChanged = onTextChanged;
 
@@ -1441,7 +1445,6 @@ public class TextEditorModalWindow : VisualElement
 
         // === Панель форматирования ===
         var formatToolbar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 8 } };
-
         var btnB = new Button(() => WrapSelection("<b>", "</b>", "жирный текст")) { text = "B" };
         var btnI = new Button(() => WrapSelection("<i>", "</i>", "курсив")) { text = "I" };
         var btnS = new Button(() => WrapSelection("<s>", "</s>", "зачёркнутый")) { text = "S" };
@@ -1462,30 +1465,42 @@ public class TextEditorModalWindow : VisualElement
         formatToolbar.Add(btnColor);
         Add(formatToolbar);
 
-        // ScrollView с TextField
-        var scrollView = new ScrollView(ScrollViewMode.Vertical) { style = { flexGrow = 1, marginBottom = 10 } };
-        _textField = new TextField() { multiline = true, isDelayed = true };
-        _textField.style.whiteSpace = WhiteSpace.Normal;
-        _textField.SetValueWithoutNotify(initialText);
-        _textField.RegisterValueChangedCallback(evt => _onTextChanged?.Invoke(evt.newValue));
-        scrollView.Add(_textField);
-        Add(scrollView);
+        // IMGUI Container для текстового поля с поддержкой выделения
+        _imguiContainer = new IMGUIContainer(() =>
+        {
+            EditorGUI.BeginChangeCheck();
+            var rect = GUILayoutUtility.GetRect(0, 1000, 200, 600);
+            var newText = EditorGUI.TextArea(rect, _text);
+            if (Event.current.type == EventType.Repaint)
+            {
+                var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                _selectionStart = editor.cursorIndex;
+                _selectionEnd = editor.selectIndex;
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                _text = newText;
+                _onTextChanged?.Invoke(_text);
+            }
+        });
+        _imguiContainer.style.flexGrow = 1;
+        Add(_imguiContainer);
 
         // Кнопки
         var buttonRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
-        var copyBtn = new Button(() => EditorGUIUtility.systemCopyBuffer = _textField.value) { text = "Copy" };
+        var copyBtn = new Button(() => EditorGUIUtility.systemCopyBuffer = _text) { text = "Copy" };
         var pasteBtn = new Button(() =>
         {
             if (!string.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer))
             {
-                _textField.value = EditorGUIUtility.systemCopyBuffer;
-                _onTextChanged?.Invoke(_textField.value);
+                _text = EditorGUIUtility.systemCopyBuffer;
+                _onTextChanged?.Invoke(_text);
             }
         })
         { text = "Paste" };
         var clearBtn = new Button(() =>
         {
-            _textField.value = "";
+            _text = "";
             _onTextChanged?.Invoke("");
         })
         { text = "Clear" };
@@ -1501,42 +1516,34 @@ public class TextEditorModalWindow : VisualElement
 
     private void WrapSelection(string openTag, string closeTag, string placeholder)
     {
-        string text = _textField.text;
-        int start = _textField.selectionStart;
-        int end = _textField.selectionEnd;
-
-        string selected = text.Substring(Math.Min(start, end), Math.Abs(end - start));
+        string selected = _text.Substring(Math.Min(_selectionStart, _selectionEnd), Math.Abs(_selectionEnd - _selectionStart));
         bool hadSelection = !string.IsNullOrEmpty(selected);
 
         if (!hadSelection)
         {
             selected = placeholder;
-            start = end;
+            _selectionStart = _selectionEnd;
         }
 
-        string newText = text.Substring(0, Math.Min(start, end)) + openTag + selected + closeTag + text.Substring(Math.Max(start, end));
-        _textField.text = newText;
+        string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
+        _text = newText;
 
-        int newCursorPos = Math.Min(start, end) + openTag.Length;
-        _textField.selectionStart = newCursorPos;
-        _textField.selectionEnd = newCursorPos + selected.Length;
+        int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
+        _selectionStart = newCursorPos;
+        _selectionEnd = newCursorPos + selected.Length;
 
-        _onTextChanged?.Invoke(_textField.text);
-        _textField.Focus();
+        _onTextChanged?.Invoke(_text);
+        _imguiContainer.MarkDirtyRepaint();
     }
 
     private void OpenColorPicker()
     {
-        string text = _textField.text;
-        int start = _textField.selectionStart;
-        int end = _textField.selectionEnd;
-
-        string selected = text.Substring(Math.Min(start, end), Math.Abs(end - start));
+        string selected = _text.Substring(Math.Min(_selectionStart, _selectionEnd), Math.Abs(_selectionEnd - _selectionStart));
         bool hadSelection = !string.IsNullOrEmpty(selected);
         if (!hadSelection)
         {
             selected = "цветной текст";
-            start = end;
+            _selectionStart = _selectionEnd;
         }
 
         var modal = new VisualElement
@@ -1565,16 +1572,16 @@ public class TextEditorModalWindow : VisualElement
             string openTag = $"<color=#{hex}>";
             string closeTag = "</color>";
 
-            string newText = text.Substring(0, Math.Min(start, end)) + openTag + selected + closeTag + text.Substring(Math.Max(start, end));
-            _textField.text = newText;
+            string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
+            _text = newText;
 
-            int newCursorPos = Math.Min(start, end) + openTag.Length;
-            _textField.selectionStart = newCursorPos;
-            _textField.selectionEnd = newCursorPos + selected.Length;
+            int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
+            _selectionStart = newCursorPos;
+            _selectionEnd = newCursorPos + selected.Length;
 
-            _onTextChanged?.Invoke(_textField.text);
-            _textField.Focus();
+            _onTextChanged?.Invoke(_text);
             modal.RemoveFromHierarchy();
+            _imguiContainer.MarkDirtyRepaint();
         })
         { text = "OK" };
 
@@ -1593,8 +1600,8 @@ public class TextEditorModalWindow : VisualElement
 
     public void UpdateText(string newText)
     {
-        if (_textField != null)
-            _textField.SetValueWithoutNotify(newText);
+        _text = newText ?? "";
+        _imguiContainer.MarkDirtyRepaint();
     }
 
     public void Close()
@@ -5041,9 +5048,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 53
-// Total Size: 171,34 KB
-// Total Lines: 4929
+// Total Size: 171,81 KB
+// Total Lines: 4936
 // Classes: 52
-// Methods: 308
+// Methods: 312
 // Comments: 649
 // =====================================

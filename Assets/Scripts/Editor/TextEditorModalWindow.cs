@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿// Assets/Scripts/Editor/TextEditorModalWindow.cs
+using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -43,11 +44,25 @@ public class TextEditorModalWindow : VisualElement
         Add(header);
 
         // === Панель форматирования ===
+        var formatHeader = new Label("Formatting Tools")
+        {
+            style =
+            {
+                fontSize = 10,
+                color = Color.gray,
+                alignSelf = Align.FlexStart,
+                marginBottom = 4
+            }
+        };
+        Add(formatHeader);
+
         var formatToolbar = new VisualElement { style = { flexDirection = FlexDirection.Row, marginBottom = 8 } };
-        var btnB = new Button(() => WrapSelection("<b>", "</b>", "жирный текст")) { text = "B" };
-        var btnI = new Button(() => WrapSelection("<i>", "</i>", "курсив")) { text = "I" };
-        var btnS = new Button(() => WrapSelection("<s>", "</s>", "зачёркнутый")) { text = "S" };
-        var btnU = new Button(() => WrapSelection("<u>", "</u>", "подчёркнутый")) { text = "U" };
+
+        // КНОПКИ ТЕПЕРЬ ВСТАВЛЯЮТ MARKDOWN!
+        var btnB = new Button(() => WrapSelection("**", "**", "жирный текст")) { text = "B" };
+        var btnI = new Button(() => WrapSelection("*", "*", "курсив")) { text = "I" };
+        var btnS = new Button(() => WrapSelection("~~", "~~", "зачёркнутый")) { text = "S" };
+        var btnU = new Button(() => WrapSelection("__", "__", "подчёркнутый")) { text = "U" };
         var btnColor = new Button(OpenColorPicker) { text = "Цвет" };
 
         foreach (var btn in new[] { btnB, btnI, btnS, btnU, btnColor })
@@ -117,20 +132,16 @@ public class TextEditorModalWindow : VisualElement
     {
         string selected = _text.Substring(Math.Min(_selectionStart, _selectionEnd), Math.Abs(_selectionEnd - _selectionStart));
         bool hadSelection = !string.IsNullOrEmpty(selected);
-
         if (!hadSelection)
         {
             selected = placeholder;
             _selectionStart = _selectionEnd;
         }
-
         string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
         _text = newText;
-
         int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
         _selectionStart = newCursorPos;
         _selectionEnd = newCursorPos + selected.Length;
-
         _onTextChanged?.Invoke(_text);
         _imguiContainer.MarkDirtyRepaint();
     }
@@ -144,7 +155,6 @@ public class TextEditorModalWindow : VisualElement
             selected = "цветной текст";
             _selectionStart = _selectionEnd;
         }
-
         var modal = new VisualElement
         {
             style =
@@ -162,7 +172,6 @@ public class TextEditorModalWindow : VisualElement
                 borderBottomRightRadius = 4
             }
         };
-
         var colorField = new ColorField("Цвет текста") { value = Color.white };
         var confirmBtn = new Button(() =>
         {
@@ -170,30 +179,23 @@ public class TextEditorModalWindow : VisualElement
             string hex = ColorUtility.ToHtmlStringRGB(c);
             string openTag = $"<color=#{hex}>";
             string closeTag = "</color>";
-
             string newText = _text.Substring(0, Math.Min(_selectionStart, _selectionEnd)) + openTag + selected + closeTag + _text.Substring(Math.Max(_selectionStart, _selectionEnd));
             _text = newText;
-
             int newCursorPos = Math.Min(_selectionStart, _selectionEnd) + openTag.Length;
             _selectionStart = newCursorPos;
             _selectionEnd = newCursorPos + selected.Length;
-
             _onTextChanged?.Invoke(_text);
             modal.RemoveFromHierarchy();
             _imguiContainer.MarkDirtyRepaint();
         })
         { text = "OK" };
-
         var cancelBtn = new Button(() => modal.RemoveFromHierarchy()) { text = "Отмена" };
-
         var btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, marginTop = 5 } };
         btnRow.Add(confirmBtn);
         btnRow.Add(cancelBtn);
-
         modal.Add(new Label("Выберите цвет:"));
         modal.Add(colorField);
         modal.Add(btnRow);
-
         this.parent?.Add(modal);
     }
 

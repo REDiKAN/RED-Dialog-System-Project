@@ -17,12 +17,4 @@ MonoBehaviour:
   Icon: {fileID: 0}
   Description: 
   NameColor: {r: 1, g: 1, b: 1, a: 1}
-  Variables:
-  - VariableName: "\u041F\u0435\u0434"
-    Value: 0
-  - VariableName: NewVariable
-    Value: 0
-  - VariableName: NewVariable
-    Value: 0
-  - VariableName: NewVariable
-    Value: 0
+  Variables: []

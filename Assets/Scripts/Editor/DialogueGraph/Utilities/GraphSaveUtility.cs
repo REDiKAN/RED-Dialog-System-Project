@@ -63,7 +63,6 @@ public class GraphSaveUtility
         {
             var outputNode = edge.output.node as BaseNode;
             var inputNode = edge.input.node as BaseNode;
-
             dialogueContainer.NodeLinks.Add(new NodeLinkData
             {
                 BaseNodeGuid = outputNode.GUID,
@@ -77,7 +76,6 @@ public class GraphSaveUtility
         {
             if (node.EntryPoint)
             {
-                // Сохраняем данные EntryNode
                 dialogueContainer.EntryNodeData = new EntryNodeData
                 {
                     Guid = node.GUID,
@@ -89,7 +87,7 @@ public class GraphSaveUtility
                 dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
                 {
                     Guid = speechNodeText.GUID,
-                    DialogueText = speechNodeText.DialogueText,
+                    DialogueText = MarkdownToTMP.Convert(speechNodeText.DialogueText), // ← Конвертация Markdown → TMP
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
@@ -101,7 +99,7 @@ public class GraphSaveUtility
                 dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
                 {
                     Guid = speechNodeAudio.GUID,
-                    DialogueText = "",
+                    DialogueText = "", // Аудио-ноды не используют текст
                     Position = node.GetPosition().position,
                     AudioClipGuid = speechNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeAudio.AudioClip)) : "",
                     SpeakerGuid = speechNodeAudio.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeAudio.Speaker) : "",
@@ -124,7 +122,7 @@ public class GraphSaveUtility
                 dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
                 {
                     Guid = optionNodeText.GUID,
-                    ResponseText = optionNodeText.ResponseText,
+                    ResponseText = MarkdownToTMP.Convert(optionNodeText.ResponseText), // ← Конвертация Markdown → TMP
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     NodeType = "OptionNodeText"
@@ -135,7 +133,7 @@ public class GraphSaveUtility
                 dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
                 {
                     Guid = optionNodeAudio.GUID,
-                    ResponseText = "",
+                    ResponseText = "", // Аудио-опции не используют текст
                     Position = node.GetPosition().position,
                     AudioClipGuid = optionNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeAudio.AudioClip)) : "",
                     NodeType = "OptionNodeAudio"
