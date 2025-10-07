@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
-
+using DialogueSystem;
 public class StringConditionNode : BaseConditionNode, IPropertyNode
 {
     public string SelectedProperty;
@@ -27,7 +27,11 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
 
         // Property dropdown
         propertyDropdown = new DropdownField("Property");
-        propertyDropdown.choices = new List<string>(); // Инициализируем пустым списком
+        propertyDropdown.choices = new List<string>();
+        propertyDropdown.RegisterValueChangedCallback(evt =>
+        {
+            SelectedProperty = evt.newValue;
+        });
         mainContainer.Add(propertyDropdown);
 
         // Comparison dropdown
@@ -45,7 +49,7 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
         valueField.RegisterValueChangedCallback(evt => CompareValue = evt.newValue);
         mainContainer.Add(valueField);
 
-        // Откладываем обновление списка свойств до момента, когда узел будет добавлен в граф
+        // Обновление выпадающего списка свойств при добавлении узла в панель
         this.RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
     }
 
@@ -54,6 +58,17 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
         // Теперь узел добавлен в граф и может получить доступ к DialogueGraphView
         RefreshPropertyDropdown();
         this.UnregisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+    }
+
+    /// <summary>
+    /// Устанавливает начальные данные узла до инициализации UI.
+    /// Используется при загрузке сохранённого диалога.
+    /// </summary>
+    public void SetInitialData(string property, StringComparisonType comparison, string value)
+    {
+        SelectedProperty = property;
+        Comparison = comparison;
+        CompareValue = value;
     }
 
     public void RefreshPropertyDropdown()
@@ -82,6 +97,21 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
             {
                 propertyDropdown.value = SelectedProperty;
             }
+        }
+    }
+
+    /// <summary>
+    /// Обновляет UI-элементы на основе текущих значений полей.
+    /// Вызывать после загрузки данных и добавления узла в граф.
+    /// </summary>
+    public void UpdateUIFromData()
+    {
+        if (propertyDropdown != null && comparisonDropdown != null && valueField != null)
+        {
+            propertyDropdown.value = SelectedProperty;
+            comparisonDropdown.value = Comparison.ToString();
+            valueField.value = CompareValue;
+            valueField.SetEnabled(Comparison != StringComparisonType.IsNullOrEmpty);
         }
     }
 }

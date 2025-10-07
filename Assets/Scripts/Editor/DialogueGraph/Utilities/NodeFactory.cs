@@ -45,9 +45,13 @@ public static class NodeFactory
         };
     }
 
-    public static IntConditionNode CreateIntConditionNode(Vector2 position)
+    public static IntConditionNode CreateIntConditionNode(Vector2 position, IntConditionNodeData data = null)
     {
         var node = new IntConditionNode();
+        if (data != null)
+        {
+            node.SetInitialData(data.SelectedProperty, data.Comparison, data.CompareValue);
+        }
         node.Initialize(position);
         return node;
     }

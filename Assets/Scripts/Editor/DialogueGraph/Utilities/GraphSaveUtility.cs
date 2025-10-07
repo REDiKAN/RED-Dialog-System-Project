@@ -199,8 +199,14 @@ public class GraphSaveUtility
     /// </summary>
     private void SaveExposedProperties(DialogueContainer dialogueContainer)
     {
-        dialogueContainer.ExposedProperties.Clear();
-        dialogueContainer.ExposedProperties.AddRange(targetGraphView.ExposedProperties);
+        // Очистка старых данных
+        dialogueContainer.ExposedProperties.Clear(); // для обратной совместимости, если используется
+        dialogueContainer.IntExposedProperties.Clear();
+        dialogueContainer.StringExposedProperties.Clear();
+
+        // Сохранение актуальных данных
+        dialogueContainer.IntExposedProperties.AddRange(targetGraphView.IntExposedProperties);
+        dialogueContainer.StringExposedProperties.AddRange(targetGraphView.StringExposedProperties);
     }
     #endregion
 
@@ -393,6 +399,9 @@ public class GraphSaveUtility
                 intConditionNode.CompareValue = nodeData.CompareValue;
             }
             targetGraphView.AddElement(tempNode);
+            // Обновляем UI после добавления в граф
+            if (tempNode is IntConditionNode icn)
+                icn.UpdateUIFromData();
         }
 
         // Создаем StringConditionNode
@@ -407,6 +416,9 @@ public class GraphSaveUtility
                 stringConditionNode.CompareValue = nodeData.CompareValue;
             }
             targetGraphView.AddElement(tempNode);
+            // Обновляем UI после добавления в граф
+            if (tempNode is StringConditionNode scn)
+                scn.UpdateUIFromData();
         }
 
         // Создаем ModifyIntNode
@@ -446,18 +458,19 @@ public class GraphSaveUtility
             for (int i = 0; i < Nodes.Count; i++)
             {
                 var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == Nodes[i].GUID).ToList();
-
                 foreach (var connection in connections)
                 {
                     var targetNodeGuid = connection.TargetNodeGuid;
-                    var targetNode = Nodes.First(x => x.GUID == targetNodeGuid);
+                    var targetNode = Nodes.FirstOrDefault(x => x.GUID == targetNodeGuid);
+                    if (targetNode == null)
+                    {
+                        Debug.LogWarning($"Target node not found for GUID: {targetNodeGuid}");
+                        continue;
+                    }
 
-                    // Находим соответствующий порт
                     Port outputPort = null;
-
                     if (Nodes[i] is SpeechNode speechNode)
                     {
-                        // Ищем порт с нужным именем
                         foreach (var port in speechNode.outputContainer.Children())
                         {
                             if (port is Port portElement && portElement.portName == connection.PortName)
@@ -466,8 +479,6 @@ public class GraphSaveUtility
                                 break;
                             }
                         }
-
-                        // Если порт не найден, создаем его
                         if (outputPort == null)
                         {
                             outputPort = speechNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
@@ -485,12 +496,36 @@ public class GraphSaveUtility
                     {
                         outputPort = entryNode.outputContainer[0].Q<Port>();
                     }
+                    else if (Nodes[i] is IntConditionNode || Nodes[i] is StringConditionNode)
+                    {
+                        foreach (var port in Nodes[i].outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            Debug.LogWarning($"Port '{connection.PortName}' not found on condition node {Nodes[i].GUID}");
+                        }
+                    }
 
-                    var inputPort = (Port)targetNode.inputContainer[0];
+                    // 🔥 КРИТИЧЕСКИ ВАЖНО: получаем inputPort и соединяем!
+                    Port inputPort = null;
+                    if (targetNode.inputContainer.childCount > 0)
+                    {
+                        inputPort = targetNode.inputContainer[0] as Port;
+                    }
 
                     if (outputPort != null && inputPort != null)
                     {
                         LinkNodes(outputPort, inputPort);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to connect {Nodes[i].GUID} -> {targetNodeGuid}. outputPort: {outputPort != null}, inputPort: {inputPort != null}");
                     }
                 }
             }
@@ -518,9 +553,29 @@ public class GraphSaveUtility
     private void CreateExposedProperties()
     {
         targetGraphView.ClearBlackBoardAndExposedProperties();
-        foreach (var exposedProperty in containerCache.ExposedProperties)
+
+        // Загружаем Int свойства
+        foreach (var prop in containerCache.IntExposedProperties)
         {
-            targetGraphView.AddPropertyToBlackBoard(exposedProperty);
+            var newProp = new IntExposedProperty
+            {
+                PropertyName = prop.PropertyName,
+                IntValue = prop.IntValue,
+                MinValue = prop.MinValue,
+                MaxValue = prop.MaxValue
+            };
+            targetGraphView.AddPropertyToBlackBoard(newProp);
+        }
+
+        // Загружаем String свойства
+        foreach (var prop in containerCache.StringExposedProperties)
+        {
+            var newProp = new StringExposedProperty
+            {
+                PropertyName = prop.PropertyName,
+                StringValue = prop.StringValue
+            };
+            targetGraphView.AddPropertyToBlackBoard(newProp);
         }
     }
 
