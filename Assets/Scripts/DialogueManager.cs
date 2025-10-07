@@ -84,12 +84,10 @@ public class DialogueManager : MonoBehaviour
     {
         if (currentNode == null)
             return;
-
         if (!visitedNodes.Contains(currentNode))
         {
             visitedNodes.Add(currentNode);
         }
-
         switch (currentNode)
         {
             case EntryNodeData entryNode:
@@ -113,7 +111,31 @@ public class DialogueManager : MonoBehaviour
             case EndNodeData endNode:
                 ProcessEndNode(endNode);
                 break;
-            // ⚠️ УБРАНО: OptionNodeData и OptionNodeImageData НЕ обрабатываются как исполняемые узлы
+            // 🔥 Добавлено: обработка OptionNodeData как "пустого" узла
+            case OptionNodeData optionNode:
+                var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                {
+                    currentNode = null;
+                }
+                break;
+            case OptionNodeImageData optionImageNode:
+                nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionImageNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                {
+                    currentNode = null;
+                }
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
