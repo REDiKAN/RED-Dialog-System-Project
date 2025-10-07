@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: Ne
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: 2843f4a9-524b-452c-985c-35ef6857cd7f
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: 2843f4a9-524b-452c-985c-35ef6857cd7f
+    PortName: Next
+    TargetNodeGuid: ba173fdb-d8bc-422d-be05-2c13c81205f2
+  SpeechNodeDatas:
+  - Guid: ba173fdb-d8bc-422d-be05-2c13c81205f2
+    Position: {x: 240, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 
+    NodeType: SpeechNodeText
+  OptionNodeDatas: []
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 

@@ -1,12 +1,12 @@
-using System.Linq;
+п»їusing System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// Главное окно редактора диалоговых графов
-/// Содержит тулбар и область для редактирования графа
+/// Р“Р»Р°РІРЅРѕРµ РѕРєРЅРѕ СЂРµРґР°РєС‚РѕСЂР° РґРёР°Р»РѕРіРѕРІС‹С… РіСЂР°С„РѕРІ
+/// РЎРѕРґРµСЂР¶РёС‚ С‚СѓР»Р±Р°СЂ Рё РѕР±Р»Р°СЃС‚СЊ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РіСЂР°С„Р°
 /// </summary>
 public class DialogueGraph : EditorWindow
 {
@@ -14,7 +14,7 @@ public class DialogueGraph : EditorWindow
     private string fileName = "New Narrative";
 
     /// <summary>
-    /// Открывает окно редактора диалоговых графов
+    /// РћС‚РєСЂС‹РІР°РµС‚ РѕРєРЅРѕ СЂРµРґР°РєС‚РѕСЂР° РґРёР°Р»РѕРіРѕРІС‹С… РіСЂР°С„РѕРІ
     /// </summary>
     [MenuItem("Dialog System/Open Graph Editor")]
     public static void OpenDialogueGraphWindow()
@@ -24,7 +24,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Инициализация окна редактора
+    /// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РѕРєРЅР° СЂРµРґР°РєС‚РѕСЂР°
     /// </summary>
     private void OnEnable()
     {
@@ -33,7 +33,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Создает область для редактирования графа
+    /// РЎРѕР·РґР°РµС‚ РѕР±Р»Р°СЃС‚СЊ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РіСЂР°С„Р°
     /// </summary>
     private void ConstructGraphView()
     {
@@ -47,19 +47,19 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Генерация тулбара с новыми элементами управления
+    /// Р“РµРЅРµСЂР°С†РёСЏ С‚СѓР»Р±Р°СЂР° СЃ РЅРѕРІС‹РјРё СЌР»РµРјРµРЅС‚Р°РјРё СѓРїСЂР°РІР»РµРЅРёСЏ
     /// </summary>
     private void GenerateToolbar()
     {
         var toolbar = new Toolbar();
 
-        // Поле выбора существующего файла диалога
+        // РџРѕР»Рµ РІС‹Р±РѕСЂР° СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ С„Р°Р№Р»Р° РґРёР°Р»РѕРіР°
         var dialogueAssetField = new ObjectField("Dialogue File")
         {
             objectType = typeof(DialogueContainer),
             value = null
         };
-        dialogueAssetField.name = "Dialogue File"; // важно для поиска через Q
+        dialogueAssetField.name = "Dialogue File"; // РІР°Р¶РЅРѕ РґР»СЏ РїРѕРёСЃРєР° С‡РµСЂРµР· Q
         dialogueAssetField.RegisterValueChangedCallback(evt =>
         {
             if (evt.newValue is DialogueContainer container)
@@ -69,16 +69,16 @@ public class DialogueGraph : EditorWindow
         });
         toolbar.Add(dialogueAssetField);
 
-        // Кнопка создания нового диалога
+        // РљРЅРѕРїРєР° СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ РґРёР°Р»РѕРіР°
         toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
 
-        // Кнопка загрузки через проводник
+        // РљРЅРѕРїРєР° Р·Р°РіСЂСѓР·РєРё С‡РµСЂРµР· РїСЂРѕРІРѕРґРЅРёРє
         toolbar.Add(new Button(LoadDialogueFromFileBrowser) { text = "Load File..." });
 
-        // Кнопка сохранения
+        // РљРЅРѕРїРєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ
         toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
 
-        // Base Character field (в конце)
+        // Base Character field (РІ РєРѕРЅС†Рµ)
         var baseCharacterField = new ObjectField("Base Character")
         {
             objectType = typeof(CharacterData),
@@ -89,6 +89,7 @@ public class DialogueGraph : EditorWindow
             var character = evt.newValue as CharacterData;
             graphView.BaseCharacterGuid = AssetDatabaseHelper.GetAssetGuid(character);
             UpdateAllSpeechNodesSpeaker(character);
+            graphView.MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
         toolbar.Add(baseCharacterField);
 
@@ -96,7 +97,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Создаёт новый диалог и сохраняет его по указанному пользователем пути
+    /// РЎРѕР·РґР°С‘С‚ РЅРѕРІС‹Р№ РґРёР°Р»РѕРі Рё СЃРѕС…СЂР°РЅСЏРµС‚ РµРіРѕ РїРѕ СѓРєР°Р·Р°РЅРЅРѕРјСѓ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј РїСѓС‚Рё
     /// </summary>
     private void CreateNewDialogue()
     {
@@ -106,30 +107,38 @@ public class DialogueGraph : EditorWindow
             "asset",
             "Choose location and name for the new dialogue file"
         );
-
         if (string.IsNullOrEmpty(path))
             return;
 
-        graphView.ClearGraph();
-
-        // Создаём новый контейнер
+        // РЎРѕР·РґР°С‘Рј РєРѕРЅС‚РµР№РЅРµСЂ
         var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+
+        // РЎРѕС…СЂР°РЅСЏРµРј С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РіСЂР°С„Р° РІ РєРѕРЅС‚РµР№РЅРµСЂ
+        var saveUtility = GraphSaveUtility.GetInstance(graphView);
+        // Р’СЂРµРјРµРЅРЅРѕ СЃРѕС…СЂР°РЅСЏРµРј РІ РєРѕРЅС‚РµР№РЅРµСЂ Р±РµР· Р·Р°РїРёСЃРё РІ AssetDatabase
+        saveUtility.SaveGraphToExistingContainer(newContainer);
+
+        // РЎРѕС…СЂР°РЅСЏРµРј С„Р°Р№Р»
         AssetDatabase.CreateAsset(newContainer, path);
         AssetDatabase.SaveAssets();
 
-        // Обновляем ObjectField
+        // РћР±РЅРѕРІР»СЏРµРј ObjectField
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         if (assetField != null)
             assetField.SetValueWithoutNotify(newContainer);
 
-        // Загружаем его (пустой)
+        // Р—Р°РіСЂСѓР¶Р°РµРј (СЌС‚Рѕ СЃР±СЂРѕСЃРёС‚ С„Р»Р°РіРё)
         LoadDialogueFromFile(newContainer);
+
+        // РЎР±СЂР°СЃС‹РІР°РµРј СЃРѕСЃС‚РѕСЏРЅРёРµ "Р±РµР· С„Р°Р№Р»Р°"
+        graphView._hasUnsavedChangesWithoutFile = false;
+        graphView._unsavedChangesWarningShown = false;
 
         Debug.Log($"Created new dialogue: {path}");
     }
 
     /// <summary>
-    /// Загружает диалог из выбранного в ObjectField контейнера
+    /// Р—Р°РіСЂСѓР¶Р°РµС‚ РґРёР°Р»РѕРі РёР· РІС‹Р±СЂР°РЅРЅРѕРіРѕ РІ ObjectField РєРѕРЅС‚РµР№РЅРµСЂР°
     /// </summary>
     private void LoadDialogueFromFile(DialogueContainer container)
     {
@@ -138,10 +147,10 @@ public class DialogueGraph : EditorWindow
         var saveUtility = GraphSaveUtility.GetInstance(graphView);
         saveUtility.LoadGraphFromContainer(container);
 
-        // Обновляем GUID базового персонажа в графе
+        // РћР±РЅРѕРІР»СЏРµРј GUID Р±Р°Р·РѕРІРѕРіРѕ РїРµСЂСЃРѕРЅР°Р¶Р° РІ РіСЂР°С„Рµ
         graphView.BaseCharacterGuid = container.BaseCharacterGuid;
 
-        // Обновляем отображение Base Character в тулбаре
+        // РћР±РЅРѕРІР»СЏРµРј РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ Base Character РІ С‚СѓР»Р±Р°СЂРµ
         var baseCharField = rootVisualElement.Q<ObjectField>("Base Character");
         if (baseCharField != null)
         {
@@ -152,7 +161,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Открывает проводник для выбора существующего .asset файла диалога
+    /// РћС‚РєСЂС‹РІР°РµС‚ РїСЂРѕРІРѕРґРЅРёРє РґР»СЏ РІС‹Р±РѕСЂР° СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРіРѕ .asset С„Р°Р№Р»Р° РґРёР°Р»РѕРіР°
     /// </summary>
     private void LoadDialogueFromFileBrowser()
     {
@@ -164,7 +173,7 @@ public class DialogueGraph : EditorWindow
 
         if (string.IsNullOrEmpty(path)) return;
 
-        // Преобразуем абсолютный путь в относительный от Assets
+        // РџСЂРµРѕР±СЂР°Р·СѓРµРј Р°Р±СЃРѕР»СЋС‚РЅС‹Р№ РїСѓС‚СЊ РІ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Р№ РѕС‚ Assets
         if (!path.StartsWith(Application.dataPath))
         {
             EditorUtility.DisplayDialog("Invalid Path", "Please select a file inside the Assets folder.", "OK");
@@ -180,16 +189,19 @@ public class DialogueGraph : EditorWindow
             return;
         }
 
-        // Обновляем ObjectField
+        // РћР±РЅРѕРІР»СЏРµРј ObjectField
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         if (assetField != null)
             assetField.SetValueWithoutNotify(container);
 
         LoadDialogueFromFile(container);
+
+        graphView._hasUnsavedChangesWithoutFile = false;
+        graphView._unsavedChangesWarningShown = false;
     }
 
     /// <summary>
-    /// Сохраняет текущий граф в уже загруженный/созданный файл
+    /// РЎРѕС…СЂР°РЅСЏРµС‚ С‚РµРєСѓС‰РёР№ РіСЂР°С„ РІ СѓР¶Рµ Р·Р°РіСЂСѓР¶РµРЅРЅС‹Р№/СЃРѕР·РґР°РЅРЅС‹Р№ С„Р°Р№Р»
     /// </summary>
     private void SaveCurrentDialogue()
     {
@@ -206,7 +218,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Вспомогательный метод: получает текущий загруженный контейнер по пути
+    /// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РјРµС‚РѕРґ: РїРѕР»СѓС‡Р°РµС‚ С‚РµРєСѓС‰РёР№ Р·Р°РіСЂСѓР¶РµРЅРЅС‹Р№ РєРѕРЅС‚РµР№РЅРµСЂ РїРѕ РїСѓС‚Рё
     /// </summary> 
     private DialogueContainer GetCurrentLoadedContainer()
     {
@@ -215,7 +227,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Обрабатывает запрос на сохранение или загрузку данных
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ Р·Р°РїСЂРѕСЃ РЅР° СЃРѕС…СЂР°РЅРµРЅРёРµ РёР»Рё Р·Р°РіСЂСѓР·РєСѓ РґР°РЅРЅС‹С…
     /// </summary>
     private void RequestDataOperation(bool save)
     {
@@ -233,7 +245,7 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Очищает ресурсы при закрытии окна
+    /// РћС‡РёС‰Р°РµС‚ СЂРµСЃСѓСЂСЃС‹ РїСЂРё Р·Р°РєСЂС‹С‚РёРё РѕРєРЅР°
     /// </summary>
     private void OnDisable()
     {

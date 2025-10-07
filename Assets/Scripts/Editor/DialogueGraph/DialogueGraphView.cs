@@ -1,14 +1,15 @@
-using UnityEditor.Experimental.GraphView;
+п»їusing UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEngine;
 using System.Linq;
 using UnityEditor;
 using System;
+using UnityEditor.UIElements;
 
 /// <summary>
-/// Граф для редактирования диалогов с ограничениями на соединения узлов
-/// Обеспечивает правильное подключение SpeechNode и OptionNode
+/// Р“СЂР°С„ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РґРёР°Р»РѕРіРѕРІ СЃ РѕРіСЂР°РЅРёС‡РµРЅРёСЏРјРё РЅР° СЃРѕРµРґРёРЅРµРЅРёСЏ СѓР·Р»РѕРІ
+/// РћР±РµСЃРїРµС‡РёРІР°РµС‚ РїСЂР°РІРёР»СЊРЅРѕРµ РїРѕРґРєР»СЋС‡РµРЅРёРµ SpeechNode Рё OptionNode
 /// </summary>
 public class DialogueGraphView : GraphView
 {
@@ -24,6 +25,9 @@ public class DialogueGraphView : GraphView
 
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
+
+    public bool _hasUnsavedChangesWithoutFile = false;
+    public bool _unsavedChangesWarningShown = false;
 
     private string _baseCharacterGuid;
     public string BaseCharacterGuid
@@ -43,56 +47,56 @@ public class DialogueGraphView : GraphView
     {
         this.editorWindow = editorWindow;
 
-        // Загружаем стили для графа
+        // Р—Р°РіСЂСѓР¶Р°РµРј СЃС‚РёР»Рё РґР»СЏ РіСЂР°С„Р°
         styleSheets.Add(Resources.Load<StyleSheet>("DialogueGraph"));
 
-        // Настраиваем масштабирование
+        // РќР°СЃС‚СЂР°РёРІР°РµРј РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёРµ
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
 
-        // Добавляем манипуляторы для перемещения и выделения
+        // Р”РѕР±Р°РІР»СЏРµРј РјР°РЅРёРїСѓР»СЏС‚РѕСЂС‹ РґР»СЏ РїРµСЂРµРјРµС‰РµРЅРёСЏ Рё РІС‹РґРµР»РµРЅРёСЏ
         this.AddManipulator(new ContentDragger());
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
 
-        // Добавляем сетку в качестве фона
+        // Р”РѕР±Р°РІР»СЏРµРј СЃРµС‚РєСѓ РІ РєР°С‡РµСЃС‚РІРµ С„РѕРЅР°
         var grid = new GridBackground();
         Insert(0, grid);
         grid.StretchToParentSize();
 
-        // Создаем стартовый узел
+        // РЎРѕР·РґР°РµРј СЃС‚Р°СЂС‚РѕРІС‹Р№ СѓР·РµР»
         AddElement(NodeFactory.CreateEntryNode(new Vector2(100, 200)));
 
-        // Добавляем окно поиска узлов
+        // Р”РѕР±Р°РІР»СЏРµРј РѕРєРЅРѕ РїРѕРёСЃРєР° СѓР·Р»РѕРІ
         AddSearchWindow();
 
-        // Создаем черную доску для свойств
+        // РЎРѕР·РґР°РµРј С‡РµСЂРЅСѓСЋ РґРѕСЃРєСѓ РґР»СЏ СЃРІРѕР№СЃС‚РІ
         GenerateBlackBoard();
 
-        // Регистрируем обработчик нажатия клавиш для удаления узлов
+        // Р РµРіРёСЃС‚СЂРёСЂСѓРµРј РѕР±СЂР°Р±РѕС‚С‡РёРє РЅР°Р¶Р°С‚РёСЏ РєР»Р°РІРёС€ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ СѓР·Р»РѕРІ
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
     }
 
     /// <summary>
-    /// Добавляет окно поиска узлов в граф
+    /// Р”РѕР±Р°РІР»СЏРµС‚ РѕРєРЅРѕ РїРѕРёСЃРєР° СѓР·Р»РѕРІ РІ РіСЂР°С„
     /// </summary>
     private void AddSearchWindow()
     {
         searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
         searchWindow.Init(editorWindow, this);
 
-        // Настраиваем создание узлов через окно поиска
+        // РќР°СЃС‚СЂР°РёРІР°РµРј СЃРѕР·РґР°РЅРёРµ СѓР·Р»РѕРІ С‡РµСЂРµР· РѕРєРЅРѕ РїРѕРёСЃРєР°
         nodeCreationRequest = context =>
             SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
     }
 
     /// <summary>
-    /// Обработчик нажатия клавиш для удаления узлов
+    /// РћР±СЂР°Р±РѕС‚С‡РёРє РЅР°Р¶Р°С‚РёСЏ РєР»Р°РІРёС€ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ СѓР·Р»РѕРІ
     /// </summary>
     private void OnKeyDown(KeyDownEvent evt)
     {
         if (evt.keyCode == KeyCode.Delete)
         {
-            // Проверяем, есть ли в выделении EntryNode
+            // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РІ РІС‹РґРµР»РµРЅРёРё EntryNode
             if (selection.OfType<BaseNode>().Any(node => node.EntryPoint))
             {
                 EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
@@ -100,29 +104,29 @@ public class DialogueGraphView : GraphView
                 return;
             }
 
-            // Удаляем выбранные элементы
+            // РЈРґР°Р»СЏРµРј РІС‹Р±СЂР°РЅРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹
             DeleteSelection();
             evt.StopPropagation();
         }
     }
 
     /// <summary>
-    /// Определяет совместимые порты для соединения с учетом ограничений
-    /// SpeechNode можно соединять только с OptionNode, OptionNode можно соединять только с SpeechNode
+    /// РћРїСЂРµРґРµР»СЏРµС‚ СЃРѕРІРјРµСЃС‚РёРјС‹Рµ РїРѕСЂС‚С‹ РґР»СЏ СЃРѕРµРґРёРЅРµРЅРёСЏ СЃ СѓС‡РµС‚РѕРј РѕРіСЂР°РЅРёС‡РµРЅРёР№
+    /// SpeechNode РјРѕР¶РЅРѕ СЃРѕРµРґРёРЅСЏС‚СЊ С‚РѕР»СЊРєРѕ СЃ OptionNode, OptionNode РјРѕР¶РЅРѕ СЃРѕРµРґРёРЅСЏС‚СЊ С‚РѕР»СЊРєРѕ СЃ SpeechNode
     /// </summary>
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
         var compatiblePorts = new List<Port>();
 
-        // Перебираем все порты в графе
+        // РџРµСЂРµР±РёСЂР°РµРј РІСЃРµ РїРѕСЂС‚С‹ РІ РіСЂР°С„Рµ
         ports.ForEach(port =>
         {
-            // Пропускаем тот же порт, порт того же узла и порты с тем же направлением
+            // РџСЂРѕРїСѓСЃРєР°РµРј С‚РѕС‚ Р¶Рµ РїРѕСЂС‚, РїРѕСЂС‚ С‚РѕРіРѕ Р¶Рµ СѓР·Р»Р° Рё РїРѕСЂС‚С‹ СЃ С‚РµРј Р¶Рµ РЅР°РїСЂР°РІР»РµРЅРёРµРј
             if (startPort != port &&
                 startPort.node != port.node &&
                 startPort.direction != port.direction)
             {
-                // Проверяем ограничения на соединения узлов
+                // РџСЂРѕРІРµСЂСЏРµРј РѕРіСЂР°РЅРёС‡РµРЅРёСЏ РЅР° СЃРѕРµРґРёРЅРµРЅРёСЏ СѓР·Р»РѕРІ
                 if (IsConnectionAllowed(startPort, port))
                 {
                     compatiblePorts.Add(port);
@@ -134,9 +138,9 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, разрешено ли соединение между портами
-    /// SpeechNode может соединяться только с OptionNode, OptionNode может соединяться только с SpeechNode
-    /// EndNode может соединяться только с OptionNode
+    /// РџСЂРѕРІРµСЂСЏРµС‚, СЂР°Р·СЂРµС€РµРЅРѕ Р»Рё СЃРѕРµРґРёРЅРµРЅРёРµ РјРµР¶РґСѓ РїРѕСЂС‚Р°РјРё
+    /// SpeechNode РјРѕР¶РµС‚ СЃРѕРµРґРёРЅСЏС‚СЊСЃСЏ С‚РѕР»СЊРєРѕ СЃ OptionNode, OptionNode РјРѕР¶РµС‚ СЃРѕРµРґРёРЅСЏС‚СЊСЃСЏ С‚РѕР»СЊРєРѕ СЃ SpeechNode
+    /// EndNode РјРѕР¶РµС‚ СЃРѕРµРґРёРЅСЏС‚СЊСЃСЏ С‚РѕР»СЊРєРѕ СЃ OptionNode
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
@@ -154,7 +158,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
-                (OptionNode, EndNode) => true, // Разрешаем подключение от OptionNode к EndNode
+                (OptionNode, EndNode) => true, // Р Р°Р·СЂРµС€Р°РµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ РѕС‚ OptionNode Рє EndNode
                 (EntryNode, SpeechNode) => true,
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
@@ -164,7 +168,7 @@ public class DialogueGraphView : GraphView
                 (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
                 (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
                 (StringConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as StringConditionNode),
-                (_, EndNode) => false, // Запрещаем подключение к EndNode от любых других узлов
+                (_, EndNode) => false, // Р—Р°РїСЂРµС‰Р°РµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє EndNode РѕС‚ Р»СЋР±С‹С… РґСЂСѓРіРёС… СѓР·Р»РѕРІ
                 _ => false
             };
         }
@@ -179,7 +183,7 @@ public class DialogueGraphView : GraphView
                 (OptionNode, SpeechNode) => true,
                 (OptionNode, IntConditionNode) => true,
                 (OptionNode, StringConditionNode) => true,
-                (EndNode, OptionNode) => true, // Разрешаем подключение от EndNode к OptionNode (входной порт)
+                (EndNode, OptionNode) => true, // Р Р°Р·СЂРµС€Р°РµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ РѕС‚ EndNode Рє OptionNode (РІС…РѕРґРЅРѕР№ РїРѕСЂС‚)
                 (ModifyIntNode, SpeechNode) => true,
                 (ModifyIntNode, OptionNode) => true,
                 (ModifyIntNode, IntConditionNode) => true,
@@ -194,7 +198,7 @@ public class DialogueGraphView : GraphView
     } 
 
     /// <summary>
-    /// Проверяет, подключен ли узел условия к SpeechNode
+    /// РџСЂРѕРІРµСЂСЏРµС‚, РїРѕРґРєР»СЋС‡РµРЅ Р»Рё СѓР·РµР» СѓСЃР»РѕРІРёСЏ Рє SpeechNode
     /// </summary>
     private bool IsConditionNodeConnectedToSpeech(BaseConditionNode conditionNode)
     {
@@ -206,7 +210,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, подключен ли узел условия к OptionNode
+    /// РџСЂРѕРІРµСЂСЏРµС‚, РїРѕРґРєР»СЋС‡РµРЅ Р»Рё СѓР·РµР» СѓСЃР»РѕРІРёСЏ Рє OptionNode
     /// </summary>
     private bool IsConditionNodeConnectedToOption(BaseConditionNode conditionNode)
     {
@@ -218,7 +222,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Создает узел указанного типа в заданной позиции
+    /// РЎРѕР·РґР°РµС‚ СѓР·РµР» СѓРєР°Р·Р°РЅРЅРѕРіРѕ С‚РёРїР° РІ Р·Р°РґР°РЅРЅРѕР№ РїРѕР·РёС†РёРё
     /// </summary>
     public void CreateNode(System.Type nodeType, Vector2 position)
     {
@@ -226,45 +230,46 @@ public class DialogueGraphView : GraphView
         if (node != null)
         {
             AddElement(node);
+            MarkUnsavedChangeWithoutFile();
         }
     }
 
     /// <summary>
-    /// Создать черную доску для exposed properties с поддержкой скроллинга
+    /// РЎРѕР·РґР°С‚СЊ С‡РµСЂРЅСѓСЋ РґРѕСЃРєСѓ РґР»СЏ exposed properties СЃ РїРѕРґРґРµСЂР¶РєРѕР№ СЃРєСЂРѕР»Р»РёРЅРіР°
     /// </summary>
     private void GenerateBlackBoard()
     {
         Blackboard = new Blackboard(this);
         Blackboard.title = "Exposed Properties";
 
-        // Устанавливаем фиксированные размеры для Blackboard
+        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С„РёРєСЃРёСЂРѕРІР°РЅРЅС‹Рµ СЂР°Р·РјРµСЂС‹ РґР»СЏ Blackboard
         Blackboard.style.minWidth = 300;
         Blackboard.style.maxWidth = 400;
         Blackboard.style.minHeight = 200;
         Blackboard.style.maxHeight = 500;
 
-        // Создаем основной скроллвью
+        // РЎРѕР·РґР°РµРј РѕСЃРЅРѕРІРЅРѕР№ СЃРєСЂРѕР»Р»РІСЊСЋ
         var scrollView = new ScrollView();
         scrollView.style.flexGrow = 1;
         scrollView.verticalScrollerVisibility = ScrollerVisibility.Auto;
         scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
 
-        // Создаем секции для разных типов свойств
+        // РЎРѕР·РґР°РµРј СЃРµРєС†РёРё РґР»СЏ СЂР°Р·РЅС‹С… С‚РёРїРѕРІ СЃРІРѕР№СЃС‚РІ
         var intSection = new BlackboardSection { title = "Int Properties (0)" };
         var stringSection = new BlackboardSection { title = "String Properties (0)" };
 
-        // Добавляем секции в скроллвью
+        // Р”РѕР±Р°РІР»СЏРµРј СЃРµРєС†РёРё РІ СЃРєСЂРѕР»Р»РІСЊСЋ
         scrollView.Add(intSection);
         scrollView.Add(stringSection);
 
-        // Добавляем скроллвью в Blackboard
+        // Р”РѕР±Р°РІР»СЏРµРј СЃРєСЂРѕР»Р»РІСЊСЋ РІ Blackboard
         Blackboard.Add(scrollView);
 
-        // Сохраняем ссылки на секции для последующего использования
+        // РЎРѕС…СЂР°РЅСЏРµРј СЃСЃС‹Р»РєРё РЅР° СЃРµРєС†РёРё РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµРіРѕ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
         IntSection = intSection;
         StringSection = stringSection;
 
-        // Функционал добавления новых свойств
+        // Р¤СѓРЅРєС†РёРѕРЅР°Р» РґРѕР±Р°РІР»РµРЅРёСЏ РЅРѕРІС‹С… СЃРІРѕР№СЃС‚РІ
         Blackboard.addItemRequested = blackboard =>
         {
             var menu = new GenericMenu();
@@ -285,12 +290,12 @@ public class DialogueGraphView : GraphView
             menu.ShowAsContext();
         };
 
-        // Функционал редактирования имен свойств
+        // Р¤СѓРЅРєС†РёРѕРЅР°Р» СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РёРјРµРЅ СЃРІРѕР№СЃС‚РІ
         Blackboard.editTextRequested = (blackboard, element, newValue) =>
         {
             var oldPropertyName = ((BlackboardField)element).text;
 
-            // Проверяем уникальность имени свойства
+            // РџСЂРѕРІРµСЂСЏРµРј СѓРЅРёРєР°Р»СЊРЅРѕСЃС‚СЊ РёРјРµРЅРё СЃРІРѕР№СЃС‚РІР°
             if (IntExposedProperties.Any(x => x.PropertyName == newValue) ||
                 StringExposedProperties.Any(x => x.PropertyName == newValue))
             {
@@ -298,31 +303,31 @@ public class DialogueGraphView : GraphView
                 return;
             }
 
-            // Обновляем имя в Int свойствах
+            // РћР±РЅРѕРІР»СЏРµРј РёРјСЏ РІ Int СЃРІРѕР№СЃС‚РІР°С…
             var intPropertyIndex = IntExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (intPropertyIndex >= 0)
             {
                 IntExposedProperties[intPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
 
-                // Обновляем все узлы, которые используют это свойство
+                // РћР±РЅРѕРІР»СЏРµРј РІСЃРµ СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ РёСЃРїРѕР»СЊР·СѓСЋС‚ СЌС‚Рѕ СЃРІРѕР№СЃС‚РІРѕ
                 RefreshAllPropertyNodes();
                 return;
             }
 
-            // Обновляем имя в String свойствах
+            // РћР±РЅРѕРІР»СЏРµРј РёРјСЏ РІ String СЃРІРѕР№СЃС‚РІР°С…
             var stringPropertyIndex = StringExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (stringPropertyIndex >= 0)
             {
                 StringExposedProperties[stringPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
 
-                // Обновляем все узлы, которые используют это свойство
+                // РћР±РЅРѕРІР»СЏРµРј РІСЃРµ СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ РёСЃРїРѕР»СЊР·СѓСЋС‚ СЌС‚Рѕ СЃРІРѕР№СЃС‚РІРѕ
                 RefreshAllPropertyNodes();
             }
         };
 
-        // Добавляем кнопку очистки всех свойств
+        // Р”РѕР±Р°РІР»СЏРµРј РєРЅРѕРїРєСѓ РѕС‡РёСЃС‚РєРё РІСЃРµС… СЃРІРѕР№СЃС‚РІ
         var clearButton = new Button(ClearAllProperties)
         {
             text = "Clear All Properties"
@@ -334,64 +339,63 @@ public class DialogueGraphView : GraphView
         clearButton.style.marginBottom = 5;
         Blackboard.Add(clearButton);
 
-        // Добавляем Blackboard в граф
+        // Р”РѕР±Р°РІР»СЏРµРј Blackboard РІ РіСЂР°С„
         Add(Blackboard);
 
-        // Обновляем отображение количества свойств
+        // РћР±РЅРѕРІР»СЏРµРј РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ РєРѕР»РёС‡РµСЃС‚РІР° СЃРІРѕР№СЃС‚РІ
         UpdateSectionTitles();
     }
 
-    // Добавьте эти поля в класс DialogueGraphView:
+    // Р”РѕР±Р°РІСЊС‚Рµ СЌС‚Рё РїРѕР»СЏ РІ РєР»Р°СЃСЃ DialogueGraphView:
     private BlackboardSection IntSection;
     private BlackboardSection StringSection;
 
     /// <summary>
-    /// Добавить Int свойство на черную доску
+    /// Р”РѕР±Р°РІР»СЏРµС‚ Int-СЃРІРѕР№СЃС‚РІРѕ РІ Blackboard Рё РІ СЃРїРёСЃРѕРє IntExposedProperties
     /// </summary>
     private void AddIntPropertyToBlackBoard(IntExposedProperty intProperty)
     {
         var container = new VisualElement();
         container.style.marginBottom = 5;
-
         var blackboardField = new BlackboardField
         {
             text = intProperty.PropertyName,
             typeText = "Int"
         };
-
-        // Поля для редактирования свойства
+        // РџРѕР»СЏ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РїР°СЂР°РјРµС‚СЂРѕРІ СЃРІРѕР№СЃС‚РІР°
         var nameField = new TextField("Name:") { value = intProperty.PropertyName };
         var minField = new IntegerField("Min:") { value = intProperty.MinValue };
         var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
         var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
 
-        // Обработчики изменений
+        // РћР±СЂР°Р±РѕС‚С‡РёРєРё РёР·РјРµРЅРµРЅРёР№
         nameField.RegisterValueChangedCallback(evt =>
         {
             intProperty.PropertyName = evt.newValue;
             blackboardField.text = evt.newValue;
             UpdateSectionTitles();
             RefreshAllPropertyNodes();
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
-
         minField.RegisterValueChangedCallback(evt =>
         {
             intProperty.MinValue = evt.newValue;
             if (intProperty.IntValue < evt.newValue)
                 valueField.value = evt.newValue;
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
-
         maxField.RegisterValueChangedCallback(evt =>
         {
             intProperty.MaxValue = evt.newValue;
             if (intProperty.IntValue > evt.newValue)
                 valueField.value = evt.newValue;
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
-
         valueField.RegisterValueChangedCallback(evt =>
         {
             intProperty.IntValue = Mathf.Clamp(evt.newValue, intProperty.MinValue, intProperty.MaxValue);
             valueField.value = intProperty.IntValue;
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
 
         container.Add(blackboardField);
@@ -400,32 +404,22 @@ public class DialogueGraphView : GraphView
         container.Add(maxField);
         container.Add(valueField);
 
-        // Добавляем в секцию Int свойств
+        // Р”РѕР±Р°РІР»СЏРµРј РІ СЃРµРєС†РёСЋ Int
         IntSection.Add(container);
 
-        // Контекстное меню для удаления
+        // РљРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ
         blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             evt.menu.AppendAction("Delete", action =>
             {
-                // Проверяем использование свойства
                 int usageCount = 0;
                 var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
                 var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
-
                 foreach (var node in conditionNodes)
-                {
-                    if (node.SelectedProperty == intProperty.PropertyName)
-                        usageCount++;
-                }
-
+                    if (node.SelectedProperty == intProperty.PropertyName) usageCount++;
                 foreach (var node in modifyNodes)
-                {
-                    if (node.SelectedProperty == intProperty.PropertyName)
-                        usageCount++;
-                }
+                    if (node.SelectedProperty == intProperty.PropertyName) usageCount++;
 
-                // Подтверждение удаления
                 if (EditorUtility.DisplayDialog("Confirm Delete",
                     $"Property '{intProperty.PropertyName}' is used in {usageCount} nodes.\nDelete anyway?",
                     "Delete", "Cancel"))
@@ -437,19 +431,17 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Добавить String свойство на черную доску
+    /// Р”РѕР±Р°РІР»СЏРµС‚ String-СЃРІРѕР№СЃС‚РІРѕ РІ Blackboard Рё РІ СЃРїРёСЃРѕРє StringExposedProperties
     /// </summary>
     private void AddStringPropertyToBlackBoard(StringExposedProperty stringProperty)
     {
         var container = new VisualElement();
         container.style.marginBottom = 5;
-
         var blackboardField = new BlackboardField
         {
             text = stringProperty.PropertyName,
             typeText = "String"
         };
-
         var nameField = new TextField("Name:") { value = stringProperty.PropertyName };
         var valueField = new TextField("Value:") { value = stringProperty.StringValue };
 
@@ -459,35 +451,29 @@ public class DialogueGraphView : GraphView
             blackboardField.text = evt.newValue;
             UpdateSectionTitles();
             RefreshAllPropertyNodes();
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
-
         valueField.RegisterValueChangedCallback(evt =>
         {
             stringProperty.StringValue = evt.newValue;
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
         });
 
         container.Add(blackboardField);
         container.Add(nameField);
         container.Add(valueField);
 
-        // Добавляем в секцию String свойств
         StringSection.Add(container);
 
-        // Контекстное меню для удаления
         blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             evt.menu.AppendAction("Delete", action =>
             {
-                // Проверяем использование свойства
                 int usageCount = 0;
                 var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
                 foreach (var node in conditionNodes)
-                {
-                    if (node.SelectedProperty == stringProperty.PropertyName)
-                        usageCount++;
-                }
+                    if (node.SelectedProperty == stringProperty.PropertyName) usageCount++;
 
-                // Подтверждение удаления
                 if (EditorUtility.DisplayDialog("Confirm Delete",
                     $"Property '{stringProperty.PropertyName}' is used in {usageCount} condition nodes.\nDelete anyway?",
                     "Delete", "Cancel"))
@@ -499,17 +485,15 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Удалить Int свойство
+    /// РЈРґР°Р»СЏРµС‚ Int-СЃРІРѕР№СЃС‚РІРѕ РёР· Blackboard Рё РёР· СЃРїРёСЃРєР°
     /// </summary>
     private void RemoveIntProperty(IntExposedProperty property, VisualElement container)
     {
-        // Удаляем из списка
         IntExposedProperties.Remove(property);
 
-        // Очищаем узлы, которые использовали это свойство
+        // РћС‡РёС‰Р°РµРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РІ СѓР·Р»Р°С…
         var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
         var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
-
         foreach (var node in conditionNodes)
         {
             if (node.SelectedProperty == property.PropertyName)
@@ -518,7 +502,6 @@ public class DialogueGraphView : GraphView
                 Debug.LogWarning($"Variable {property.PropertyName} was removed but was used in IntConditionNode {node.GUID}");
             }
         }
-
         foreach (var node in modifyNodes)
         {
             if (node.SelectedProperty == property.PropertyName)
@@ -528,25 +511,20 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Обновляем все узлы, которые используют свойства
         RefreshAllPropertyNodes();
-
-        // Удаляем визуальный элемент
         IntSection.Remove(container);
-
-        // Обновляем заголовок секции
         UpdateSectionTitles();
+        MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
     }
 
     /// <summary>
-    /// Удалить String свойство
+    /// РЈРґР°Р»СЏРµС‚ String-СЃРІРѕР№СЃС‚РІРѕ РёР· Blackboard Рё РёР· СЃРїРёСЃРєР°
     /// </summary>
     private void RemoveStringProperty(StringExposedProperty property, VisualElement container)
     {
-        // Удаляем из списка
         StringExposedProperties.Remove(property);
 
-        // Очищаем узлы, которые использовали это свойство
+        // РћС‡РёС‰Р°РµРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РІ СѓР·Р»Р°С…
         var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
         foreach (var node in conditionNodes)
         {
@@ -557,18 +535,14 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Обновляем все узлы, которые используют свойства
         RefreshAllPropertyNodes();
-
-        // Удаляем визуальный элемент
         StringSection.Remove(container);
-
-        // Обновляем заголовок секции
         UpdateSectionTitles();
+        MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
     }
 
     /// <summary>
-    /// Вспомогательный метод для обновления заголовков секций с количеством свойств
+    /// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РјРµС‚РѕРґ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ Р·Р°РіРѕР»РѕРІРєРѕРІ СЃРµРєС†РёР№ СЃ РєРѕР»РёС‡РµСЃС‚РІРѕРј СЃРІРѕР№СЃС‚РІ
     /// </summary>
     private void UpdateSectionTitles()
     {
@@ -584,7 +558,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Вспомогательный метод для обновления всех узлов, использующих свойства
+    /// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РјРµС‚РѕРґ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РІСЃРµС… СѓР·Р»РѕРІ, РёСЃРїРѕР»СЊР·СѓСЋС‰РёС… СЃРІРѕР№СЃС‚РІР°
     /// </summary>
     private void RefreshAllPropertyNodes()
     {
@@ -596,7 +570,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Вспомогательный метод для очистки всех свойств
+    /// РџРѕР»РЅРѕСЃС‚СЊСЋ РѕС‡РёС‰Р°РµС‚ РІСЃРµ exposed properties РёР· Blackboard
     /// </summary>
     private void ClearAllProperties()
     {
@@ -606,28 +580,20 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        // Очищаем списки свойств
         IntExposedProperties.Clear();
         StringExposedProperties.Clear();
 
-        // Очищаем визуальное представление
-        if (IntSection != null)
-            IntSection.Clear();
+        IntSection?.Clear();
+        StringSection?.Clear();
 
-        if (StringSection != null)
-            StringSection.Clear();
-
-        // Обновляем все узлы, которые использовали свойства
         RefreshAllPropertyNodes();
-
-        // Обновляем заголовки секций
         UpdateSectionTitles();
-
         Debug.Log("All exposed properties cleared successfully");
+        MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
     }
 
     /// <summary>
-    /// Очистить черную доску и exposed properties (для совместимости со старым кодом)
+    /// РћС‡РёСЃС‚РёС‚СЊ С‡РµСЂРЅСѓСЋ РґРѕСЃРєСѓ Рё exposed properties (РґР»СЏ СЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё СЃРѕ СЃС‚Р°СЂС‹Рј РєРѕРґРѕРј)
     /// </summary>
     public void ClearBlackBoardAndExposedProperties()
     {
@@ -635,10 +601,10 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Добавляет свойство на черную доску
+    /// Р”РѕР±Р°РІР»СЏРµС‚ СЃРІРѕР№СЃС‚РІРѕ РЅР° С‡РµСЂРЅСѓСЋ РґРѕСЃРєСѓ
     /// </summary>
     // <summary>
-    /// Добавляет свойство на черную доску
+    /// Р”РѕР±Р°РІР»СЏРµС‚ СЃРІРѕР№СЃС‚РІРѕ РЅР° С‡РµСЂРЅСѓСЋ РґРѕСЃРєСѓ
     /// </summary>
     public void AddPropertyToBlackBoard(object property)
     {
@@ -653,13 +619,13 @@ public class DialogueGraphView : GraphView
                 typeText = "Int"
             };
 
-            // Поля для редактирования int свойства
+            // РџРѕР»СЏ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ int СЃРІРѕР№СЃС‚РІР°
             var nameField = new TextField("Name:") { value = intProperty.PropertyName };
             var minField = new IntegerField("Min:") { value = intProperty.MinValue };
             var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
             var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
 
-            // Обработчики изменений
+            // РћР±СЂР°Р±РѕС‚С‡РёРєРё РёР·РјРµРЅРµРЅРёР№
             nameField.RegisterValueChangedCallback(evt =>
             {
                 intProperty.PropertyName = evt.newValue;
@@ -692,13 +658,13 @@ public class DialogueGraphView : GraphView
             container.Add(maxField);
             container.Add(valueField);
 
-            Blackboard[0].Add(container); // Добавляем в секцию int свойств
+            Blackboard[0].Add(container); // Р”РѕР±Р°РІР»СЏРµРј РІ СЃРµРєС†РёСЋ int СЃРІРѕР№СЃС‚РІ
 
             blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
             {
                 evt.menu.AppendAction("Delete", action =>
                 {
-                // Находим использование свойства
+                // РќР°С…РѕРґРёРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЃРІРѕР№СЃС‚РІР°
                 int usageCount = 0;
                 var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
                 var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
@@ -715,15 +681,15 @@ public class DialogueGraphView : GraphView
                         usageCount++;
                 }
 
-                    // Диалог подтверждения
+                    // Р”РёР°Р»РѕРі РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ
                     if (EditorUtility.DisplayDialog("Confirm Delete",
                         $"Property '{intProperty.PropertyName}' is used in {usageCount} nodes.\nDelete anyway?",
                         "Delete", "Cancel"))
                     {
-                        // Удаляем из списка
+                        // РЈРґР°Р»СЏРµРј РёР· СЃРїРёСЃРєР°
                         IntExposedProperties.Remove(intProperty);
 
-                        // Обновляем все узлы, которые использовали это свойство
+                        // РћР±РЅРѕРІР»СЏРµРј РІСЃРµ СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё СЌС‚Рѕ СЃРІРѕР№СЃС‚РІРѕ
                         foreach (var node in conditionNodes)
                         {
                             if (node.SelectedProperty == intProperty.PropertyName)
@@ -742,14 +708,14 @@ public class DialogueGraphView : GraphView
                             }
                         }
 
-                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
+                        // РћР‘РќРћР’Р›РЇР•Рњ Р’РЎР• РЈР—Р›Р« РЎ Р’Р«РџРђР”РђР®Р©РРњР РЎРџРРЎРљРђРњР
                         var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
                         foreach (var node in allPropertyNodes)
                         {
                             node.RefreshPropertyDropdown();
                         }
 
-                        // Находим и удаляем визуальный элемент по имени свойства
+                        // РќР°С…РѕРґРёРј Рё СѓРґР°Р»СЏРµРј РІРёР·СѓР°Р»СЊРЅС‹Р№ СЌР»РµРјРµРЅС‚ РїРѕ РёРјРµРЅРё СЃРІРѕР№СЃС‚РІР°
                         var containers = Blackboard[0].Children().ToList();
                         foreach (var cont in containers)
                         {
@@ -793,14 +759,14 @@ public class DialogueGraphView : GraphView
             container.Add(nameField);
             container.Add(valueField);
 
-            Blackboard[1].Add(container); // Добавляем в секцию string свойств
+            Blackboard[1].Add(container); // Р”РѕР±Р°РІР»СЏРµРј РІ СЃРµРєС†РёСЋ string СЃРІРѕР№СЃС‚РІ
 
-            // Добавляем контекстное меню для string свойств
+            // Р”РѕР±Р°РІР»СЏРµРј РєРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ РґР»СЏ string СЃРІРѕР№СЃС‚РІ
             blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
             {
                 evt.menu.AppendAction("Delete", action =>
                 {
-                    // Находим использование свойства
+                    // РќР°С…РѕРґРёРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЃРІРѕР№СЃС‚РІР°
                     int usageCount = 0;
                     var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
                     foreach (var node in conditionNodes)
@@ -809,15 +775,15 @@ public class DialogueGraphView : GraphView
                             usageCount++;
                     }
 
-                    // Диалог подтверждения
+                    // Р”РёР°Р»РѕРі РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ
                     if (EditorUtility.DisplayDialog("Confirm Delete",
                         $"Property '{stringProperty.PropertyName}' is used in {usageCount} condition nodes.\nDelete anyway?",
                         "Delete", "Cancel"))
                     {
-                        // Удаляем из списка
+                        // РЈРґР°Р»СЏРµРј РёР· СЃРїРёСЃРєР°
                         StringExposedProperties.Remove(stringProperty);
 
-                        // Обновляем все узлы, которые использовали это свойство
+                        // РћР±РЅРѕРІР»СЏРµРј РІСЃРµ СѓР·Р»С‹, РєРѕС‚РѕСЂС‹Рµ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё СЌС‚Рѕ СЃРІРѕР№СЃС‚РІРѕ
                         foreach (var node in nodes.ToList().OfType<StringConditionNode>())
                         {
                             if (node.SelectedProperty == stringProperty.PropertyName)
@@ -827,14 +793,14 @@ public class DialogueGraphView : GraphView
                             }
                         }
 
-                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
+                        // РћР‘РќРћР’Р›РЇР•Рњ Р’РЎР• РЈР—Р›Р« РЎ Р’Р«РџРђР”РђР®Р©РРњР РЎРџРРЎРљРђРњР
                         var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
                         foreach (var node in allPropertyNodes)
                         {
                             node.RefreshPropertyDropdown();
                         }
 
-                        // Находим и удаляем визуальный элемент по имени свойства
+                        // РќР°С…РѕРґРёРј Рё СѓРґР°Р»СЏРµРј РІРёР·СѓР°Р»СЊРЅС‹Р№ СЌР»РµРјРµРЅС‚ РїРѕ РёРјРµРЅРё СЃРІРѕР№СЃС‚РІР°
                         var containers = Blackboard[1].Children().ToList();
                         foreach (var cont in containers)
                         {
@@ -852,52 +818,51 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Удаляет выбранные элементы из графа
+    /// РЈРґР°Р»СЏРµС‚ РІС‹Р±СЂР°РЅРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹ РёР· РіСЂР°С„Р°
     /// </summary>
     private void DeleteSelection()
     {
-        // Создаем копию выделения для безопасного удаления
         var selectionCopy = selection.ToList();
-
+        bool hadChange = false;
         foreach (var selectedElement in selectionCopy)
         {
             if (selectedElement is BaseNode node)
             {
-                // Удаляем связанные связи
                 var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
                 foreach (var edge in edgesToRemove)
                 {
                     RemoveElement(edge);
                 }
-
-                // Удаляем узел
                 RemoveElement(node);
+                hadChange = true;
             }
             else if (selectedElement is Edge edge)
             {
-                // Удаляем связь
                 RemoveElement(edge);
+                hadChange = true;
             }
         }
+        if (hadChange)
+            MarkUnsavedChangeWithoutFile(); // в†ђ РґРѕР±Р°РІР»РµРЅРѕ
     }
 
-    // Метод для обработки изменений базового персонажа
+    // РњРµС‚РѕРґ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РёР·РјРµРЅРµРЅРёР№ Р±Р°Р·РѕРІРѕРіРѕ РїРµСЂСЃРѕРЅР°Р¶Р°
     private void OnBaseCharacterChanged()
     {
-        // Можно добавить дополнительную логику при изменении базового персонажа
+        // РњРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ Р»РѕРіРёРєСѓ РїСЂРё РёР·РјРµРЅРµРЅРёРё Р±Р°Р·РѕРІРѕРіРѕ РїРµСЂСЃРѕРЅР°Р¶Р°
         Debug.Log($"Base character changed to: {BaseCharacterGuid}");
     }
 
     /// <summary>
-    /// Публичный метод для полной очистки графа (кроме EntryNode)
+    /// РџСѓР±Р»РёС‡РЅС‹Р№ РјРµС‚РѕРґ РґР»СЏ РїРѕР»РЅРѕР№ РѕС‡РёСЃС‚РєРё РіСЂР°С„Р° (РєСЂРѕРјРµ EntryNode)
     /// </summary>
     public void ClearGraph()
     {
-        // Удаляем все узлы, кроме EntryPoint
+        // РЈРґР°Р»СЏРµРј РІСЃРµ СѓР·Р»С‹, РєСЂРѕРјРµ EntryPoint
         var nodesToRemove = nodes.ToList().Where(node => !(node is EntryNode)).ToList();
         foreach (var node in nodesToRemove)
         {
-            // Удаляем связанные рёбра
+            // РЈРґР°Р»СЏРµРј СЃРІСЏР·Р°РЅРЅС‹Рµ СЂС‘Р±СЂР°
             var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
             foreach (var edge in edgesToRemove)
             {
@@ -906,10 +871,34 @@ public class DialogueGraphView : GraphView
             RemoveElement(node);
         }
 
-        // Очищаем Blackboard и exposed properties
+        // РћС‡РёС‰Р°РµРј Blackboard Рё exposed properties
         ClearBlackBoardAndExposedProperties();
 
-        // Сбрасываем BaseCharacterGuid
+        // РЎР±СЂР°СЃС‹РІР°РµРј BaseCharacterGuid
         BaseCharacterGuid = string.Empty;
+    }
+
+    /// <summary>
+    /// РћС‚РјРµС‡Р°РµС‚, С‡С‚Рѕ Р±С‹Р»Рё РІРЅРµСЃРµРЅС‹ РёР·РјРµРЅРµРЅРёСЏ Р±РµР· РїСЂРёРІСЏР·РєРё Рє С„Р°Р№Р»Сѓ.
+    /// Р’С‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё/СѓРґР°Р»РµРЅРёРё СѓР·Р»РѕРІ, СЃРІСЏР·РµР№, РёР·РјРµРЅРµРЅРёРё Blackboard РёР»Рё Base Character.
+    /// </summary>
+    public void MarkUnsavedChangeWithoutFile()
+    {
+        var assetField = this.parent?.parent?.Q<ObjectField>("Dialogue File");
+        if (assetField?.value == null)
+        {
+            _hasUnsavedChangesWithoutFile = true;
+            if (!_unsavedChangesWarningShown)
+            {
+                _unsavedChangesWarningShown = true;
+                Debug.LogWarning("Р”РёР°Р»РѕРі РЅРµ Р±С‹Р» РІС‹Р±СЂР°РЅ");
+            }
+        }
+        else
+        {
+            // Р•СЃР»Рё С„Р°Р№Р» СѓР¶Рµ РІС‹Р±СЂР°РЅ, СЃР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі
+            _hasUnsavedChangesWithoutFile = false;
+            _unsavedChangesWarningShown = false;
+        }
     }
 }
