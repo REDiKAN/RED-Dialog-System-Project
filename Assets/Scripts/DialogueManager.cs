@@ -165,12 +165,11 @@ public class DialogueManager : MonoBehaviour
             StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
         }
 
-        // === НОВАЯ ЛОГИКА: обработка вариантов ответа ===
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechNode.Guid)
             .ToList();
 
-        // Проверяем, есть ли исходящие связи к OptionNode
+        // Проверяем: есть ли исходящие связи к OptionNode?
         var optionLinks = outgoingLinks.Where(link =>
         {
             var target = GetNodeByGuid(link.TargetNodeGuid);
@@ -179,21 +178,19 @@ public class DialogueManager : MonoBehaviour
 
         if (optionLinks.Any())
         {
+            // Режим выбора опций — как раньше
             var options = new List<Option>();
             foreach (var linkToOption in optionLinks)
             {
                 var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
                 if (optionNode == null) continue;
 
-                // Получаем текст опции
                 string text = "Изображение";
                 if (optionNode is OptionNodeData opt)
                     text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
 
-                // Находим следующий узел ПОСЛЕ OptionNode
                 var nextLinkAfterOption = currentDialogue.NodeLinks
-                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid); // ← Каст к BaseNodeData
-
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
                 if (nextLinkAfterOption != null)
                 {
                     options.Add(new Option
@@ -201,10 +198,6 @@ public class DialogueManager : MonoBehaviour
                         Text = text,
                         NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
                     });
-                }
-                else
-                {
-                    Debug.LogWarning($"OptionNode {((BaseNodeData)optionNode).Guid} не имеет исходящих связей!");
                 }
             }
 
@@ -217,11 +210,31 @@ public class DialogueManager : MonoBehaviour
                 Debug.LogError("Нет валидных вариантов для отображения!");
                 currentNode = null;
             }
-            return; // ← Останавливаем выполнение — выбор сделает игрок
+            return;
         }
 
-        // Если нет Option Node — продолжаем линейно
-        var nextLinearLink = outgoingLinks.FirstOrDefault(); // ← Используем другое имя переменной
+        // Нет Option — проверяем: есть ли Speech-связи?
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            // Цепочка Speech → Speech: запускаем следующее сообщение с задержкой
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechNode {speechNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        // Нет ни Option, ни Speech — линейный переход (к Condition, Modify, End и т.д.)
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
         if (nextLinearLink != null)
         {
             currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
@@ -239,35 +252,101 @@ public class DialogueManager : MonoBehaviour
     /// <param name="speechImageNode">Данные узла изображения речи</param>
     private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
     {
-        // Получаем персонажа из CharacterManager
         CharacterData speaker = GetCharacterByGuid(speechImageNode.SpeakerGuid);
-
-        // Создаем сообщение для чата
         var message = new Message
         {
             Type = SenderType.NPC,
-            Text = null, // Для изображений текст не используется
-            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid), // Исправлено: AssetLoader
+            Text = null,
+            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid),
             Audio = null,
             Sender = speaker
         };
-
-        // Добавляем сообщение в чат
         chatPanel.AddMessage(message, MessageType.SpeechImage);
 
-        // Находим следующий узел
-        var nextLink = currentDialogue.NodeLinks
-            .FirstOrDefault(l => l.BaseNodeGuid == speechImageNode.Guid);
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechImageNode.Guid)
+            .ToList();
 
-        if (nextLink != null)
+        // Проверяем: есть ли исходящие связи к OptionNode?
+        var optionLinks = outgoingLinks.Where(link =>
         {
-            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        // Нет Option — проверяем Speech-связи
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechImageNode {speechImageNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        // Линейный переход
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
             ProcessNextNode();
         }
         else
         {
             currentNode = null;
         }
+    }
+
+    private IEnumerator DelayedGoToNode(string nextNodeGuid)
+    {
+        yield return new WaitForSeconds(messageDelay);
+        currentNode = GetNodeByGuid(nextNodeGuid);
+        ProcessNextNode();
     }
 
     /// <summary>

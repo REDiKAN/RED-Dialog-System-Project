@@ -147,6 +147,7 @@ public class DialogueGraphView : GraphView
         {
             return (startNode, targetNode) switch
             {
+                (SpeechNode, SpeechNode) => true,
                 (SpeechNode, OptionNode) => true,
                 (SpeechNode, IntConditionNode) => true,
                 (SpeechNode, StringConditionNode) => true,
@@ -171,6 +172,7 @@ public class DialogueGraphView : GraphView
         {
             return (startNode, targetNode) switch
             {
+                (SpeechNode, SpeechNode) => true,
                 (SpeechNode, OptionNode) => true,
                 (SpeechNode, IntConditionNode) => true,
                 (SpeechNode, StringConditionNode) => true,
