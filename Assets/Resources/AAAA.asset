@@ -18,35 +18,59 @@ MonoBehaviour:
   NodeLinks:
   - BaseNodeGuid: ed137263-8410-448a-8b23-4806e8ee320a
     PortName: Next
-    TargetNodeGuid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
-  - BaseNodeGuid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
+    TargetNodeGuid: b49d9bca-9c68-4119-8c04-48eff748396b
+  - BaseNodeGuid: b49d9bca-9c68-4119-8c04-48eff748396b
     PortName: Next
-    TargetNodeGuid: d39e1e31-1b46-43f2-b7ad-f13034362dff
-  - BaseNodeGuid: d39e1e31-1b46-43f2-b7ad-f13034362dff
+    TargetNodeGuid: 54982c86-7b1d-4287-84e9-c68583d72075
+  - BaseNodeGuid: 54982c86-7b1d-4287-84e9-c68583d72075
     PortName: Next
-    TargetNodeGuid: fb0725c3-c674-4688-84e9-9e0d7bb75658
+    TargetNodeGuid: f7417fad-3b83-4cde-a324-1ddda65eecd5
+  - BaseNodeGuid: f7417fad-3b83-4cde-a324-1ddda65eecd5
+    PortName: Next
+    TargetNodeGuid: eb1dc387-c916-44fb-80b5-dbd06da96f4e
+  - BaseNodeGuid: f7417fad-3b83-4cde-a324-1ddda65eecd5
+    PortName: Next
+    TargetNodeGuid: 3b2abd01-d48b-4487-9dc1-c75b320a49fd
   SpeechNodeDatas:
-  - Guid: 8f9bbbe0-2f2e-4f80-9d71-38e4804c3374
-    Position: {x: 243, y: 200}
-    DialogueText: 111
+  - Guid: b49d9bca-9c68-4119-8c04-48eff748396b
+    Position: {x: 223, y: 200}
+    DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442"
     AudioClipGuid: 
     SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
     NodeType: SpeechNodeText
-  - Guid: fb0725c3-c674-4688-84e9-9e0d7bb75658
-    Position: {x: 955, y: 200}
-    DialogueText: New Dialogue
+  - Guid: f7417fad-3b83-4cde-a324-1ddda65eecd5
+    Position: {x: 874, y: 200}
+    DialogueText: "\u041A\u0430\u043A \u0434\u0435\u043B\u0430 ?"
     AudioClipGuid: 
     SpeakerGuid: 7a1e5d764246410439bdd451455b69ea
     NodeType: SpeechNodeText
   OptionNodeDatas:
-  - Guid: d39e1e31-1b46-43f2-b7ad-f13034362dff
-    Position: {x: 665, y: 200}
-    ResponseText: Hi
+  - Guid: 54982c86-7b1d-4287-84e9-c68583d72075
+    Position: {x: 586, y: 200}
+    ResponseText: "\u041F\u0440\u0438\u0432\u0435\u0442"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: eb1dc387-c916-44fb-80b5-dbd06da96f4e
+    Position: {x: 1245, y: 149}
+    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 3b2abd01-d48b-4487-9dc1-c75b320a49fd
+    Position: {x: 1245, y: 271}
+    ResponseText: "\u041F\u043B\u043E\u0445\u043E"
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
-  IntExposedProperties: []
-  StringExposedProperties: []
+  IntExposedProperties:
+  - PropertyName: New Int Property
+    IntValue: 0
+    MinValue: 0
+    MaxValue: 100
+  StringExposedProperties:
+  - PropertyName: New String Property
+    StringValue: New Value
+  - PropertyName: New String Property
+    StringValue: New Value
   IntConditionNodeDatas: []
   StringConditionNodeDatas: []
   ModifyIntNodeDatas: []

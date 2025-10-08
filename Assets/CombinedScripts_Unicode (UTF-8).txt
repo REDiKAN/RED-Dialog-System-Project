@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 07.10.2025 23:24:39
+// Generation Time: 08.10.2025 19:42:26
 // Total Files: 55
 // =================================
 
@@ -293,12 +293,10 @@ public class DialogueManager : MonoBehaviour
     {
         if (currentNode == null)
             return;
-
         if (!visitedNodes.Contains(currentNode))
         {
             visitedNodes.Add(currentNode);
         }
-
         switch (currentNode)
         {
             case EntryNodeData entryNode:
@@ -322,7 +320,31 @@ public class DialogueManager : MonoBehaviour
             case EndNodeData endNode:
                 ProcessEndNode(endNode);
                 break;
-            // ⚠️ УБРАНО: OptionNodeData и OptionNodeImageData НЕ обрабатываются как исполняемые узлы
+            // 🔥 Добавлено: обработка OptionNodeData как "пустого" узла
+            case OptionNodeData optionNode:
+                var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                {
+                    currentNode = null;
+                }
+                break;
+            case OptionNodeImageData optionImageNode:
+                nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionImageNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                {
+                    currentNode = null;
+                }
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
@@ -3493,6 +3515,20 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
             }
         }
     }
+
+    /// <summary>
+    /// ��������� UI-�������� �� ������ ������� �������� �����.
+    /// �������� ����� �������� ������ � ���������� ���� � ����.
+    /// </summary>
+    public void UpdateUIFromData()
+    {
+        if (propertyDropdown != null && comparisonDropdown != null && valueField != null)
+        {
+            propertyDropdown.value = SelectedProperty;
+            comparisonDropdown.value = Comparison.ToString();
+            valueField.value = CompareValue;
+        }
+    }
 }
 
 //==== File 24 of 55: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
@@ -4234,6 +4270,21 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
             }
         }
     }
+
+    /// <summary>
+    /// ��������� UI-�������� �� ������ ������� �������� �����.
+    /// �������� ����� �������� ������ � ���������� ���� � ����.
+    /// </summary>
+    public void UpdateUIFromData()
+    {
+        if (propertyDropdown != null && comparisonDropdown != null && valueField != null)
+        {
+            propertyDropdown.value = SelectedProperty;
+            comparisonDropdown.value = Comparison.ToString();
+            valueField.value = CompareValue;
+            valueField.SetEnabled(Comparison != StringComparisonType.IsNullOrEmpty);
+        }
+    }
 }
 
 //==== File 34 of 55: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\AssetDatabaseHelper.cs ====
@@ -4685,6 +4736,9 @@ public class GraphSaveUtility
                 intConditionNode.CompareValue = nodeData.CompareValue;
             }
             targetGraphView.AddElement(tempNode);
+            // Обновляем UI после добавления в граф
+            if (tempNode is IntConditionNode icn)
+                icn.UpdateUIFromData();
         }
 
         // Создаем StringConditionNode
@@ -4699,6 +4753,9 @@ public class GraphSaveUtility
                 stringConditionNode.CompareValue = nodeData.CompareValue;
             }
             targetGraphView.AddElement(tempNode);
+            // Обновляем UI после добавления в граф
+            if (tempNode is StringConditionNode scn)
+                scn.UpdateUIFromData();
         }
 
         // Создаем ModifyIntNode
@@ -5451,9 +5508,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 55
-// Total Size: 192,78 KB
-// Total Lines: 5335
+// Total Size: 195,09 KB
+// Total Lines: 5392
 // Classes: 54
-// Methods: 351
-// Comments: 659
+// Methods: 353
+// Comments: 669
 // =====================================
