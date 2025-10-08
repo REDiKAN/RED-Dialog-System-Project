@@ -86,9 +86,7 @@ public class DialogueManager : MonoBehaviour
             return;
 
         if (!visitedNodes.Contains(currentNode))
-        {
             visitedNodes.Add(currentNode);
-        }
 
         switch (currentNode)
         {

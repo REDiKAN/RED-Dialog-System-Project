@@ -147,55 +147,63 @@ public class DialogueGraphView : GraphView
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
 
+        // Определяем типы узлов независимо от направления
+        bool IsCondition(BaseNode n) => n is IntConditionNode or StringConditionNode;
+        bool IsSpeech(BaseNode n) => n is SpeechNode;
+        bool IsSpeechImage(BaseNode n) => n is SpeechNodeImage;
+        bool IsOption(BaseNode n) => n is OptionNode;
+        bool IsOptionImage(BaseNode n) => n is OptionNodeImage;
+        bool IsModify(BaseNode n) => n is ModifyIntNode;
+        bool IsEnd(BaseNode n) => n is EndNode;
+        bool IsEntry(BaseNode n) => n is EntryNode;
+
+        // Разрешённые переходы от выхода (startPort — output)
         if (startPort.direction == Direction.Output)
         {
             return (startNode, targetNode) switch
             {
-                (SpeechNode, SpeechNode) => true,
-                (SpeechNode, OptionNode) => true,
-                (SpeechNode, IntConditionNode) => true,
-                (SpeechNode, StringConditionNode) => true,
-                (OptionNode, SpeechNode) => true,
-                (OptionNode, IntConditionNode) => true,
-                (OptionNode, StringConditionNode) => true,
-                (OptionNode, EndNode) => true, // Разрешаем подключение от OptionNode к EndNode
-                (EntryNode, SpeechNode) => true,
-                (ModifyIntNode, SpeechNode) => true,
-                (ModifyIntNode, OptionNode) => true,
-                (ModifyIntNode, IntConditionNode) => true,
-                (ModifyIntNode, StringConditionNode) => true,
-                (IntConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as IntConditionNode),
-                (IntConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as IntConditionNode),
-                (StringConditionNode, OptionNode) => IsConditionNodeConnectedToSpeech(startNode as StringConditionNode),
-                (StringConditionNode, SpeechNode) => IsConditionNodeConnectedToOption(startNode as StringConditionNode),
-                (_, EndNode) => false, // Запрещаем подключение к EndNode от любых других узлов
+                // Entry может вести только в Speech
+                (EntryNode _, _) when IsSpeech(targetNode) => true,
+
+                // Speech может вести в: Speech, Option, Condition, Modify, End
+                (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+
+                // SpeechImage — аналогично
+                (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+
+                // Option может вести в: Speech, Condition, Modify, End
+                (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+
+                // Condition (True/False) может вести в: Speech, Option, Modify, End
+                (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+
+                // Modify может вести в: Speech, Option, Condition, End
+                (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+
+                // End — никуда не ведёт (но можно разрешить, если нужно)
                 _ => false
             };
         }
         else
         {
-            return (startNode, targetNode) switch
+            // Для input порта — зеркальная логика (или можно просто вернуть true, если граф направленный)
+            // Но проще использовать ту же логику, что и для output, только поменять местами
+            return (targetNode, startNode) switch
             {
-                (SpeechNode, SpeechNode) => true,
-                (SpeechNode, OptionNode) => true,
-                (SpeechNode, IntConditionNode) => true,
-                (SpeechNode, StringConditionNode) => true,
-                (OptionNode, SpeechNode) => true,
-                (OptionNode, IntConditionNode) => true,
-                (OptionNode, StringConditionNode) => true,
-                (EndNode, OptionNode) => true, // Разрешаем подключение от EndNode к OptionNode (входной порт)
-                (ModifyIntNode, SpeechNode) => true,
-                (ModifyIntNode, OptionNode) => true,
-                (ModifyIntNode, IntConditionNode) => true,
-                (ModifyIntNode, StringConditionNode) => true,
-                (IntConditionNode, OptionNode) => true,
-                (IntConditionNode, SpeechNode) => true,
-                (StringConditionNode, OptionNode) => true,
-                (StringConditionNode, SpeechNode) => true,
+                (EntryNode _, _) when IsSpeech(startNode) => true,
+                (SpeechNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (SpeechNodeImage _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (OptionNode _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (OptionNodeImage _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (IntConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (StringConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
+                (ModifyIntNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsEnd(startNode) => true,
                 _ => false
             };
         }
-    } 
+    }
 
     /// <summary>
     /// Проверяет, подключен ли узел условия к SpeechNode
