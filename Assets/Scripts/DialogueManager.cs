@@ -124,11 +124,13 @@ public class DialogueManager : MonoBehaviour
                 {
                     currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
                     ProcessNextNode();
-                }
-                else
-                {
-                    currentNode = null;
-                }
+                } else currentNode = null;
+                break;
+            case CharacterIntConditionNodeData charIntCondition:
+                ProcessCharacterIntCondition(charIntCondition);
+                break;
+            case CharacterModifyIntNodeData charModifyInt:
+                ProcessCharacterModifyInt(charModifyInt);
                 break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
@@ -711,6 +713,12 @@ public class DialogueManager : MonoBehaviour
         var endNode = currentDialogue.EndNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (endNode != null) return endNode;
 
+        var charIntConditionNode = currentDialogue.CharacterIntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charIntConditionNode != null) return charIntConditionNode;
+
+        var charModifyIntNode = currentDialogue.CharacterModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charModifyIntNode != null) return charModifyIntNode;
+
         return currentDialogue.EntryNodeData;
     }
 
@@ -777,5 +785,88 @@ public class DialogueManager : MonoBehaviour
             // В реальной системе нужно реализовать загрузку из Resources
             return null;
         }
+    }
+
+    private void ProcessCharacterIntCondition(CharacterIntConditionNodeData condition)
+    {
+        var character = CharacterManager.Instance.GetCharacter(condition.CharacterName);
+        if (character == null)
+        {
+            Debug.LogError($"Character '{condition.CharacterName}' not found for condition node.");
+            currentNode = null;
+            return;
+        }
+
+        if (!character.TryGetVariable(condition.SelectedVariable, out var variable))
+        {
+            Debug.LogError($"Variable '{condition.SelectedVariable}' not found on character '{condition.CharacterName}'.");
+            currentNode = null;
+            return;
+        }
+
+        bool result = false;
+        switch (condition.Comparison)
+        {
+            case ComparisonType.Equal: result = variable.Value == condition.CompareValue; break;
+            case ComparisonType.NotEqual: result = variable.Value != condition.CompareValue; break;
+            case ComparisonType.Greater: result = variable.Value > condition.CompareValue; break;
+            case ComparisonType.Less: result = variable.Value < condition.CompareValue; break;
+            case ComparisonType.GreaterOrEqual: result = variable.Value >= condition.CompareValue; break;
+            case ComparisonType.LessOrEqual: result = variable.Value <= condition.CompareValue; break;
+            default: result = false; break;
+        }
+
+        var nextLinks = currentDialogue.NodeLinks.Where(l => l.BaseNodeGuid == condition.Guid).ToList();
+        foreach (var link in nextLinks)
+        {
+            if ((link.PortName == "True" && result) || (link.PortName == "False" && !result))
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
+        Debug.LogWarning($"No matching output port for CharacterIntConditionNode {condition.Guid}");
+        currentNode = null;
+    }
+
+    private void ProcessCharacterModifyInt(CharacterModifyIntNodeData modify)
+    {
+        var character = CharacterManager.Instance.GetCharacter(modify.CharacterName);
+        if (character == null)
+        {
+            Debug.LogError($"Character '{modify.CharacterName}' not found for modify node.");
+            currentNode = null;
+            return;
+        }
+
+        if (!character.TryGetVariable(modify.SelectedVariable, out var variable))
+        {
+            Debug.LogError($"Variable '{modify.SelectedVariable}' not found on character '{modify.CharacterName}'.");
+            currentNode = null;
+            return;
+        }
+
+        switch (modify.Operator)
+        {
+            case OperatorType.Set: variable.Value = modify.Value; break;
+            case OperatorType.Add: variable.Value += modify.Value; break;
+            case OperatorType.Subtract: variable.Value -= modify.Value; break;
+            case OperatorType.Multiply: variable.Value *= modify.Value; break;
+            case OperatorType.Divide:
+                if (modify.Value != 0) variable.Value /= modify.Value;
+                else Debug.LogWarning("Division by zero in CharacterModifyIntNode");
+                break;
+            case OperatorType.Increment: variable.Value++; break;
+            case OperatorType.Decrement: variable.Value--; break;
+        }
+
+        var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == modify.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else currentNode = null;
     }
 }

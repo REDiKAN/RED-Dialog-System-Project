@@ -48,4 +48,10 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Event Nodes")]
     public List<EventNodeData> EventNodeDatas = new List<EventNodeData>();
+
+    [Header("Character Condition Nodes")]
+    public List<CharacterIntConditionNodeData> CharacterIntConditionNodeDatas = new List<CharacterIntConditionNodeData>();
+
+    [Header("Character Modify Int Nodes")]
+    public List<CharacterModifyIntNodeData> CharacterModifyIntNodeDatas = new List<CharacterModifyIntNodeData>();
 }

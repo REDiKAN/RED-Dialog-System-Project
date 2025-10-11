@@ -42,6 +42,8 @@ public static class NodeFactory
             nameof(ModifyIntNode) => CreateModifyIntNode(position),
             nameof(EndNode) => CreateEndNode(position),
             nameof(EventNode) => CreateEventNode(position),
+            nameof(CharacterIntConditionNode) => CreateCharacterIntConditionNode(position),
+            nameof(CharacterModifyIntNode) => CreateCharacterModifyIntNode(position),
             _ => null
         };
     }
@@ -198,6 +200,20 @@ public static class NodeFactory
             return AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(graphView.BaseCharacterGuid);
         }
         return null;
+    }
+
+    public static CharacterIntConditionNode CreateCharacterIntConditionNode(Vector2 position)
+    {
+        var node = new CharacterIntConditionNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static CharacterModifyIntNode CreateCharacterModifyIntNode(Vector2 position)
+    {
+        var node = new CharacterModifyIntNode();
+        node.Initialize(position);
+        return node;
     }
 
 }

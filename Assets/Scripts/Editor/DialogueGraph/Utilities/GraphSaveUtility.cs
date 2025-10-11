@@ -203,6 +203,30 @@ public class GraphSaveUtility
                     Event = eventNode.RuntimeEvent
                 });
             }
+            else if (node is CharacterIntConditionNode charIntCond)
+            {
+                dialogueContainer.CharacterIntConditionNodeDatas.Add(new CharacterIntConditionNodeData
+                {
+                    Guid = charIntCond.GUID,
+                    Position = node.GetPosition().position,
+                    CharacterName = charIntCond.CharacterName,
+                    SelectedVariable = charIntCond.SelectedVariable,
+                    Comparison = charIntCond.Comparison,
+                    CompareValue = charIntCond.CompareValue
+                });
+            }
+            else if (node is CharacterModifyIntNode charModify)
+            {
+                dialogueContainer.CharacterModifyIntNodeDatas.Add(new CharacterModifyIntNodeData
+                {
+                    Guid = charModify.GUID,
+                    Position = node.GetPosition().position,
+                    CharacterName = charModify.CharacterName,
+                    SelectedVariable = charModify.SelectedVariable,
+                    Operator = charModify.Operator,
+                    Value = charModify.Value
+                });
+            }
         }
     }
 
@@ -466,6 +490,33 @@ public class GraphSaveUtility
             tempNode.Initialize(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
             tempNode.RuntimeEvent = nodeData.Event;
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.CharacterIntConditionNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateCharacterIntConditionNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is CharacterIntConditionNode n)
+            {
+                n.SetInitialData(nodeData.CharacterName, nodeData.SelectedVariable, nodeData.Comparison, nodeData.CompareValue);
+                n.UpdateUIFromData();
+            }
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.CharacterModifyIntNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateCharacterModifyIntNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is CharacterModifyIntNode n)
+            {
+                n.CharacterName = nodeData.CharacterName;
+                n.SelectedVariable = nodeData.SelectedVariable;
+                n.Operator = nodeData.Operator;
+                n.Value = nodeData.Value;
+                n.UpdateUIFromData();
+            }
             targetGraphView.AddElement(tempNode);
         }
     }
