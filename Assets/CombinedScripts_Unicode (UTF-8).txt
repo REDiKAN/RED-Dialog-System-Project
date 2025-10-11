@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 11.10.2025 15:28:45
+// Generation Time: 11.10.2025 16:01:06
 // Total Files: 58
 // =================================
 
@@ -2125,7 +2125,7 @@ public class DialogueGraphView : GraphView
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
 
-        // Определяем типы узлов независимо от направления
+        // Определяем типы узлов
         bool IsCondition(BaseNode n) => n is IntConditionNode or StringConditionNode;
         bool IsSpeech(BaseNode n) => n is SpeechNode;
         bool IsSpeechImage(BaseNode n) => n is SpeechNodeImage;
@@ -2134,53 +2134,56 @@ public class DialogueGraphView : GraphView
         bool IsModify(BaseNode n) => n is ModifyIntNode;
         bool IsEnd(BaseNode n) => n is EndNode;
         bool IsEntry(BaseNode n) => n is EntryNode;
+        bool IsEvent(BaseNode n) => n is EventNode;
 
-        // Разрешённые переходы от выхода (startPort — output)
+        // Специальная логика для EventNode на выходе
+        if (startPort.direction == Direction.Output && IsEvent(startNode))
+        {
+            // Найти входную ноду, подключённую к EventNode.Input
+            var inputPort = startNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
+            if (inputPort?.connections?.Count > 0)
+            {
+                var sourceNode = inputPort.connections[0].output.node as BaseNode;
+                if (sourceNode != null)
+                {
+                    // Наследуем правила от sourceNode
+                    return (sourceNode, targetNode) switch
+                    {
+                        (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                        (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+                        (EntryNode _, _) when IsSpeech(targetNode) => true,
+                        _ => false
+                    };
+                }
+            }
+            // Если вход не подключён — разрешаем всё (или ничего, по желанию)
+            return true; // или false, если хотите запретить
+        }
+
+        // Стандартная логика для всех остальных нод
         if (startPort.direction == Direction.Output)
         {
             return (startNode, targetNode) switch
             {
-                // Entry может вести только в Speech
                 (EntryNode _, _) when IsSpeech(targetNode) => true,
-
-                // Speech может вести в: Speech, Option, Condition, Modify, End
                 (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // SpeechImage — аналогично
                 (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Option может вести в: Speech, Condition, Modify, End
                 (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                 (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Condition (True/False) может вести в: Speech, Option, Modify, End
                 (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                 (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Modify может вести в: Speech, Option, Condition, End
                 (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+                _ => false
+            };
+        }
 
-                // End — никуда не ведёт (но можно разрешить, если нужно)
-                _ => false
-            };
-        }
-        else
-        {
-            // Для input порта — зеркальная логика (или можно просто вернуть true, если граф направленный)
-            // Но проще использовать ту же логику, что и для output, только поменять местами
-            return (targetNode, startNode) switch
-            {
-                (EntryNode _, _) when IsSpeech(startNode) => true,
-                (SpeechNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (SpeechNodeImage _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (OptionNode _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (OptionNodeImage _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (IntConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (StringConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (ModifyIntNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsEnd(startNode) => true,
-                _ => false
-            };
-        }
+        // Для input портов — зеркальная логика (или разрешить всё)
+        return true;
     }
 
     /// <summary>
@@ -2814,7 +2817,10 @@ public class DialogueGraphView : GraphView
         {
             if (selectedElement is BaseNode node)
             {
-                var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+                var edgesToRemove = targetGraphView.edges
+                    .Where(e => e.input.node == node || e.output.node == node)
+                    .ToList(); // ← ToList() делает его IList
+
                 foreach (var edge in edgesToRemove)
                 {
                     RemoveElement(edge);
@@ -2829,7 +2835,7 @@ public class DialogueGraphView : GraphView
             }
         }
         if (hadChange)
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
     }
 
     // Метод для обработки изменений базового персонажа
@@ -4472,9 +4478,10 @@ public class GraphSaveUtility
         dialogueContainer.BaseCharacterGuid = targetGraphView.BaseCharacterGuid;
 
         // Сохраняем связи между узлами
-        var connectedPorts = Edges.Where(x => x.input.node != null).ToArray();
+        var edgesList = targetGraphView.edges.ToList();
+        var connectedPorts = edgesList.Where(x => x.input.node != null).ToArray();
         foreach (var edge in connectedPorts)
-        {
+        {;
             var outputNode = edge.output.node as BaseNode;
             var inputNode = edge.input.node as BaseNode;
             dialogueContainer.NodeLinks.Add(new NodeLinkData
@@ -5087,17 +5094,17 @@ using UnityEngine;
 using UnityEditor;
 
 /// <summary>
-/// ������� ��� �������� ����� ����������� �����
-/// ������������ ������ �������� ���� ����� �����
+/// Фабрика для создания узлов диалогового графа
+/// Централизует логику создания всех типов узлов
 /// </summary>
 public static class NodeFactory
 {
     /// <summary>
-    /// ������� ���� ���������� ���� � �������� �������
+    /// Создает узел указанного типа в заданной позиции
     /// </summary>
     private static DialogueGraphView GetGraphView()
     {
-        // �������� ��� ���� ���� DialogueGraph
+        // Получаем все окна типа DialogueGraph
         var windows = Resources.FindObjectsOfTypeAll<DialogueGraph>();
         if (windows.Length > 0)
         {
@@ -5107,7 +5114,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// ������� ���� ���������� ���� � �������� �������
+    /// Создает узел указанного типа в заданной позиции
     /// </summary>
     public static BaseNode CreateNode(System.Type nodeType, Vector2 position)
     {
@@ -5126,8 +5133,16 @@ public static class NodeFactory
             nameof(StringConditionNode) => CreateStringConditionNode(position),
             nameof(ModifyIntNode) => CreateModifyIntNode(position),
             nameof(EndNode) => CreateEndNode(position),
+            nameof(EventNode) => CreateEventNode(position),
             _ => null
         };
+    }
+
+    public static EventNode CreateEventNode(Vector2 position)
+    {
+        var node = new EventNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static IntConditionNode CreateIntConditionNode(Vector2 position, IntConditionNodeData data = null)
@@ -5156,7 +5171,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// ������� ���� ���� NPC
+    /// Создает узел речи NPC
     /// </summary>
     public static SpeechNode CreateSpeechNode(Vector2 position, string dialogueText = "New Dialogue")
     {
@@ -5164,7 +5179,7 @@ public static class NodeFactory
         node.Initialize(position);
         node.DialogueText = dialogueText;
 
-        // �������������� ��������� �������� ���������
+        // Автоматическая установка базового персонажа
         var baseCharacter = GetBaseCharacter();
         if (baseCharacter != null)
         {
@@ -5175,7 +5190,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// ������� ���� �������� ������ ������
+    /// Создает узел варианта ответа игрока
     /// </summary>
     public static OptionNode CreateOptionNode(Vector2 position, string responseText = "New Response")
     {
@@ -5186,7 +5201,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// ������� ��������� ����
+    /// Создает стартовый узел
     /// </summary>
     public static EntryNode CreateEntryNode(Vector2 position)
     {
@@ -5617,9 +5632,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 58
-// Total Size: 199,67 KB
-// Total Lines: 5495
+// Total Size: 200,50 KB
+// Total Lines: 5510
 // Classes: 57
-// Methods: 365
-// Comments: 684
+// Methods: 366
+// Comments: 680
 // =====================================

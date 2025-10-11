@@ -147,7 +147,7 @@ public class DialogueGraphView : GraphView
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
 
-        // Определяем типы узлов независимо от направления
+        // Определяем типы узлов
         bool IsCondition(BaseNode n) => n is IntConditionNode or StringConditionNode;
         bool IsSpeech(BaseNode n) => n is SpeechNode;
         bool IsSpeechImage(BaseNode n) => n is SpeechNodeImage;
@@ -156,53 +156,61 @@ public class DialogueGraphView : GraphView
         bool IsModify(BaseNode n) => n is ModifyIntNode;
         bool IsEnd(BaseNode n) => n is EndNode;
         bool IsEntry(BaseNode n) => n is EntryNode;
+        bool IsEvent(BaseNode n) => n is EventNode;
 
-        // Разрешённые переходы от выхода (startPort — output)
+        // Специальная логика для EventNode на выходе
+        if (startPort.direction == Direction.Output && IsEvent(startNode))
+        {
+            // Найти входную ноду, подключённую к EventNode.Input
+            var inputPort = startNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
+            if (inputPort?.connections != null)
+            {
+                // Исправление 1: используем FirstOrDefault() вместо индексации
+                var connection = inputPort.connections.FirstOrDefault();
+                if (connection != null)
+                {
+                    var sourceNode = connection.output.node as BaseNode;
+                    if (sourceNode != null)
+                    {
+                        // Наследуем правила от sourceNode
+                        return (sourceNode, targetNode) switch
+                        {
+                            (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+                            (EntryNode _, _) when IsSpeech(targetNode) => true,
+                            _ => false
+                        };
+                    }
+                }
+            }
+            // Если вход не подключён — разрешаем всё (или ничего, по желанию)
+            return true; // или false, если хотите запретить
+        }
+
+        // Стандартная логика для всех остальных нод
         if (startPort.direction == Direction.Output)
         {
             return (startNode, targetNode) switch
             {
-                // Entry может вести только в Speech
                 (EntryNode _, _) when IsSpeech(targetNode) => true,
-
-                // Speech может вести в: Speech, Option, Condition, Modify, End
                 (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // SpeechImage — аналогично
                 (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Option может вести в: Speech, Condition, Modify, End
                 (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                 (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Condition (True/False) может вести в: Speech, Option, Modify, End
                 (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                 (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-
-                // Modify может вести в: Speech, Option, Condition, End
                 (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+                _ => false
+            };
+        }
 
-                // End — никуда не ведёт (но можно разрешить, если нужно)
-                _ => false
-            };
-        }
-        else
-        {
-            // Для input порта — зеркальная логика (или можно просто вернуть true, если граф направленный)
-            // Но проще использовать ту же логику, что и для output, только поменять местами
-            return (targetNode, startNode) switch
-            {
-                (EntryNode _, _) when IsSpeech(startNode) => true,
-                (SpeechNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (SpeechNodeImage _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (OptionNode _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (OptionNodeImage _, _) when IsSpeech(startNode) || IsCondition(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (IntConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (StringConditionNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsModify(startNode) || IsEnd(startNode) => true,
-                (ModifyIntNode _, _) when IsSpeech(startNode) || IsOption(startNode) || IsCondition(startNode) || IsEnd(startNode) => true,
-                _ => false
-            };
-        }
+        // Для input портов — зеркальная логика (или разрешить всё)
+        return true;
     }
 
     /// <summary>
@@ -836,7 +844,10 @@ public class DialogueGraphView : GraphView
         {
             if (selectedElement is BaseNode node)
             {
-                var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+                // Используем this.edges, а не Edges
+                var edgesToRemove = this.edges
+                    .Where(e => e.input.node == node || e.output.node == node)
+                    .ToList(); // ← ToList() делает его IList
                 foreach (var edge in edgesToRemove)
                 {
                     RemoveElement(edge);
@@ -851,7 +862,7 @@ public class DialogueGraphView : GraphView
             }
         }
         if (hadChange)
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
     }
 
     // Метод для обработки изменений базового персонажа
@@ -864,24 +875,23 @@ public class DialogueGraphView : GraphView
     /// <summary>
     /// Публичный метод для полной очистки графа (кроме EntryNode)
     /// </summary>
-    public void ClearGraph()
+    private void ClearGraph()
     {
         // Удаляем все узлы, кроме EntryPoint
-        var nodesToRemove = nodes.ToList().Where(node => !(node is EntryNode)).ToList();
+        var nodesToRemove = this.nodes.ToList().Where(node => !(node is EntryNode)).ToList();
         foreach (var node in nodesToRemove)
         {
             // Удаляем связанные рёбра
-            var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+            var edgesToRemove = this.edges
+                .Where(e => e.input.node == node || e.output.node == node)
+                .ToList();
             foreach (var edge in edgesToRemove)
-            {
                 RemoveElement(edge);
-            }
+
             RemoveElement(node);
         }
-
         // Очищаем Blackboard и exposed properties
         ClearBlackBoardAndExposedProperties();
-
         // Сбрасываем BaseCharacterGuid
         BaseCharacterGuid = string.Empty;
     }
