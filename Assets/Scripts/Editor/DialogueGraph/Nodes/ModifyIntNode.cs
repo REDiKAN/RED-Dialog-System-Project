@@ -77,6 +77,21 @@ public class ModifyIntNode : BaseNode, IPropertyNode
                                   DisplayStyle.None : DisplayStyle.Flex;
     }
 
+    /// <summary>
+    /// Обновляет UI-элементы на основе текущих значений полей.
+    /// Вызывается при загрузке узла из DialogueContainer.
+    /// </summary>
+    public void UpdateUIFromData()
+    {
+        if (propertyDropdown != null && operatorDropdown != null && valueField != null)
+        {
+            propertyDropdown.value = SelectedProperty;
+            operatorDropdown.value = Operator.ToString();
+            valueField.value = Value;
+            UpdateValueFieldVisibility();
+        }
+    }
+
     public void RefreshPropertyDropdown()
     {
         // Получаем свойства из графа

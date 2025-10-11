@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 11.10.2025 16:01:06
+// Generation Time: 11.10.2025 16:48:22
 // Total Files: 58
 // =================================
 
@@ -2141,24 +2141,29 @@ public class DialogueGraphView : GraphView
         {
             // Найти входную ноду, подключённую к EventNode.Input
             var inputPort = startNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
-            if (inputPort?.connections?.Count > 0)
+            if (inputPort?.connections != null)
             {
-                var sourceNode = inputPort.connections[0].output.node as BaseNode;
-                if (sourceNode != null)
+                // Исправление 1: используем FirstOrDefault() вместо индексации
+                var connection = inputPort.connections.FirstOrDefault();
+                if (connection != null)
                 {
-                    // Наследуем правила от sourceNode
-                    return (sourceNode, targetNode) switch
+                    var sourceNode = connection.output.node as BaseNode;
+                    if (sourceNode != null)
                     {
-                        (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                        (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
-                        (EntryNode _, _) when IsSpeech(targetNode) => true,
-                        _ => false
-                    };
+                        // Наследуем правила от sourceNode
+                        return (sourceNode, targetNode) switch
+                        {
+                            (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
+                            (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
+                            (EntryNode _, _) when IsSpeech(targetNode) => true,
+                            _ => false
+                        };
+                    }
                 }
             }
             // Если вход не подключён — разрешаем всё (или ничего, по желанию)
@@ -2817,10 +2822,10 @@ public class DialogueGraphView : GraphView
         {
             if (selectedElement is BaseNode node)
             {
-                var edgesToRemove = targetGraphView.edges
+                // Используем this.edges, а не Edges
+                var edgesToRemove = this.edges
                     .Where(e => e.input.node == node || e.output.node == node)
                     .ToList(); // ← ToList() делает его IList
-
                 foreach (var edge in edgesToRemove)
                 {
                     RemoveElement(edge);
@@ -2848,24 +2853,23 @@ public class DialogueGraphView : GraphView
     /// <summary>
     /// Публичный метод для полной очистки графа (кроме EntryNode)
     /// </summary>
-    public void ClearGraph()
+    private void ClearGraph()
     {
         // Удаляем все узлы, кроме EntryPoint
-        var nodesToRemove = nodes.ToList().Where(node => !(node is EntryNode)).ToList();
+        var nodesToRemove = this.nodes.ToList().Where(node => !(node is EntryNode)).ToList();
         foreach (var node in nodesToRemove)
         {
             // Удаляем связанные рёбра
-            var edgesToRemove = edges.ToList().Where(e => e.input.node == node || e.output.node == node).ToList();
+            var edgesToRemove = this.edges
+                .Where(e => e.input.node == node || e.output.node == node)
+                .ToList();
             foreach (var edge in edgesToRemove)
-            {
                 RemoveElement(edge);
-            }
+
             RemoveElement(node);
         }
-
         // Очищаем Blackboard и exposed properties
         ClearBlackBoardAndExposedProperties();
-
         // Сбрасываем BaseCharacterGuid
         BaseCharacterGuid = string.Empty;
     }
@@ -4433,8 +4437,9 @@ public class GraphSaveUtility
 {
     private DialogueGraphView targetGraphView;
     private DialogueContainer containerCache;
-    private List<Edge> Edges => targetGraphView.edges.ToList();
-    private List<BaseNode> Nodes => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
+
+    private List<BaseNode> GetNodes() => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
+    private List<Edge> GetEdges() => targetGraphView.edges.ToList();
 
     /// <summary>
     /// Получение экземпляра утилиты для сохранения
@@ -4493,7 +4498,7 @@ public class GraphSaveUtility
         }
 
         // Сохраняем данные узлов
-        foreach (var node in Nodes)
+        foreach (var node in GetNodes())
         {
             if (node.EntryPoint)
             {
@@ -4669,7 +4674,7 @@ public class GraphSaveUtility
         // Восстанавливаем EntryNode
         if (containerCache.EntryNodeData != null)
         {
-            var entryNode = Nodes.Find(x => x.EntryPoint);
+            var entryNode = GetNodes().Find(x => x.EntryPoint);
             if (entryNode != null)
             {
                 entryNode.GUID = containerCache.EntryNodeData.Guid;
@@ -4890,17 +4895,21 @@ public class GraphSaveUtility
     /// <summary>
     /// Восстановление связей между узлами
     /// </summary>
+    /// <summary>
+    /// Восстановление связей между узлами
+    /// </summary>
     private void ConnectNodes()
     {
         try
         {
-            for (int i = 0; i < Nodes.Count; i++)
+            var nodeList = this.targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
+            for (int i = 0; i < nodeList.Count; i++)
             {
-                var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == Nodes[i].GUID).ToList();
+                var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == nodeList[i].GUID).ToList();
                 foreach (var connection in connections)
                 {
                     var targetNodeGuid = connection.TargetNodeGuid;
-                    var targetNode = Nodes.FirstOrDefault(x => x.GUID == targetNodeGuid);
+                    var targetNode = nodeList.FirstOrDefault(x => x.GUID == targetNodeGuid);
                     if (targetNode == null)
                     {
                         Debug.LogWarning($"Target node not found for GUID: {targetNodeGuid}");
@@ -4908,7 +4917,9 @@ public class GraphSaveUtility
                     }
 
                     Port outputPort = null;
-                    if (Nodes[i] is SpeechNode speechNode)
+
+                    // Определяем outputPort в зависимости от типа узла
+                    if (nodeList[i] is SpeechNode speechNode)
                     {
                         foreach (var port in speechNode.outputContainer.Children())
                         {
@@ -4927,17 +4938,17 @@ public class GraphSaveUtility
                             speechNode.RefreshExpandedState();
                         }
                     }
-                    else if (Nodes[i] is OptionNode optionNode)
+                    else if (nodeList[i] is OptionNode optionNode)
                     {
                         outputPort = optionNode.outputContainer[0].Q<Port>();
                     }
-                    else if (Nodes[i] is EntryNode entryNode)
+                    else if (nodeList[i] is EntryNode entryNode)
                     {
                         outputPort = entryNode.outputContainer[0].Q<Port>();
                     }
-                    else if (Nodes[i] is IntConditionNode || Nodes[i] is StringConditionNode)
+                    else if (nodeList[i] is IntConditionNode || nodeList[i] is StringConditionNode)
                     {
-                        foreach (var port in Nodes[i].outputContainer.Children())
+                        foreach (var port in nodeList[i].outputContainer.Children())
                         {
                             if (port is Port portElement && portElement.portName == connection.PortName)
                             {
@@ -4947,31 +4958,44 @@ public class GraphSaveUtility
                         }
                         if (outputPort == null)
                         {
-                            Debug.LogWarning($"Port '{connection.PortName}' not found on condition node {Nodes[i].GUID}");
+                            Debug.LogWarning($"Port '{connection.PortName}' not found on condition node {nodeList[i].GUID}");
                         }
                     }
+                    else if (nodeList[i] is ModifyIntNode modifyNode)
+                    {
+                        outputPort = modifyNode.outputContainer[0].Q<Port>();
+                    }
+                    else if (nodeList[i] is EndNode endNode)
+                    {
+                        outputPort = endNode.outputContainer[0].Q<Port>();
+                    }
+                    else if (nodeList[i] is EventNode eventNode)
+                    {
+                        outputPort = eventNode.outputContainer[0].Q<Port>();
+                    }
 
-                    // 🔥 КРИТИЧЕСКИ ВАЖНО: получаем inputPort и соединяем!
+                    // Получаем inputPort у целевого узла
                     Port inputPort = null;
                     if (targetNode.inputContainer.childCount > 0)
                     {
                         inputPort = targetNode.inputContainer[0] as Port;
                     }
 
+                    // Соединяем порты
                     if (outputPort != null && inputPort != null)
                     {
                         LinkNodes(outputPort, inputPort);
                     }
                     else
                     {
-                        Debug.LogWarning($"Failed to connect {Nodes[i].GUID} -> {targetNodeGuid}. outputPort: {outputPort != null}, inputPort: {inputPort != null}");
+                        Debug.LogWarning($"Failed to connect {nodeList[i].GUID} -> {targetNodeGuid}. outputPort: {outputPort != null}, inputPort: {inputPort != null}");
                     }
                 }
             }
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error connecting nodes: {e.Message}");
+            Debug.LogError($"Error connecting nodes: {e.Message}\n{e.StackTrace}");
         }
     }
 
@@ -5024,10 +5048,10 @@ public class GraphSaveUtility
     private void ClearGraph()
     {
         // Удаляем все узлы кроме стартового
-        foreach (var node in Nodes.Where(node => !node.EntryPoint).ToList())
+        foreach (var node in GetNodes().Where(node => !node.EntryPoint).ToList())
         {
             // Удаляем связанные связи
-            var edgesToRemove = Edges.Where(x => x.input.node == node || x.output.node == node).ToList();
+            var edgesToRemove = GetEdges().Where(x => x.input.node == node || x.output.node == node).ToList();
             foreach (var edge in edgesToRemove)
             {
                 targetGraphView.RemoveElement(edge);
@@ -5632,9 +5656,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 58
-// Total Size: 200,50 KB
-// Total Lines: 5510
+// Total Size: 201,84 KB
+// Total Lines: 5534
 // Classes: 57
 // Methods: 366
-// Comments: 680
+// Comments: 687
 // =====================================

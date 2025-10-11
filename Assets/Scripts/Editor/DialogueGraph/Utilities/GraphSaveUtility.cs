@@ -443,6 +443,7 @@ public class GraphSaveUtility
                 modifyIntNode.SelectedProperty = nodeData.SelectedProperty;
                 modifyIntNode.Operator = nodeData.Operator;
                 modifyIntNode.Value = nodeData.Value;
+                modifyIntNode.UpdateUIFromData(); // ← добавлено
             }
             targetGraphView.AddElement(tempNode);
         }
@@ -617,6 +618,11 @@ public class GraphSaveUtility
             };
             targetGraphView.AddPropertyToBlackBoard(newProp);
         }
+
+        // Принудительно обновляем все выпадающие списки после загрузки свойств
+        var propertyNodes = targetGraphView.nodes.ToList().OfType<IPropertyNode>();
+        foreach (var node in propertyNodes)
+            node.RefreshPropertyDropdown();
     }
 
     /// <summary>

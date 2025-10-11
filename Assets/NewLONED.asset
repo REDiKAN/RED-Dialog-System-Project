@@ -27,10 +27,19 @@ MonoBehaviour:
     TargetNodeGuid: 20a55472-83e6-47c7-85ce-b58d7a4ccc11
   - BaseNodeGuid: 05625c1d-c7c1-4011-8433-a7a6a18f410d
     PortName: Next
-    TargetNodeGuid: 49dc0b1d-3335-48ad-bf0f-7e569d1a247c
+    TargetNodeGuid: 681c068c-eb7a-43ad-9bb5-96fac420f71e
   - BaseNodeGuid: 20a55472-83e6-47c7-85ce-b58d7a4ccc11
     PortName: Next
+    TargetNodeGuid: 5ad81034-ab80-4ee3-b2b7-cb92e718e3f3
+  - BaseNodeGuid: 5ad81034-ab80-4ee3-b2b7-cb92e718e3f3
+    PortName: False
     TargetNodeGuid: 49dc0b1d-3335-48ad-bf0f-7e569d1a247c
+  - BaseNodeGuid: 5ad81034-ab80-4ee3-b2b7-cb92e718e3f3
+    PortName: True
+    TargetNodeGuid: e6c4057f-b058-4994-84c0-1daeb4154112
+  - BaseNodeGuid: 681c068c-eb7a-43ad-9bb5-96fac420f71e
+    PortName: Output
+    TargetNodeGuid: 5ad81034-ab80-4ee3-b2b7-cb92e718e3f3
   SpeechNodeDatas:
   - Guid: d0c78cbd-6545-4d93-919e-89bf44704e95
     Position: {x: 138, y: 0}
@@ -60,7 +69,7 @@ MonoBehaviour:
     SpeakerGuid: 6ef42f4494129324e9c5b7c6c5478fa8
     NodeType: SpeechNodeText
   - Guid: 49dc0b1d-3335-48ad-bf0f-7e569d1a247c
-    Position: {x: 840, y: -10}
+    Position: {x: 1385, y: 222}
     DialogueText: "\n<size=115%><b>\u0421\u0441\u044B\u043B\u043A\u0438 \u0438 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F</b></size>\n\n<link=\"quest:start_dialogue_01\"><u>\u041D\u0430\u0436\u043C\u0438
       \u0441\u044E\u0434\u0430</u></link> \u2014 \u043D\u0430\u0447\u0430\u0442\u044C
       \u043A\u0432\u0435\u0441\u0442.\n\n!<link=\"SwordIcon\"><u>sword_icon</u></link>
@@ -81,6 +90,12 @@ MonoBehaviour:
     AudioClipGuid: 
     SpeakerGuid: 6ef42f4494129324e9c5b7c6c5478fa8
     NodeType: SpeechNodeText
+  - Guid: e6c4057f-b058-4994-84c0-1daeb4154112
+    Position: {x: 1403, y: 77}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 6ef42f4494129324e9c5b7c6c5478fa8
+    NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: 05625c1d-c7c1-4011-8433-a7a6a18f410d
     Position: {x: 526, y: -51}
@@ -93,15 +108,27 @@ MonoBehaviour:
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
-  IntExposedProperties: []
+  IntExposedProperties:
+  - PropertyName: New Int Property
+    IntValue: 0
+    MinValue: 0
+    MaxValue: 100
   StringExposedProperties: []
-  IntConditionNodeDatas: []
+  IntConditionNodeDatas:
+  - Guid: 5ad81034-ab80-4ee3-b2b7-cb92e718e3f3
+    Position: {x: 1113, y: 77}
+    SelectedProperty: New Int Property
+    Comparison: 3
+    CompareValue: 10
   StringConditionNodeDatas: []
-  ModifyIntNodeDatas: []
-  EndNodeDatas:
-  - Guid: 9c29027a-30ae-4a51-afdc-507fa5faad14
-    Position: {x: 1551, y: -10}
-    NextDialogueName: 
+  ModifyIntNodeDatas:
+  - Guid: 681c068c-eb7a-43ad-9bb5-96fac420f71e
+    Position: {x: 816, y: -51}
+    SelectedProperty: New Int Property
+    Operator: 0
+    Value: 5
+  EndNodeDatas: []
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []
   BaseCharacterGuid: 6ef42f4494129324e9c5b7c6c5478fa8
+  EventNodeDatas: []
