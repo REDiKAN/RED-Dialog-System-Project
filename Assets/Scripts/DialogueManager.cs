@@ -117,6 +117,19 @@ public class DialogueManager : MonoBehaviour
             case OptionNodeImageData optionImageNode:
                 ProcessOptionImageNode(optionImageNode);
                 break;
+            case EventNodeData eventNode:
+                eventNode.Event.Invoke();
+                var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == eventNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                {
+                    currentNode = null;
+                }
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;

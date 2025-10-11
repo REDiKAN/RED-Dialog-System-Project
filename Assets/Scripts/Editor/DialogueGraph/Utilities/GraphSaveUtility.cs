@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using System;
+using UnityEngine.Events;
 
 /// <summary>
 /// Утилита для сохранения и загрузки диалоговых графов
@@ -189,6 +190,15 @@ public class GraphSaveUtility
                     Guid = endNode.GUID,
                     Position = node.GetPosition().position,
                     NextDialogueName = endNode.GetNextDialoguePath()
+                });
+            }
+            else if (node is EventNode eventNode)
+            {
+                dialogueContainer.EventNodeDatas.Add(new EventNodeData
+                {
+                    Guid = eventNode.GUID,
+                    Position = node.GetPosition().position,
+                    Event = eventNode.RuntimeEvent
                 });
             }
         }
@@ -444,6 +454,15 @@ public class GraphSaveUtility
             {
                 endNodeEditor.SetNextDialogueFromPath(nodeData.NextDialogueName);
             }
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.EventNodeDatas)
+        {
+            var tempNode = new EventNode();
+            tempNode.Initialize(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            tempNode.RuntimeEvent = nodeData.Event;
             targetGraphView.AddElement(tempNode);
         }
     }

@@ -1,18 +1,18 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEditor;
 
 /// <summary>
-/// Фабрика для создания узлов диалогового графа
-/// Централизует логику создания всех типов узлов
+/// Р¤Р°Р±СЂРёРєР° РґР»СЏ СЃРѕР·РґР°РЅРёСЏ СѓР·Р»РѕРІ РґРёР°Р»РѕРіРѕРІРѕРіРѕ РіСЂР°С„Р°
+/// Р¦РµРЅС‚СЂР°Р»РёР·СѓРµС‚ Р»РѕРіРёРєСѓ СЃРѕР·РґР°РЅРёСЏ РІСЃРµС… С‚РёРїРѕРІ СѓР·Р»РѕРІ
 /// </summary>
 public static class NodeFactory
 {
     /// <summary>
-    /// Создает узел указанного типа в заданной позиции
+    /// РЎРѕР·РґР°РµС‚ СѓР·РµР» СѓРєР°Р·Р°РЅРЅРѕРіРѕ С‚РёРїР° РІ Р·Р°РґР°РЅРЅРѕР№ РїРѕР·РёС†РёРё
     /// </summary>
     private static DialogueGraphView GetGraphView()
     {
-        // Получаем все окна типа DialogueGraph
+        // РџРѕР»СѓС‡Р°РµРј РІСЃРµ РѕРєРЅР° С‚РёРїР° DialogueGraph
         var windows = Resources.FindObjectsOfTypeAll<DialogueGraph>();
         if (windows.Length > 0)
         {
@@ -22,7 +22,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// Создает узел указанного типа в заданной позиции
+    /// РЎРѕР·РґР°РµС‚ СѓР·РµР» СѓРєР°Р·Р°РЅРЅРѕРіРѕ С‚РёРїР° РІ Р·Р°РґР°РЅРЅРѕР№ РїРѕР·РёС†РёРё
     /// </summary>
     public static BaseNode CreateNode(System.Type nodeType, Vector2 position)
     {
@@ -41,8 +41,16 @@ public static class NodeFactory
             nameof(StringConditionNode) => CreateStringConditionNode(position),
             nameof(ModifyIntNode) => CreateModifyIntNode(position),
             nameof(EndNode) => CreateEndNode(position),
+            nameof(EventNode) => CreateEventNode(position),
             _ => null
         };
+    }
+
+    public static EventNode CreateEventNode(Vector2 position)
+    {
+        var node = new EventNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static IntConditionNode CreateIntConditionNode(Vector2 position, IntConditionNodeData data = null)
@@ -71,7 +79,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// Создает узел речи NPC
+    /// РЎРѕР·РґР°РµС‚ СѓР·РµР» СЂРµС‡Рё NPC
     /// </summary>
     public static SpeechNode CreateSpeechNode(Vector2 position, string dialogueText = "New Dialogue")
     {
@@ -79,7 +87,7 @@ public static class NodeFactory
         node.Initialize(position);
         node.DialogueText = dialogueText;
 
-        // Автоматическая установка базового персонажа
+        // РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° Р±Р°Р·РѕРІРѕРіРѕ РїРµСЂСЃРѕРЅР°Р¶Р°
         var baseCharacter = GetBaseCharacter();
         if (baseCharacter != null)
         {
@@ -90,7 +98,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// Создает узел варианта ответа игрока
+    /// РЎРѕР·РґР°РµС‚ СѓР·РµР» РІР°СЂРёР°РЅС‚Р° РѕС‚РІРµС‚Р° РёРіСЂРѕРєР°
     /// </summary>
     public static OptionNode CreateOptionNode(Vector2 position, string responseText = "New Response")
     {
@@ -101,7 +109,7 @@ public static class NodeFactory
     }
 
     /// <summary>
-    /// Создает стартовый узел
+    /// РЎРѕР·РґР°РµС‚ СЃС‚Р°СЂС‚РѕРІС‹Р№ СѓР·РµР»
     /// </summary>
     public static EntryNode CreateEntryNode(Vector2 position)
     {

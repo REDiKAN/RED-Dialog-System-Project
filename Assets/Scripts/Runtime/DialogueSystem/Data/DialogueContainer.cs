@@ -45,4 +45,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Base Character")]
     public string BaseCharacterGuid;
+
+    [Header("Event Nodes")]
+    public List<EventNodeData> EventNodeDatas = new List<EventNodeData>();
 }
