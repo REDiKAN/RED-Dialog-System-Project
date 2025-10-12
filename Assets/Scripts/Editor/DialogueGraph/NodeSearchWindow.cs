@@ -58,6 +58,10 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeEntry(new GUIContent("Event", indentationIcon)) { userData = typeof(EventNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Character Condition (Int)", indentationIcon)) { userData = typeof(CharacterIntConditionNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Character Modify Int", indentationIcon)) { userData = typeof(CharacterModifyIntNode), level = 2 },
+        new SearchTreeGroupEntry(new GUIContent("Debug Nodes"), 1),
+        new SearchTreeEntry(new GUIContent("Debug Log", indentationIcon)) { userData = typeof(DebugLogNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Debug Warning", indentationIcon)) { userData = typeof(DebugWarningNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Debug Error", indentationIcon)) { userData = typeof(DebugErrorNode), level = 2 },
     };
     }
 

@@ -1,0 +1,3 @@
+.node {
+    --node-color: #FF4444;
+}

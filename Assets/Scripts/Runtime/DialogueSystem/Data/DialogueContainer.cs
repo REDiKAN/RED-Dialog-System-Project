@@ -54,4 +54,9 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Character Modify Int Nodes")]
     public List<CharacterModifyIntNodeData> CharacterModifyIntNodeDatas = new List<CharacterModifyIntNodeData>();
+
+    [Header("Debug Nodes")]
+    public List<DebugLogNodeData> DebugLogNodeDatas = new List<DebugLogNodeData>();
+    public List<DebugWarningNodeData> DebugWarningNodeDatas = new List<DebugWarningNodeData>();
+    public List<DebugErrorNodeData> DebugErrorNodeDatas = new List<DebugErrorNodeData>();
 }

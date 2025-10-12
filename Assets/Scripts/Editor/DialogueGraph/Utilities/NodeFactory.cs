@@ -44,8 +44,32 @@ public static class NodeFactory
             nameof(EventNode) => CreateEventNode(position),
             nameof(CharacterIntConditionNode) => CreateCharacterIntConditionNode(position),
             nameof(CharacterModifyIntNode) => CreateCharacterModifyIntNode(position),
+            nameof(DebugLogNode) => CreateDebugLogNode(position),
+            nameof(DebugWarningNode) => CreateDebugWarningNode(position),
+            nameof(DebugErrorNode) => CreateDebugErrorNode(position),
             _ => null
         };
+    }
+
+    public static DebugLogNode CreateDebugLogNode(Vector2 position)
+    {
+        var node = new DebugLogNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static DebugWarningNode CreateDebugWarningNode(Vector2 position)
+    {
+        var node = new DebugWarningNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static DebugErrorNode CreateDebugErrorNode(Vector2 position)
+    {
+        var node = new DebugErrorNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static EventNode CreateEventNode(Vector2 position)

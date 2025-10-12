@@ -132,6 +132,18 @@ public class DialogueManager : MonoBehaviour
             case CharacterModifyIntNodeData charModifyInt:
                 ProcessCharacterModifyInt(charModifyInt);
                 break;
+            case DebugLogNodeData debugLog:
+                Debug.Log(debugLog.MessageText);
+                GoToNextNode(debugLog.Guid);
+                break;
+            case DebugWarningNodeData debugWarn:
+                Debug.LogWarning(debugWarn.MessageText);
+                GoToNextNode(debugWarn.Guid);
+                break;
+            case DebugErrorNodeData debugErr:
+                Debug.LogError(debugErr.MessageText);
+                GoToNextNode(debugErr.Guid);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
@@ -720,6 +732,20 @@ public class DialogueManager : MonoBehaviour
         if (charModifyIntNode != null) return charModifyIntNode;
 
         return currentDialogue.EntryNodeData;
+    }
+
+    private void GoToNextNode(string currentGuid)
+    {
+        var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == currentGuid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
     }
 
     /// <summary>

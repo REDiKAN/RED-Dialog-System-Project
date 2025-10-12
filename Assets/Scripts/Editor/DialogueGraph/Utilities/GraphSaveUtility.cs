@@ -227,6 +227,33 @@ public class GraphSaveUtility
                     Value = charModify.Value
                 });
             }
+            else if (node is DebugLogNode debugLog)
+            {
+                dialogueContainer.DebugLogNodeDatas.Add(new DebugLogNodeData
+                {
+                    Guid = debugLog.GUID,
+                    Position = node.GetPosition().position,
+                    MessageText = debugLog.MessageText
+                });
+            }
+            else if (node is DebugWarningNode debugWarn)
+            {
+                dialogueContainer.DebugWarningNodeDatas.Add(new DebugWarningNodeData
+                {
+                    Guid = debugWarn.GUID,
+                    Position = node.GetPosition().position,
+                    MessageText = debugWarn.MessageText
+                });
+            }
+            else if (node is DebugErrorNode debugErr)
+            {
+                dialogueContainer.DebugErrorNodeDatas.Add(new DebugErrorNodeData
+                {
+                    Guid = debugErr.GUID,
+                    Position = node.GetPosition().position,
+                    MessageText = debugErr.MessageText
+                });
+            }
         }
     }
 
@@ -518,6 +545,36 @@ public class GraphSaveUtility
                 n.UpdateUIFromData();
             }
             targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.DebugLogNodeDatas)
+        {
+            var node = new DebugLogNode();
+            node.Initialize(nodeData.Position);
+            node.GUID = nodeData.Guid;
+            node.MessageText = nodeData.MessageText;
+            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
+            targetGraphView.AddElement(node);
+        }
+
+        foreach (var nodeData in containerCache.DebugWarningNodeDatas)
+        {
+            var node = new DebugWarningNode();
+            node.Initialize(nodeData.Position);
+            node.GUID = nodeData.Guid;
+            node.MessageText = nodeData.MessageText;
+            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
+            targetGraphView.AddElement(node);
+        }
+
+        foreach (var nodeData in containerCache.DebugErrorNodeDatas)
+        {
+            var node = new DebugErrorNode();
+            node.Initialize(nodeData.Position);
+            node.GUID = nodeData.Guid;
+            node.MessageText = nodeData.MessageText;
+            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
+            targetGraphView.AddElement(node);
         }
     }
 
