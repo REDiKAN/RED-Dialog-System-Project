@@ -1,6 +1,7 @@
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
+using UnityEditor.Search;
 using DialogueSystem;
 using System.Linq;
 using UnityEngine;
@@ -8,12 +9,12 @@ using UnityEditor;
 
 public class CharacterModifyIntNode : BaseNode
 {
-    public string CharacterName = "";
+    public CharacterData CharacterAsset;
     public string SelectedVariable = "";
     public OperatorType Operator;
     public int Value;
 
-    private TextField characterNameField;
+    private ObjectField characterField;
     private DropdownField variableDropdown;
     private DropdownField operatorDropdown;
     private IntegerField valueField;
@@ -31,22 +32,24 @@ public class CharacterModifyIntNode : BaseNode
         outputPort.portName = "Output";
         outputContainer.Add(outputPort);
 
-        characterNameField = new TextField("Character Name");
-        characterNameField.RegisterValueChangedCallback(evt =>
+        characterField = new ObjectField("Character")
         {
-            CharacterName = evt.newValue;
+            objectType = typeof(CharacterData)
+        };
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            CharacterAsset = evt.newValue as CharacterData;
             RefreshVariableDropdown();
         });
-        mainContainer.Add(characterNameField);
+        mainContainer.Add(characterField);
 
         variableDropdown = new DropdownField("Variable") { choices = new List<string>() };
         variableDropdown.RegisterValueChangedCallback(evt => SelectedVariable = evt.newValue);
         mainContainer.Add(variableDropdown);
 
         var choices = System.Enum.GetNames(typeof(OperatorType));
-        operatorDropdown = new DropdownField(choices.ToList(), choices[0]); // choices[0] = "Set"
+        operatorDropdown = new DropdownField(choices.ToList(), choices[0]);
         operatorDropdown.label = "Operator";
-
         operatorDropdown.RegisterValueChangedCallback(evt =>
         {
             Operator = (OperatorType)System.Enum.Parse(typeof(OperatorType), evt.newValue);
@@ -71,7 +74,7 @@ public class CharacterModifyIntNode : BaseNode
 
     public void UpdateUIFromData()
     {
-        characterNameField?.SetValueWithoutNotify(CharacterName);
+        characterField?.SetValueWithoutNotify(CharacterAsset);
         RefreshVariableDropdown();
         variableDropdown?.SetValueWithoutNotify(SelectedVariable);
         operatorDropdown?.SetValueWithoutNotify(Operator.ToString());
@@ -81,18 +84,9 @@ public class CharacterModifyIntNode : BaseNode
     private void RefreshVariableDropdown()
     {
         var choices = new List<string>();
-        if (!string.IsNullOrEmpty(CharacterName))
+        if (CharacterAsset != null)
         {
-#if UNITY_EDITOR
-            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:CharacterData {CharacterName}");
-            if (guids.Length > 0)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                var charData = UnityEditor.AssetDatabase.LoadAssetAtPath<CharacterData>(path);
-                if (charData != null)
-                    choices = charData.Variables.Select(v => v.VariableName).ToList();
-            }
-#endif
+            choices = CharacterAsset.Variables.Select(v => v.VariableName).ToList();
         }
         variableDropdown.choices = choices;
         if (!string.IsNullOrEmpty(SelectedVariable) && choices.Contains(SelectedVariable))

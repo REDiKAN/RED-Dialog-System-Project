@@ -221,7 +221,7 @@ public class GraphSaveUtility
                 {
                     Guid = charModify.GUID,
                     Position = node.GetPosition().position,
-                    CharacterName = charModify.CharacterName,
+                    CharacterName = charModify.CharacterAsset ? charModify.CharacterAsset.name : "",
                     SelectedVariable = charModify.SelectedVariable,
                     Operator = charModify.Operator,
                     Value = charModify.Value
@@ -511,7 +511,7 @@ public class GraphSaveUtility
             tempNode.GUID = nodeData.Guid;
             if (tempNode is CharacterModifyIntNode n)
             {
-                n.CharacterName = nodeData.CharacterName;
+                n.CharacterAsset = CharacterManager.Instance?.GetCharacter(nodeData.CharacterName);
                 n.SelectedVariable = nodeData.SelectedVariable;
                 n.Operator = nodeData.Operator;
                 n.Value = nodeData.Value;
