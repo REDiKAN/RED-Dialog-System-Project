@@ -1,3 +1,28 @@
-.node {
-    --node-color: #FFA500;
+.debug-warning-node {
+    --debug-bg: #3a2e1a;
+    --debug-border: #d4a017; /* Жёлто-оранжевая обводка */
+    --debug-text: #fff8d0;
+}
+
+.debug-warning-node .node-title {
+    background-color: var(--debug-bg);
+    border-bottom: 2px solid var(--debug-border);
+    color: var(--debug-text);
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 10px;
+}
+
+.debug-warning-node .main-container {
+    border-width: 2px;
+    border-color: var(--debug-border);
+    border-style: solid;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.debug-warning-preview {
+    color: #ffe080;
+    font-size: 12px;
+    line-height: 1.4;
 }

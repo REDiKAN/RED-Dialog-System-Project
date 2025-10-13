@@ -1,10 +1,6 @@
-﻿// Аналогично DebugLogNode, но:
-// - title = "Debug Warning"
-// - стиль: Resources.Load<StyleSheet>("DebugWarningNode")
-// - class: "debug-warning-preview"
-using UnityEditor.Experimental.GraphView;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor.Experimental.GraphView;
 
 public class DebugWarningNode : BaseNode
 {
@@ -18,33 +14,39 @@ public class DebugWarningNode : BaseNode
         base.Initialize(position);
         title = "Debug Warning";
 
-        // Input
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // Output
         var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 
-        // Preview label (только вертикальное расширение)
+        this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
+        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
+
+        RefreshExpandedState();
+        RefreshPorts();
+    }
+
+    private void OnAttachedToPanel(AttachToPanelEvent evt)
+    {
         _previewLabel = new Label(MessageText)
         {
             style =
         {
-        whiteSpace = WhiteSpace.Normal,
-        overflow = Overflow.Visible,
-        flexGrow = 0,
-        flexShrink = 0,
-        alignSelf = Align.Stretch,
-        // ← Фиксируем максимальную ширину, как в SpeechNodeText
-        maxWidth = 230f // или 240f — подбери по вкусу
+            whiteSpace = WhiteSpace.Normal,
+            overflow = Overflow.Visible,
+            flexGrow = 0,
+            flexShrink = 0,
+            alignSelf = Align.Stretch,
+            maxWidth = 230f
         }
         };
-        _previewLabel.AddToClassList("debug-log-preview"); // или warning/error
+        _previewLabel.AddToClassList("debug-warning-preview");
+        mainContainer.Add(_previewLabel);
+        mainContainer.AddToClassList("main-container"); // ← важно для обводки
 
-        // Кнопка редактирования
         _editButton = new Button(OpenTextEditor) { text = "✎" };
         _editButton.style.position = Position.Absolute;
         _editButton.style.top = 2;
@@ -52,20 +54,22 @@ public class DebugWarningNode : BaseNode
         _editButton.style.width = 24;
         _editButton.style.height = 20;
         _editButton.style.fontSize = 10;
-
-        mainContainer.Add(_previewLabel);
         titleContainer.Add(_editButton);
 
-        // Стиль (если есть)
-        var styleSheet = Resources.Load<StyleSheet>("DebugLogNode"); // или соответствующий
+        var styleSheet = Resources.Load<StyleSheet>("DebugWarningNode");
         if (styleSheet != null)
             styleSheets.Add(styleSheet);
 
-        // Подписка на изменение геометрии для авто-высоты
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
+    }
 
-        RefreshExpandedState();
-        RefreshPorts();
+    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
+    {
+        if (_modalWindow != null)
+        {
+            _modalWindow.Close();
+            _modalWindow = null;
+        }
     }
 
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
@@ -75,7 +79,7 @@ public class DebugWarningNode : BaseNode
         var newHeight = Mathf.Max(minHeight, contentHeight + 60f);
         var rect = GetPosition();
         rect.height = newHeight;
-        rect.width = 250f; // ← Фиксированная ширина узла
+        rect.width = 250f;
         SetPosition(rect);
     }
 

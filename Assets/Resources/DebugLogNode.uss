@@ -1,3 +1,28 @@
-.node {
-    --node-color: #4A90E2;
+.debug-log-node {
+    --debug-bg: #1e2a38;
+    --debug-border: #4a77c9; /* Синяя обводка */
+    --debug-text: #d0e0ff;
+}
+
+.debug-log-node .node-title {
+    background-color: var(--debug-bg);
+    border-bottom: 2px solid var(--debug-border);
+    color: var(--debug-text);
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 10px;
+}
+
+.debug-log-node .main-container {
+    border-width: 2px;
+    border-color: #4a77c9;
+    border-style: solid;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.debug-log-preview {
+    color: #c0d0e8;
+    font-size: 12px;
+    line-height: 1.4;
 }
