@@ -254,6 +254,16 @@ public class GraphSaveUtility
                     MessageText = debugErr.MessageText
                 });
             }
+            else if (node is SpeechNodeRandText speechRandNode)
+            {
+                dialogueContainer.SpeechRandNodeDatas.Add(new SpeechRandNodeData
+                {
+                    Guid = speechRandNode.GUID,
+                    Position = node.GetPosition().position,
+                    SpeakerName = speechRandNode.Speaker ? speechRandNode.Speaker.name : "",
+                    Variants = speechRandNode.GetVariants()
+                });
+            }
         }
     }
 
@@ -575,6 +585,19 @@ public class GraphSaveUtility
             node.MessageText = nodeData.MessageText;
             if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
             targetGraphView.AddElement(node);
+        }
+
+        foreach (var nodeData in containerCache.SpeechRandNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateSpeechNodeRandText(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (!string.IsNullOrEmpty(nodeData.SpeakerName))
+            {
+                var speaker = CharacterManager.Instance?.GetCharacter(nodeData.SpeakerName);
+                tempNode.SetSpeaker(speaker);
+            }
+            tempNode.LoadVariants(nodeData.Variants);
+            targetGraphView.AddElement(tempNode);
         }
     }
 

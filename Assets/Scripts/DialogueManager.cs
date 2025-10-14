@@ -26,6 +26,8 @@ public class DialogueManager : MonoBehaviour
     private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
     private List<object> visitedNodes = new List<object>(); // Исправлено: BaseNodeData -> object
 
+    private readonly System.Random random = new System.Random();
+
     private void Start()
     {
         // Подписываемся на событие выбора опции
@@ -144,10 +146,133 @@ public class DialogueManager : MonoBehaviour
                 Debug.LogError(debugErr.MessageText);
                 GoToNextNode(debugErr.Guid);
                 break;
+            case SpeechRandNodeData speechRandNode:
+                ProcessSpeechRandNode(speechRandNode);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
                 break;
+        }
+    }
+
+    private void ProcessSpeechRandNode(SpeechRandNodeData speechRandNode)
+    {
+        CharacterData speaker = null;
+        if (!string.IsNullOrEmpty(speechRandNode.SpeakerName))
+            speaker = CharacterManager.Instance?.GetCharacter(speechRandNode.SpeakerName);
+
+        string selectedText = "";
+
+        if (speechRandNode.Variants.Count > 0)
+        {
+            // Взвешенный случайный выбор
+            float totalWeight = 0f;
+            foreach (var v in speechRandNode.Variants)
+                totalWeight += v.WeightPercent;
+
+            if (totalWeight <= 0f)
+            {
+                // fallback: первый
+                selectedText = speechRandNode.Variants[0].Text;
+            }
+            else
+            {
+                float pick = (float)random.NextDouble() * totalWeight;
+                float current = 0f;
+                foreach (var v in speechRandNode.Variants)
+                {
+                    current += v.WeightPercent;
+                    if (pick <= current)
+                    {
+                        selectedText = v.Text;
+                        break;
+                    }
+                }
+            }
+        }
+        // Если список пуст — selectedText остаётся ""
+
+        var message = new Message
+        {
+            Type = SenderType.NPC,
+            Text = selectedText,
+            Image = null,
+            Audio = null,
+            Sender = speaker
+        };
+        chatPanel.AddMessage(message, MessageType.Speech);
+
+        // Обработка исходящих связей — как в SpeechNode
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechRandNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData || target is SpeechRandNodeData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechRandNode {speechRandNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
         }
     }
 
@@ -700,7 +825,7 @@ public class DialogueManager : MonoBehaviour
         if (string.IsNullOrEmpty(guid))
             return null;
 
-        // Ищем в всех типах узлов
+        // Ищем в Speech
         var speechNode = currentDialogue.SpeechNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechNode != null) return speechNode;
 
@@ -731,7 +856,25 @@ public class DialogueManager : MonoBehaviour
         var charModifyIntNode = currentDialogue.CharacterModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (charModifyIntNode != null) return charModifyIntNode;
 
-        return currentDialogue.EntryNodeData;
+        var debugLogNode = currentDialogue.DebugLogNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugLogNode != null) return debugLogNode;
+
+        var debugWarnNode = currentDialogue.DebugWarningNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugWarnNode != null) return debugWarnNode;
+
+        var debugErrNode = currentDialogue.DebugErrorNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugErrNode != null) return debugErrNode;
+
+        // Добавлено: поддержка SpeechRandNodeData
+        var speechRandNode = currentDialogue.SpeechRandNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechRandNode != null) return speechRandNode;
+
+        // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
+        if (currentDialogue.EntryNodeData?.Guid == guid)
+            return currentDialogue.EntryNodeData;
+
+        // Если ничего не найдено — возвращаем null
+        return null;
     }
 
     private void GoToNextNode(string currentGuid)

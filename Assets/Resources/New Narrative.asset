@@ -16,12 +16,12 @@ MonoBehaviour:
     Guid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
     Position: {x: 100, y: 200}
   NodeLinks:
-  - BaseNodeGuid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
-    PortName: Next
-    TargetNodeGuid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
   - BaseNodeGuid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
     PortName: Next
     TargetNodeGuid: 4a9c7d0f-6ee3-45f2-a209-f836ccde5634
+  - BaseNodeGuid: b39a2b69-22b0-4e89-bac2-70d9c8614be2
+    PortName: Next
+    TargetNodeGuid: 13a6b4b8-cc74-4fe8-82e4-847ab5f3104f
   - BaseNodeGuid: 32caf0be-f4b6-446a-9014-549b051cc4fa
     PortName: Next
     TargetNodeGuid: dcf9cc17-ed18-4af2-aebb-70167aac30b2
@@ -31,9 +31,9 @@ MonoBehaviour:
   - BaseNodeGuid: 4a9c7d0f-6ee3-45f2-a209-f836ccde5634
     PortName: False
     TargetNodeGuid: b39a2b69-22b0-4e89-bac2-70d9c8614be2
-  - BaseNodeGuid: b39a2b69-22b0-4e89-bac2-70d9c8614be2
+  - BaseNodeGuid: 1a5f305d-2114-4f19-a7d3-2c8e4a87ed3d
     PortName: Next
-    TargetNodeGuid: 13a6b4b8-cc74-4fe8-82e4-847ab5f3104f
+    TargetNodeGuid: 4b9a58f1-bfcf-474b-9be1-1d99d0416219
   SpeechNodeDatas:
   - Guid: 22be72dd-7cfd-4157-a9dd-0d8a773219e1
     Position: {x: 243, y: 200}
@@ -86,3 +86,76 @@ MonoBehaviour:
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []
   BaseCharacterGuid: 7a1e5d764246410439bdd451455b69ea
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas:
+  - Guid: faf0121e-76ae-4f24-a0a0-5e97c9a1569e
+    Position: {x: 245, y: 360}
+    SpeakerName: 
+    Variants:
+    - Text: 1
+      WeightPercent: 0
+    - Text: 2
+      WeightPercent: 0
+  - Guid: faf0121e-76ae-4f24-a0a0-5e97c9a1569e
+    Position: {x: 245, y: 360}
+    SpeakerName: 
+    Variants:
+    - Text: 1
+      WeightPercent: 46
+    - Text: 2
+      WeightPercent: 60
+  - Guid: 9d3772cc-49ac-42d5-9a33-9be2ae1f678b
+    Position: {x: 608, y: 479}
+    SpeakerName: TestDialogue
+    Variants:
+    - Text: 1
+      WeightPercent: 0
+    - Text: 2
+      WeightPercent: 0
+  - Guid: 5220f188-046c-4033-a8f2-f6a4529be962
+    Position: {x: 245, y: 434}
+    SpeakerName: TestDialogue
+    Variants:
+    - Text: 1
+      WeightPercent: 71
+    - Text: 2
+      WeightPercent: 29
+  - Guid: 5220f188-046c-4033-a8f2-f6a4529be962
+    Position: {x: 245, y: 434}
+    SpeakerName: TestDialogue
+    Variants:
+    - Text: 1
+      WeightPercent: 71
+    - Text: 2
+      WeightPercent: 29
+  - Guid: 5ae65b3b-e8bf-4368-9bcc-45d2c45bd04c
+    Position: {x: 633, y: 434}
+    SpeakerName: TestDialogue
+    Variants:
+    - Text: 1
+      WeightPercent: 20
+    - Text: 2
+      WeightPercent: 20
+    - Text: 3
+      WeightPercent: 20
+    - Text: 4
+      WeightPercent: 20
+    - Text: 5
+      WeightPercent: 20
+  - Guid: 4b9a58f1-bfcf-474b-9be1-1d99d0416219
+    Position: {x: 243, y: 371}
+    SpeakerName: TestDialogue
+    Variants:
+    - Text: 1
+      WeightPercent: 30
+    - Text: 2
+      WeightPercent: 30
+    - Text: 3
+      WeightPercent: 20
+    - Text: 4
+      WeightPercent: 20

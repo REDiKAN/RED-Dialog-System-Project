@@ -59,4 +59,7 @@ public class DialogueContainer : ScriptableObject
     public List<DebugLogNodeData> DebugLogNodeDatas = new List<DebugLogNodeData>();
     public List<DebugWarningNodeData> DebugWarningNodeDatas = new List<DebugWarningNodeData>();
     public List<DebugErrorNodeData> DebugErrorNodeDatas = new List<DebugErrorNodeData>();
+
+    [Header("Speech Rand Nodes")]
+    public List<SpeechRandNodeData> SpeechRandNodeDatas = new List<SpeechRandNodeData>();
 }

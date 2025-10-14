@@ -157,6 +157,7 @@ public class DialogueGraphView : GraphView
         bool IsEnd(BaseNode n) => n is EndNode;
         bool IsEntry(BaseNode n) => n is EntryNode;
         bool IsEvent(BaseNode n) => n is EventNode;
+        bool IsSpeechRand(BaseNode n) => n is SpeechNodeRandText;
 
         // Специальная логика для EventNode на выходе
         if (startPort.direction == Direction.Output && IsEvent(startNode))
@@ -182,7 +183,8 @@ public class DialogueGraphView : GraphView
                             (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                             (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                             (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
-                            (EntryNode _, _) when IsSpeech(targetNode) => true,
+                            (EntryNode _, _) when IsSpeech(targetNode) => true, 
+                            (SpeechNodeRandText _, _) when IsSpeech(targetNode) || IsSpeechRand(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                             _ => false
                         };
                     }

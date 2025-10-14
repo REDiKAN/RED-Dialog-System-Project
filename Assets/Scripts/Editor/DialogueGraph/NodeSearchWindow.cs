@@ -43,6 +43,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeEntry(new GUIContent("Speech (Text)", indentationIcon)) { userData = typeof(SpeechNodeText), level = 3 },
         new SearchTreeEntry(new GUIContent("Speech (Audio)", indentationIcon)) { userData = typeof(SpeechNodeAudio), level = 3 },
         new SearchTreeEntry(new GUIContent("Speech (Image)", indentationIcon)) { userData = typeof(SpeechNodeImage), level = 3 },
+        new SearchTreeEntry(new GUIContent("Speech Rand (Text)", indentationIcon)) { userData = typeof(SpeechNodeRandText), level = 3 },
         new SearchTreeGroupEntry(new GUIContent("Option Nodes"), 2),
         new SearchTreeEntry(new GUIContent("Option (Text)", indentationIcon)) { userData = typeof(OptionNodeText), level = 3 },
         new SearchTreeEntry(new GUIContent("Option (Audio)", indentationIcon)) { userData = typeof(OptionNodeAudio), level = 3 },

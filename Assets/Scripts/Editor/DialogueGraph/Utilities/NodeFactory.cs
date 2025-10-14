@@ -47,8 +47,19 @@ public static class NodeFactory
             nameof(DebugLogNode) => CreateDebugLogNode(position),
             nameof(DebugWarningNode) => CreateDebugWarningNode(position),
             nameof(DebugErrorNode) => CreateDebugErrorNode(position),
+            nameof(SpeechNodeRandText) => CreateSpeechNodeRandText(position),
             _ => null
         };
+    }
+
+    public static SpeechNodeRandText CreateSpeechNodeRandText(Vector2 position)
+    {
+        var node = new SpeechNodeRandText();
+        node.Initialize(position);
+        var baseCharacter = GetBaseCharacter();
+        if (baseCharacter != null)
+            node.SetSpeaker(baseCharacter);
+        return node;
     }
 
     public static DebugLogNode CreateDebugLogNode(Vector2 position)
