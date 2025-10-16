@@ -62,4 +62,6 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Speech Rand Nodes")]
     public List<SpeechRandNodeData> SpeechRandNodeDatas = new List<SpeechRandNodeData>();
+
+    public List<RandomBranchNodeData> RandomBranchNodeDatas = new List<RandomBranchNodeData>();
 }

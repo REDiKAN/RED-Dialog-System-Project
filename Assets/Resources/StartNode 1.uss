@@ -1,0 +1,14 @@
+RandomBranchNode {
+    background-color: rgb(50, 40, 60);
+    border-left-color: rgb(120, 80, 160);
+}
+
+RandomBranchNode:selected {
+    border-left-color: rgb(160, 120, 200);
+    border-left-width: 3px;
+}
+
+RandomBranchNode .title {
+    background-color: rgb(80, 60, 100);
+    color: white;
+}

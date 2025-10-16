@@ -264,6 +264,15 @@ public class GraphSaveUtility
                     Variants = speechRandNode.GetVariants()
                 });
             }
+            else if (node is RandomBranchNode randomBranchNode)
+            {
+                dialogueContainer.RandomBranchNodeDatas.Add(new RandomBranchNodeData
+                {
+                    Guid = randomBranchNode.GUID,
+                    Position = node.GetPosition().position,
+                    Variants = randomBranchNode.GetVariants()
+                });
+            }
         }
     }
 
@@ -597,6 +606,17 @@ public class GraphSaveUtility
                 tempNode.SetSpeaker(speaker);
             }
             tempNode.LoadVariants(nodeData.Variants);
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.RandomBranchNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateRandomBranchNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is RandomBranchNode randomBranchNode)
+            {
+                randomBranchNode.LoadVariants(nodeData.Variants);
+            }
             targetGraphView.AddElement(tempNode);
         }
     }

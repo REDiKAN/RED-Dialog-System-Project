@@ -149,10 +149,70 @@ public class DialogueManager : MonoBehaviour
             case SpeechRandNodeData speechRandNode:
                 ProcessSpeechRandNode(speechRandNode);
                 break;
+            case RandomBranchNodeData randomBranchNode:
+                ProcessRandomBranchNode(randomBranchNode);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
                 break;
+        }
+    }
+
+    private void ProcessRandomBranchNode(RandomBranchNodeData randomBranchNode)
+    {
+        if (randomBranchNode.Variants.Count == 0)
+        {
+            Debug.LogError($"RandomBranchNode {randomBranchNode.Guid} has no variants");
+            currentNode = null;
+            return;
+        }
+
+        // Взвешенный случайный выбор
+        float totalWeight = 0f;
+        foreach (var variant in randomBranchNode.Variants)
+            totalWeight += variant.WeightPercent;
+
+        string selectedPort = "";
+        if (totalWeight <= 0f)
+        {
+            // fallback: первый вариант
+            selectedPort = randomBranchNode.Variants[0].PortName;
+        }
+        else
+        {
+            float pick = (float)random.NextDouble() * totalWeight;
+            float current = 0f;
+            foreach (var variant in randomBranchNode.Variants)
+            {
+                current += variant.WeightPercent;
+                if (pick <= current)
+                {
+                    selectedPort = variant.PortName;
+                    break;
+                }
+            }
+        }
+
+        // Находим связь по выбранному порту
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == randomBranchNode.Guid && l.PortName == selectedPort)
+            .ToList();
+
+        if (outgoingLinks.Count > 0)
+        {
+            if (outgoingLinks.Count > 1)
+            {
+                Debug.LogWarning($"RandomBranchNode {randomBranchNode.Guid} has multiple connections for port {selectedPort}. Using first.");
+            }
+
+            currentNode = GetNodeByGuid(outgoingLinks.First().TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            Debug.LogWarning($"RandomBranchNode {randomBranchNode.Guid} has no connection for selected port {selectedPort}");
+            currentNode = null;
         }
     }
 

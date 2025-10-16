@@ -1,0 +1,9 @@
+.random-branch-node {
+    background-color: #2d2d30;
+    border: 2px solid #4CAF50;
+}
+
+.random-branch-node > .title {
+    background-color: #4CAF50;
+    color: white;
+}

@@ -18,14 +18,8 @@ MonoBehaviour:
   NodeLinks:
   - BaseNodeGuid: 2843f4a9-524b-452c-985c-35ef6857cd7f
     PortName: Next
-    TargetNodeGuid: ba173fdb-d8bc-422d-be05-2c13c81205f2
-  SpeechNodeDatas:
-  - Guid: ba173fdb-d8bc-422d-be05-2c13c81205f2
-    Position: {x: 240, y: 200}
-    DialogueText: New Dialogue
-    AudioClipGuid: 
-    SpeakerGuid: 
-    NodeType: SpeechNodeText
+    TargetNodeGuid: 20262b5d-a8ad-434f-9e06-30b7b2a9d543
+  SpeechNodeDatas: []
   OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []
@@ -37,3 +31,16 @@ MonoBehaviour:
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []
   BaseCharacterGuid: 
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas:
+  - Guid: 20262b5d-a8ad-434f-9e06-30b7b2a9d543
+    Position: {x: 239, y: 200}
+    Variants:
+    - PortName: Variant 1
+      WeightPercent: 10
