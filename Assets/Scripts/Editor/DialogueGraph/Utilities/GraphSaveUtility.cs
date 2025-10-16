@@ -273,6 +273,18 @@ public class GraphSaveUtility
                     Variants = randomBranchNode.GetVariants()
                 });
             }
+            else if (node is NoteNode noteNode)
+            {
+                dialogueContainer.NoteNodeDatas.Add(new NoteNodeData
+                {
+                    Guid = noteNode.GUID,
+                    Position = node.GetPosition().position,
+                    NoteText = noteNode.NoteText,
+                    BackgroundColor = noteNode.BackgroundColor,
+                    ConnectedNodeGuids = noteNode.ConnectedNodeGuids
+                });
+            }
+
         }
     }
 
@@ -616,6 +628,19 @@ public class GraphSaveUtility
             if (tempNode is RandomBranchNode randomBranchNode)
             {
                 randomBranchNode.LoadVariants(nodeData.Variants);
+            }
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.NoteNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateNoteNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is NoteNode noteNode)
+            {
+                noteNode.SetNoteText(nodeData.NoteText);
+                noteNode.SetBackgroundColor(nodeData.BackgroundColor);
+                noteNode.ConnectedNodeGuids = nodeData.ConnectedNodeGuids ?? new List<string>();
             }
             targetGraphView.AddElement(tempNode);
         }

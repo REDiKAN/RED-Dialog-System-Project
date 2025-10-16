@@ -51,7 +51,8 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
         new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
         new SearchTreeEntry(new GUIContent("End Node", indentationIcon)) { userData = typeof(EndNode), level = 2 },
-        new SearchTreeEntry(new GUIContent("Random Branch", indentationIcon)) { userData = typeof(RandomBranchNode), level = 2 }, // ← ДОБАВЛЕНО
+        new SearchTreeEntry(new GUIContent("Note Node", indentationIcon)) { userData = typeof(NoteNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Random Branch", indentationIcon)) { userData = typeof(RandomBranchNode), level = 2 },
         new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
         new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon)) { userData = typeof(ModifyIntNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Event", indentationIcon)) { userData = typeof(EventNode), level = 2 },

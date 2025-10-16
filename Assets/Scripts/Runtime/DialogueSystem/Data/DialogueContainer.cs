@@ -64,4 +64,7 @@ public class DialogueContainer : ScriptableObject
     public List<SpeechRandNodeData> SpeechRandNodeDatas = new List<SpeechRandNodeData>();
 
     public List<RandomBranchNodeData> RandomBranchNodeDatas = new List<RandomBranchNodeData>();
+
+    [SerializeField] private List<NoteNodeData> noteNodeDatas = new List<NoteNodeData>();
+    public List<NoteNodeData> NoteNodeDatas => noteNodeDatas;
 }

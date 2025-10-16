@@ -49,12 +49,23 @@ public static class NodeFactory
             return CreateDebugErrorNode(position);
         else if (nodeType == typeof(RandomBranchNode))
             return CreateRandomBranchNode(position);
+        if (nodeType == typeof(NoteNode))
+            return CreateNoteNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
     }
+
+    public static BaseNode CreateNoteNode(Vector2 position)
+    {
+        var node = new NoteNode();
+        node.Initialize(position);
+        node.SetPosition(new Rect(position, new Vector2(300, 150)));
+        return node;
+    }
+
 
     public static EntryNode CreateEntryNode(Vector2 position)
     {

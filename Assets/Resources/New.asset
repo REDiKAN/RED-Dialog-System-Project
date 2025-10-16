@@ -54,3 +54,17 @@ MonoBehaviour:
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []
   BaseCharacterGuid: 7a1e5d764246410439bdd451455b69ea
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas:
+  - Guid: 99808619-ec5c-420a-9d5d-34230f22bcb8
+    Position: {x: 53, y: -60}
+    NoteText: "\u044F\u0441\u0447\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u043C\u044F\u0432\u0447\u043C\u044F\u0447\u0441\u0444\u044F\u0447\u0441"
+    BackgroundColor: {r: 0.34509805, g: 0.34509805, b: 0.34509805, a: 1}
+    ConnectedNodeGuids: []
