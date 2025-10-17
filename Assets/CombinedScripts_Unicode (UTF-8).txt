@@ -1,9 +1,9 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 16.10.2025 23:54:44
-// Total Files: 72
+// Generation Time: 17.10.2025 19:02:02
+// Total Files: 74
 // =================================
 
-//==== File 1 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\BaseNodeData.cs ====
+//==== File 1 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\BaseNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -15,7 +15,7 @@ public abstract class BaseNodeData
 }
 
 
-//==== File 2 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterManager.cs ====
+//==== File 2 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\CharacterManager.cs ====
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -64,7 +64,7 @@ public class CharacterManager : MonoBehaviour
 }
 
 
-//==== File 3 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\ChatPanel.cs ====
+//==== File 3 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\ChatPanel.cs ====
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -136,7 +136,7 @@ public class ChatPanel : MonoBehaviour
     }
 }
 
-//==== File 4 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\ConditionHandler.cs ====
+//==== File 4 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\ConditionHandler.cs ====
 using DialogueSystem;
 using System.Collections.Generic;
 using UnityEngine;
@@ -206,7 +206,7 @@ public static class ConditionHandler
     }
 }
 
-//==== File 5 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueManager.cs ====
+//==== File 5 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\DialogueManager.cs ====
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -1309,7 +1309,7 @@ public class DialogueManager : MonoBehaviour
     }
 }
 
-//==== File 6 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Message.cs ====
+//==== File 6 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Message.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -1364,7 +1364,7 @@ public enum MessageType
 
 
 
-//==== File 7 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\MessageObject.cs ====
+//==== File 7 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\MessageObject.cs ====
 using UnityEngine;
 
 public interface IMessageObject
@@ -1375,7 +1375,7 @@ public interface IMessageObject
 }
 
 
-//==== File 8 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Option.cs ====
+//==== File 8 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Option.cs ====
 using System;
 
 /// <summary>
@@ -1388,7 +1388,7 @@ public class Option
     public string NextNodeGuid; // GUID ���������� ����
 }
 
-//==== File 9 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionPanel.cs ====
+//==== File 9 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionPanel.cs ====
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -1452,7 +1452,7 @@ public class OptionPanel : MonoBehaviour
     }
 }
 
-//==== File 10 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionTextMessage.cs ====
+//==== File 10 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\OptionTextMessage.cs ====
 using UnityEngine;
 using TMPro;
 
@@ -1482,7 +1482,7 @@ public class OptionTextMessage : MonoBehaviour, IMessageObject
 }
 
 
-//==== File 11 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechTextMessage.cs ====
+//==== File 11 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\SpeechTextMessage.cs ====
 using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
@@ -1559,7 +1559,7 @@ public class SpeechTextMessage : MonoBehaviour, IMessageObject
     }
 }
 
-//==== File 12 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
+//==== File 12 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -1825,14 +1825,14 @@ public class DialogueGraph : EditorWindow
 
 }
 
-//==== File 13 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\EventNodeHelperSO.cs ====
+//==== File 13 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\EventNodeHelperSO.cs ====
 using UnityEngine.Events;
 using UnityEngine;
 
 public class EventNodeHelperSO : ScriptableObject { public UnityEvent Event = new UnityEvent(); }
 
 
-//==== File 14 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\MarkdownToTMP.cs ====
+//==== File 14 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\MarkdownToTMP.cs ====
 // Assets/Scripts/Editor/MarkdownToTMP.cs
 using System.Text.RegularExpressions;
 using System;
@@ -1900,7 +1900,7 @@ public static class MarkdownToTMP
 }
 
 
-//==== File 15 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\TextEditorModalWindow.cs ====
+//==== File 15 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\TextEditorModalWindow.cs ====
 // Assets/Scripts/Editor/TextEditorModalWindow.cs
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -2272,7 +2272,7 @@ public class TextEditorModalWindow : VisualElement
     }
 }
 
-//==== File 16 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\TMPToMarkdown.cs ====
+//==== File 16 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\TMPToMarkdown.cs ====
 // Assets/Scripts/Editor/TMPToMarkdown.cs
 using System.Text.RegularExpressions;
 
@@ -2295,7 +2295,7 @@ public static class TMPToMarkdown
     }
 }
 
-//==== File 17 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
+//==== File 17 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -2457,6 +2457,7 @@ public class DialogueGraphView : GraphView
         bool IsEvent(BaseNode n) => n is EventNode;
         bool IsSpeechRand(BaseNode n) => n is SpeechNodeRandText;
         bool IsRandomBranch(BaseNode n) => n is RandomBranchNode;
+        bool IsNote(BaseNode n) => n is NoteNode;
 
         // Специальная логика для EventNode на выходе
         if (startPort.direction == Direction.Output && IsEvent(startNode))
@@ -2485,6 +2486,8 @@ public class DialogueGraphView : GraphView
                             (EntryNode _, _) when IsSpeech(targetNode) => true, 
                             (SpeechNodeRandText _, _) when IsSpeech(targetNode) || IsSpeechRand(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
                             (RandomBranchNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) || IsSpeechRand(targetNode) || IsRandomBranch(targetNode) => true,
+                            (NoteNode _, _) => true,
+                            (_, NoteNode _) => true,
                             _ => false
                         };
                     }
@@ -3223,7 +3226,7 @@ public class DialogueGraphView : GraphView
     }
 }
 
-//==== File 18 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueNode.cs ====
+//==== File 18 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\DialogueNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -3266,7 +3269,7 @@ public class DialogueNode : BaseNode
 }
 
 
-//==== File 19 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
+//==== File 19 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\NodeSearchWindow.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -3320,7 +3323,8 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1),
         new SearchTreeEntry(new GUIContent("Entry Node", indentationIcon)) { userData = typeof(EntryNode), level = 2 },
         new SearchTreeEntry(new GUIContent("End Node", indentationIcon)) { userData = typeof(EndNode), level = 2 },
-        new SearchTreeEntry(new GUIContent("Random Branch", indentationIcon)) { userData = typeof(RandomBranchNode), level = 2 }, // ← ДОБАВЛЕНО
+        new SearchTreeEntry(new GUIContent("Note Node", indentationIcon)) { userData = typeof(NoteNode), level = 2 },
+        new SearchTreeEntry(new GUIContent("Random Branch", indentationIcon)) { userData = typeof(RandomBranchNode), level = 2 },
         new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1),
         new SearchTreeEntry(new GUIContent("Modify Int", indentationIcon)) { userData = typeof(ModifyIntNode), level = 2 },
         new SearchTreeEntry(new GUIContent("Event", indentationIcon)) { userData = typeof(EventNode), level = 2 },
@@ -3369,7 +3373,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     }
 }
 
-//==== File 20 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\Characters\CharacterData.cs ====
+//==== File 20 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\Characters\CharacterData.cs ====
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -3417,7 +3421,19 @@ public class CharacterVariable
     }
 }
 
-//==== File 21 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\RandomBranchNodeData.cs ====
+//==== File 21 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\NoteNodeData.cs ====
+using System.Collections.Generic;
+using UnityEngine;
+
+[System.Serializable]
+public class NoteNodeData : BaseNodeData
+{
+    public string NoteText = "";
+    public Color BackgroundColor = new Color(1f, 0.9152542f, 0f, 1f);
+    public List<string> ConnectedNodeGuids = new List<string>(); // ��� ���������� ������
+}
+
+//==== File 22 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\RandomBranchNodeData.cs ====
 // Assets/Scripts/Runtime/DialogueSystem/RandomBranchNodeData.cs
 using System;
 using System.Collections.Generic;
@@ -3436,7 +3452,7 @@ public class RandomBranchVariant
     public float WeightPercent = 10f;
 }
 
-//==== File 22 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Characters\CharacterEditorWindow.cs ====
+//==== File 23 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Characters\CharacterEditorWindow.cs ====
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
@@ -3656,7 +3672,7 @@ public class CharacterEditorWindow : EditorWindow
     }
 }
 
-//==== File 23 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\CharacterIntConditionNode.cs ====
+//==== File 24 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\CharacterIntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -3750,7 +3766,7 @@ public class CharacterIntConditionNode : BaseConditionNode
     }
 }
 
-//==== File 24 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\CharacterModifyIntNode.cs ====
+//==== File 25 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\CharacterModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -3849,7 +3865,7 @@ public class CharacterModifyIntNode : BaseNode
     }
 }
 
-//==== File 25 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugErrorNode.cs ====
+//==== File 26 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugErrorNode.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -3952,7 +3968,7 @@ public class DebugErrorNode : BaseNode
     }
 }
 
-//==== File 26 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugLogNode.cs ====
+//==== File 27 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugLogNode.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -4055,7 +4071,7 @@ public class DebugLogNode : BaseNode
     }
 }
 
-//==== File 27 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugWarningNode.cs ====
+//==== File 28 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\DebugWarningNode.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -4158,7 +4174,7 @@ public class DebugWarningNode : BaseNode
     }
 }
 
-//==== File 28 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
+//==== File 29 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEditor.Search;
@@ -4263,7 +4279,7 @@ public class EndNode : BaseNode
     }
 }
 
-//==== File 29 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
+//==== File 30 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EntryNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -4301,7 +4317,7 @@ public class EntryNode : BaseNode
     }
 }
 
-//==== File 30 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EventNode.cs ====
+//==== File 31 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\EventNode.cs ====
 // Assets/Scripts/Editor/DialogueGraph/Nodes/EventNode.cs
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -4367,7 +4383,7 @@ public class EventNode : BaseNode
     }
 }
 
-//==== File 31 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
+//==== File 32 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\IntConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -4467,7 +4483,7 @@ public class IntConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 32 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
+//==== File 33 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\ModifyIntNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using DialogueSystem;
@@ -4594,7 +4610,205 @@ public class ModifyIntNode : BaseNode, IPropertyNode
     }
 }
 
-//==== File 33 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
+//==== File 34 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\NoteNode.cs ====
+/// Assets/Scripts/Editor/DialogueGraph/Nodes/NoteNode.cs
+using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor;
+using System.Collections.Generic;
+using UnityEditor.UIElements;
+
+public class NoteNode : BaseNode
+{
+    public string NoteText { get; set; } = "";
+    public Color BackgroundColor { get; set; } = new Color(1f, 0.98f, 0.77f, 1f);
+    public List<string> ConnectedNodeGuids { get; set; } = new List<string>();
+
+    private Label _previewLabel;
+    private Button _editButton;
+    private TextEditorModalWindow _modalWindow;
+    private ColorField _colorField;
+
+    public override void Initialize(Vector2 position)
+    {
+        base.Initialize(position);
+        title = "Note";
+
+        // Убираем стандартные порты (но оставляем возможность удаления)
+        inputContainer.Clear();
+        outputContainer.Clear();
+
+        // УБИРАЕМ эту строку - оставляем возможность удаления
+        // capabilities &= ~Capabilities.Deletable;
+
+        // Оставляем возможность сворачивания для удобства
+        capabilities |= Capabilities.Collapsible;
+
+        this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
+        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
+
+        RefreshExpandedState();
+        RefreshPorts();
+    }
+
+    private void OnAttachedToPanel(AttachToPanelEvent evt)
+    {
+        // Создаем превью текста
+        _previewLabel = new Label(NoteText)
+        {
+            style =
+            {
+                whiteSpace = WhiteSpace.Normal,
+                overflow = Overflow.Visible,
+                flexGrow = 1,
+                flexShrink = 0,
+                alignSelf = Align.Stretch,
+                fontSize = 11,
+                unityTextAlign = TextAnchor.UpperLeft,
+                marginTop = 5,
+                marginBottom = 5,
+                color = new Color(0.17f, 0.24f, 0.31f), // Темно-синий для лучшей читаемости
+                unityFontStyleAndWeight = FontStyle.Normal
+            }
+        };
+        _previewLabel.AddToClassList("note-preview");
+        mainContainer.Add(_previewLabel);
+
+        // Кнопка редактирования
+        _editButton = new Button(OpenTextEditor) { text = "✎" };
+        _editButton.style.position = Position.Absolute;
+        _editButton.style.top = 2;
+        _editButton.style.right = 2;
+        _editButton.style.width = 24;
+        _editButton.style.height = 20;
+        _editButton.style.fontSize = 10;
+        titleContainer.Add(_editButton);
+
+        // Поле выбора цвета
+        _colorField = new ColorField("Background Color");
+        _colorField.value = BackgroundColor;
+        _colorField.showAlpha = true;
+        _colorField.RegisterValueChangedCallback(evt =>
+        {
+            BackgroundColor = evt.newValue;
+            UpdateBackgroundColor();
+        });
+        mainContainer.Add(_colorField);
+
+        // Загружаем стили
+        var styleSheet = Resources.Load<StyleSheet>("NoteNode");
+        if (styleSheet != null)
+            styleSheets.Add(styleSheet);
+
+        UpdateBackgroundColor();
+
+        // Подписываемся на изменение размера текста
+        _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
+    }
+
+    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
+    {
+        if (_modalWindow != null)
+        {
+            _modalWindow.Close();
+            _modalWindow = null;
+        }
+    }
+
+    private void OnPreviewLabelResized(GeometryChangedEvent evt)
+    {
+        // Автоматически подстраиваем высоту узла под содержимое
+        var contentHeight = _previewLabel.layout.height;
+        var minHeight = 120f;
+        var newHeight = Mathf.Max(minHeight, contentHeight + 100f); // + отступы для цветового поля и заголовка
+
+        var rect = GetPosition();
+        rect.height = newHeight;
+        rect.width = Mathf.Max(250f, rect.width); // Минимальная ширина
+        SetPosition(rect);
+    }
+
+    private void OpenTextEditor()
+    {
+        var graphView = GetFirstAncestorOfType<DialogueGraphView>();
+        if (graphView == null) return;
+
+        if (_modalWindow != null)
+            _modalWindow.Close();
+
+        _modalWindow = new TextEditorModalWindow(NoteText, GUID, newText =>
+        {
+            NoteText = newText;
+            _previewLabel.text = NoteText;
+        });
+        _modalWindow.style.position = Position.Absolute;
+        _modalWindow.style.top = 30;
+        _modalWindow.style.right = 0;
+        graphView.Add(_modalWindow);
+    }
+
+    private void UpdateBackgroundColor()
+    {
+        // Применяем цвет фона ко всему узлу
+        style.backgroundColor = new StyleColor(BackgroundColor);
+
+        // Автоматически настраиваем цвет текста для контрастности
+        UpdateTextContrast();
+    }
+
+    private void UpdateTextContrast()
+    {
+        if (_previewLabel == null) return;
+
+        // Вычисляем яркость фона для определения контрастного цвета текста
+        float brightness = BackgroundColor.r * 0.299f + BackgroundColor.g * 0.587f + BackgroundColor.b * 0.114f;
+
+        // Если фон светлый - темный текст, если темный - светлый текст
+        if (brightness > 0.6f)
+        {
+            _previewLabel.style.color = new Color(0.17f, 0.24f, 0.31f); // Темно-синий
+        }
+        else
+        {
+            _previewLabel.style.color = new Color(0.95f, 0.95f, 0.95f); // Светлый
+        }
+    }
+
+    public void SetNoteText(string text)
+    {
+        NoteText = text ?? "";
+        if (_previewLabel != null)
+            _previewLabel.text = NoteText;
+    }
+
+    public void SetBackgroundColor(Color color)
+    {
+        BackgroundColor = color;
+        if (_colorField != null)
+            _colorField.value = color;
+        UpdateBackgroundColor();
+    }
+
+    // Методы для управления визуальными связями
+    public void AddVisualConnection(string targetNodeGuid)
+    {
+        if (!ConnectedNodeGuids.Contains(targetNodeGuid))
+            ConnectedNodeGuids.Add(targetNodeGuid);
+    }
+
+    public void RemoveVisualConnection(string targetNodeGuid)
+    {
+        ConnectedNodeGuids.Remove(targetNodeGuid);
+    }
+
+    public void ClearVisualConnections()
+    {
+        ConnectedNodeGuids.Clear();
+    }
+}
+
+//==== File 35 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -4667,7 +4881,7 @@ public class OptionNode : BaseNode
     }
 }
 
-//==== File 34 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
+//==== File 36 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -4692,7 +4906,7 @@ public class OptionNodeAudio : OptionNode
     }
 }
 
-//==== File 35 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
+//==== File 37 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -4738,7 +4952,7 @@ public class OptionNodeImage : OptionNode
 }
 
 
-//==== File 36 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
+//==== File 38 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\OptionNodeText.cs ====
 // Assets/Scripts/Editor/DialogueGraph/Nodes/OptionNodeText.cs
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -4835,7 +5049,7 @@ public class OptionNodeText : OptionNode
     }
 }
 
-//==== File 37 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\RandomBranchNode.cs ====
+//==== File 39 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\RandomBranchNode.cs ====
 // Assets/Scripts/Editor/DialogueGraph/Nodes/RandomBranchNode.cs
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -5124,7 +5338,7 @@ public class RandomBranchNode : BaseNode
     }
 }
 
-//==== File 38 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
+//==== File 40 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -5234,7 +5448,7 @@ public class SpeechNode : BaseNode
     }
 }
 
-//==== File 39 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
+//==== File 41 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeAudio.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -5259,7 +5473,7 @@ public class SpeechNodeAudio : SpeechNode
     }
 }
 
-//==== File 40 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
+//==== File 42 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeImage.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -5305,7 +5519,7 @@ public class SpeechNodeImage : SpeechNode
 }
 
 
-//==== File 41 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeRandText.cs ====
+//==== File 43 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeRandText.cs ====
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -5599,7 +5813,7 @@ public class SpeechNodeRandText : BaseNode
     }
 }
 
-//==== File 42 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
+//==== File 44 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNodeText.cs ====
 // Assets/Scripts/Editor/DialogueGraph/Nodes/SpeechNodeText.cs
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -5702,7 +5916,7 @@ public class SpeechNodeText : SpeechNode
     }
 }
 
-//==== File 43 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
+//==== File 45 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\StringConditionNode.cs ====
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using System.Linq;
@@ -5821,7 +6035,7 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
     }
 }
 
-//==== File 44 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\AssetDatabaseHelper.cs ====
+//==== File 46 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\AssetDatabaseHelper.cs ====
 using UnityEditor;
 using UnityEngine;
 
@@ -5849,7 +6063,7 @@ public static class AssetDatabaseHelper
 }
 
 
-//==== File 45 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\DialogueValidator.cs ====
+//==== File 47 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\DialogueValidator.cs ====
 using UnityEngine;
 
 
@@ -5868,7 +6082,7 @@ public static class DialogueValidator
     }
 }
 
-//==== File 46 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
+//==== File 48 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\GraphSaveUtility.cs ====
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
@@ -6144,6 +6358,18 @@ public class GraphSaveUtility
                     Variants = randomBranchNode.GetVariants()
                 });
             }
+            else if (node is NoteNode noteNode)
+            {
+                dialogueContainer.NoteNodeDatas.Add(new NoteNodeData
+                {
+                    Guid = noteNode.GUID,
+                    Position = node.GetPosition().position,
+                    NoteText = noteNode.NoteText,
+                    BackgroundColor = noteNode.BackgroundColor,
+                    ConnectedNodeGuids = noteNode.ConnectedNodeGuids
+                });
+            }
+
         }
     }
 
@@ -6490,6 +6716,19 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
+
+        foreach (var nodeData in containerCache.NoteNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateNoteNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is NoteNode noteNode)
+            {
+                noteNode.SetNoteText(nodeData.NoteText);
+                noteNode.SetBackgroundColor(nodeData.BackgroundColor);
+                noteNode.ConnectedNodeGuids = nodeData.ConnectedNodeGuids ?? new List<string>();
+            }
+            targetGraphView.AddElement(tempNode);
+        }
     }
 
     /// <summary>
@@ -6718,7 +6957,7 @@ public class GraphSaveUtility
     }
 }
 
-//==== File 47 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
+//==== File 49 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\NodeFactory.cs ====
 // Assets/Scripts/Editor/DialogueGraph/Utilities/NodeFactory.cs
 using UnityEngine;
 using System;
@@ -6770,12 +7009,23 @@ public static class NodeFactory
             return CreateDebugErrorNode(position);
         else if (nodeType == typeof(RandomBranchNode))
             return CreateRandomBranchNode(position);
+        if (nodeType == typeof(NoteNode))
+            return CreateNoteNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
     }
+
+    public static BaseNode CreateNoteNode(Vector2 position)
+    {
+        var node = new NoteNode();
+        node.Initialize(position);
+        node.SetPosition(new Rect(position, new Vector2(300, 150)));
+        return node;
+    }
+
 
     public static EntryNode CreateEntryNode(Vector2 position)
     {
@@ -6925,7 +7175,7 @@ public static class NodeFactory
     }
 }
 
-//==== File 48 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
+//==== File 50 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseConditionNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -6952,7 +7202,7 @@ public abstract class BaseConditionNode : BaseNode
 }
 
 
-//==== File 49 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
+//==== File 51 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\BaseNode.cs ====
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using System;
@@ -6977,13 +7227,13 @@ public abstract class BaseNode : Node
 }
 
 
-//==== File 50 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
+//==== File 52 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Core\IPropertyNode.cs ====
 public interface IPropertyNode
 {
     void RefreshPropertyDropdown();
 }
 
-//==== File 51 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
+//==== File 53 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\DialogueContainer.cs ====
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -7050,10 +7300,13 @@ public class DialogueContainer : ScriptableObject
     public List<SpeechRandNodeData> SpeechRandNodeDatas = new List<SpeechRandNodeData>();
 
     public List<RandomBranchNodeData> RandomBranchNodeDatas = new List<RandomBranchNodeData>();
+
+    [SerializeField] private List<NoteNodeData> noteNodeDatas = new List<NoteNodeData>();
+    public List<NoteNodeData> NoteNodeDatas => noteNodeDatas;
 }
 
 
-//==== File 52 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
+//==== File 54 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\ExposedProperty.cs ====
 using UnityEngine;
 
 /// <summary>
@@ -7066,7 +7319,7 @@ public class ExposedProperty
     public string PropertyValue = "New Value";   // �������� ��������
 }
 
-//==== File 53 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
+//==== File 55 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\IntExposedProperty.cs ====
 [System.Serializable]
 public class IntExposedProperty
 {
@@ -7077,7 +7330,7 @@ public class IntExposedProperty
 }
 
 
-//==== File 54 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
+//==== File 56 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\NodeLinkData.cs ====
 [System.Serializable]
 public class NodeLinkData
 {
@@ -7087,7 +7340,7 @@ public class NodeLinkData
 }
 
 
-//==== File 55 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
+//==== File 57 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\StringExposedProperty.cs ====
 [System.Serializable]
 public class StringExposedProperty
 {
@@ -7096,7 +7349,7 @@ public class StringExposedProperty
 }
 
 
-//==== File 56 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
+//==== File 58 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Enums\ComparisonEnums.cs ====
 namespace DialogueSystem
 {
     public enum ComparisonType
@@ -7129,7 +7382,7 @@ namespace DialogueSystem
 }
 
 
-//==== File 57 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\CharacterIntConditionNodeData.cs ====
+//==== File 59 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\CharacterIntConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -7143,7 +7396,7 @@ public class CharacterIntConditionNodeData : BaseNodeData
     public int CompareValue;
 }
 
-//==== File 58 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\CharacterModifyIntNodeData.cs ====
+//==== File 60 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\CharacterModifyIntNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -7157,7 +7410,7 @@ public class CharacterModifyIntNodeData : BaseNodeData
     public int Value;
 }
 
-//==== File 59 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugErrorNodeData.cs ====
+//==== File 61 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugErrorNodeData.cs ====
 using System;
 
 [Serializable]
@@ -7166,7 +7419,7 @@ public class DebugErrorNodeData : BaseNodeData
     public string MessageText;
 }
 
-//==== File 60 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugLogNodeData.cs ====
+//==== File 62 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugLogNodeData.cs ====
 using System;
 
 [Serializable]
@@ -7176,7 +7429,7 @@ public class DebugLogNodeData : BaseNodeData
 }
 
 
-//==== File 61 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugWarningNodeData.cs ====
+//==== File 63 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\DebugWarningNodeData.cs ====
 using System;
 
 [Serializable]
@@ -7186,7 +7439,7 @@ public class DebugWarningNodeData : BaseNodeData
 }
 
 
-//==== File 62 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+//==== File 64 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -7196,7 +7449,7 @@ public class EndNodeData : BaseNodeData
     public string NextDialogueName;
 }
 
-//==== File 63 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
+//==== File 65 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EntryNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -7210,7 +7463,7 @@ public class EntryNodeData : BaseNodeData
 }
 
 
-//==== File 64 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EventNodeData.cs ====
+//==== File 66 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EventNodeData.cs ====
 using UnityEngine;
 using UnityEngine.Events;
 using System;
@@ -7221,7 +7474,7 @@ public class EventNodeData : BaseNodeData
     public UnityEvent Event = new UnityEvent();
 }
 
-//==== File 65 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
+//==== File 67 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\IntConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -7237,7 +7490,7 @@ public class IntConditionNodeData
 }
 
 
-//==== File 66 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
+//==== File 68 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\ModifyIntNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -7251,7 +7504,7 @@ public class ModifyIntNodeData : BaseNodeData
 }
 
 
-//==== File 67 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
+//==== File 69 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -7271,7 +7524,7 @@ public class OptionNodeData : BaseNodeData
 }
 
 
-//==== File 68 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeImageData.cs ====
+//==== File 70 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\OptionNodeImageData.cs ====
 using UnityEngine;
 using System;
 
@@ -7283,7 +7536,7 @@ public class OptionNodeImageData : BaseNodeData
     public string NodeType;
 }
 
-//==== File 69 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
+//==== File 71 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeData.cs ====
 using UnityEngine;
 using System;
 
@@ -7306,7 +7559,7 @@ public class SpeechNodeData : BaseNodeData
 }
 
 
-//==== File 70 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeImageData.cs ====
+//==== File 72 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechNodeImageData.cs ====
 using UnityEngine;
 using System;
 
@@ -7319,7 +7572,7 @@ public class SpeechNodeImageData : BaseNodeData
     public string SpeakerGuid;
 }
 
-//==== File 71 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechRandNodeData.cs ====
+//==== File 73 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\SpeechRandNodeData.cs ====
 using System;
 using System.Collections.Generic;
 
@@ -7338,7 +7591,7 @@ public class SpeechVariant
 }
 
 
-//==== File 72 of 72: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
+//==== File 74 of 74: D:/Work/REDDialogSystemProject/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\StringConditionNodeData.cs ====
 using DialogueSystem;
 using UnityEngine;
 using System;
@@ -7354,10 +7607,10 @@ public class StringConditionNodeData : BaseNodeData
 
 
 // ============ Statistics =============
-// Total Files: 72
-// Total Size: 261,49 KB
-// Total Lines: 7205
-// Classes: 75
-// Methods: 437
-// Comments: 704
+// Total Files: 74
+// Total Size: 270,36 KB
+// Total Lines: 7454
+// Classes: 77
+// Methods: 453
+// Comments: 720
 // =====================================

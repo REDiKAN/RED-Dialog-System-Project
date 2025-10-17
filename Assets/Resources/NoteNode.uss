@@ -1,10 +1,14 @@
+/* Assets/Resources/NoteNode.uss */
 .note-preview {
     -unity-word-wrap: true;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding: 8px;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 4px;
+    color: #2C3E50;
+    font-size: 11px;
+    unity-text-align: upper-left;
 }
 
 .main-container {
@@ -20,4 +24,15 @@
     padding: 4px 8px;
     color: #5D4037;
     font-weight: bold;
+    font-size: 12px;
+}
+
+/* Улучшенные цвета для разных состояний */
+.note-preview:focus {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Обеспечиваем контрастность текста на любом фоне */
+.note-preview {
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
 }

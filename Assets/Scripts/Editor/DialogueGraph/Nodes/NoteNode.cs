@@ -1,4 +1,4 @@
-﻿// Assets/Scripts/Editor/DialogueGraph/Nodes/NoteNode.cs
+﻿/// Assets/Scripts/Editor/DialogueGraph/Nodes/NoteNode.cs
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -22,13 +22,15 @@ public class NoteNode : BaseNode
         base.Initialize(position);
         title = "Note";
 
-        // Убираем стандартные порты
+        // Убираем стандартные порты (но оставляем возможность удаления)
         inputContainer.Clear();
         outputContainer.Clear();
 
-        // Убираем возможность соединения
-        capabilities &= ~Capabilities.Deletable;
-        capabilities &= ~Capabilities.Collapsible;
+        // УБИРАЕМ эту строку - оставляем возможность удаления
+        // capabilities &= ~Capabilities.Deletable;
+
+        // Оставляем возможность сворачивания для удобства
+        capabilities |= Capabilities.Collapsible;
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
         this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
@@ -52,7 +54,9 @@ public class NoteNode : BaseNode
                 fontSize = 11,
                 unityTextAlign = TextAnchor.UpperLeft,
                 marginTop = 5,
-                marginBottom = 5
+                marginBottom = 5,
+                color = new Color(0.17f, 0.24f, 0.31f), // Темно-синий для лучшей читаемости
+                unityFontStyleAndWeight = FontStyle.Normal
             }
         };
         _previewLabel.AddToClassList("note-preview");
@@ -103,8 +107,8 @@ public class NoteNode : BaseNode
     {
         // Автоматически подстраиваем высоту узла под содержимое
         var contentHeight = _previewLabel.layout.height;
-        var minHeight = 100f;
-        var newHeight = Mathf.Max(minHeight, contentHeight + 80f); // + отступы для цветового поля
+        var minHeight = 120f;
+        var newHeight = Mathf.Max(minHeight, contentHeight + 100f); // + отступы для цветового поля и заголовка
 
         var rect = GetPosition();
         rect.height = newHeight;
@@ -135,6 +139,27 @@ public class NoteNode : BaseNode
     {
         // Применяем цвет фона ко всему узлу
         style.backgroundColor = new StyleColor(BackgroundColor);
+
+        // Автоматически настраиваем цвет текста для контрастности
+        UpdateTextContrast();
+    }
+
+    private void UpdateTextContrast()
+    {
+        if (_previewLabel == null) return;
+
+        // Вычисляем яркость фона для определения контрастного цвета текста
+        float brightness = BackgroundColor.r * 0.299f + BackgroundColor.g * 0.587f + BackgroundColor.b * 0.114f;
+
+        // Если фон светлый - темный текст, если темный - светлый текст
+        if (brightness > 0.6f)
+        {
+            _previewLabel.style.color = new Color(0.17f, 0.24f, 0.31f); // Темно-синий
+        }
+        else
+        {
+            _previewLabel.style.color = new Color(0.95f, 0.95f, 0.95f); // Светлый
+        }
     }
 
     public void SetNoteText(string text)
@@ -152,6 +177,7 @@ public class NoteNode : BaseNode
         UpdateBackgroundColor();
     }
 
+    // Методы для управления визуальными связями
     public void AddVisualConnection(string targetNodeGuid)
     {
         if (!ConnectedNodeGuids.Contains(targetNodeGuid))

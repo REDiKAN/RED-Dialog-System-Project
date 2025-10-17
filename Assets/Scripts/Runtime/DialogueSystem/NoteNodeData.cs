@@ -5,6 +5,6 @@ using UnityEngine;
 public class NoteNodeData : BaseNodeData
 {
     public string NoteText = "";
-    public Color BackgroundColor = new Color(1f, 0.98f, 0.77f, 1f); // Желтый по умолчанию
+    public Color BackgroundColor = new Color(1f, 0.9152542f, 0f, 1f);
     public List<string> ConnectedNodeGuids = new List<string>(); // для визуальных связей
 }
