@@ -841,29 +841,9 @@ public class DialogueManager : MonoBehaviour
         if (optionPanel != null)
             optionPanel.Hide();
 
-        // Получаем текст опции через обратную связь
-        var linkToNext = currentDialogue.NodeLinks
-            .FirstOrDefault(l => l.TargetNodeGuid == nextNodeGuid);
-
-        if (linkToNext != null)
-        {
-            var optionNode = GetNodeByGuid(linkToNext.BaseNodeGuid);
-            string optionText = "Изображение";
-
-            if (optionNode is OptionNodeData opt)
-                optionText = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
-
-            var message = new Message
-            {
-                Type = SenderType.Player,
-                Text = optionText // ← без префикса!
-            };
-            chatPanel.AddMessage(message, MessageType.OptionText);
-        }
-
         // Устанавливаем следующий узел и продолжаем
         currentNode = GetNodeByGuid(nextNodeGuid);
-        ProcessNextNode(); // ← сразу, без задержки
+        ProcessNextNode();
     }
 
     /// <summary>

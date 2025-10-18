@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: DiDialogue
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: 4531440c-4981-47e3-ba5b-eaf09f5b7f3d
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: 4531440c-4981-47e3-ba5b-eaf09f5b7f3d
+    PortName: Next
+    TargetNodeGuid: da644a66-5680-431a-8f49-16e6708aed43
+  - BaseNodeGuid: da644a66-5680-431a-8f49-16e6708aed43
+    PortName: Next
+    TargetNodeGuid: 6c904f14-223b-4a3d-aa45-0055ed46b6be
+  - BaseNodeGuid: da644a66-5680-431a-8f49-16e6708aed43
+    PortName: Next
+    TargetNodeGuid: 6b907f1c-f12b-4e9a-a545-69940dab06ce
+  - BaseNodeGuid: 6b907f1c-f12b-4e9a-a545-69940dab06ce
+    PortName: Next
+    TargetNodeGuid: c51bffa0-5a16-4dc1-a258-daa4bb80277b
+  - BaseNodeGuid: 6c904f14-223b-4a3d-aa45-0055ed46b6be
+    PortName: Next
+    TargetNodeGuid: c51bffa0-5a16-4dc1-a258-daa4bb80277b
+  SpeechNodeDatas:
+  - Guid: da644a66-5680-431a-8f49-16e6708aed43
+    Position: {x: 252, y: 200}
+    DialogueText: Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 67f3895e3e5b4404d9330aed12e93631
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  - Guid: c51bffa0-5a16-4dc1-a258-daa4bb80277b
+    Position: {x: 831, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 67f3895e3e5b4404d9330aed12e93631
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  OptionNodeDatas:
+  - Guid: 6b907f1c-f12b-4e9a-a545-69940dab06ce
+    Position: {x: 552, y: 247}
+    ResponseText: 2
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 6c904f14-223b-4a3d-aa45-0055ed46b6be
+    Position: {x: 552, y: 149}
+    ResponseText: 1
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 67f3895e3e5b4404d9330aed12e93631
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []

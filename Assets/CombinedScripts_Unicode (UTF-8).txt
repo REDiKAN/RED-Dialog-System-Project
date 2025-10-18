@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 17.10.2025 19:02:02
+// Generation Time: 18.10.2025 12:46:07
 // Total Files: 74
 // =================================
 
@@ -1050,29 +1050,9 @@ public class DialogueManager : MonoBehaviour
         if (optionPanel != null)
             optionPanel.Hide();
 
-        // Получаем текст опции через обратную связь
-        var linkToNext = currentDialogue.NodeLinks
-            .FirstOrDefault(l => l.TargetNodeGuid == nextNodeGuid);
-
-        if (linkToNext != null)
-        {
-            var optionNode = GetNodeByGuid(linkToNext.BaseNodeGuid);
-            string optionText = "Изображение";
-
-            if (optionNode is OptionNodeData opt)
-                optionText = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
-
-            var message = new Message
-            {
-                Type = SenderType.Player,
-                Text = optionText // ← без префикса!
-            };
-            chatPanel.AddMessage(message, MessageType.OptionText);
-        }
-
         // Устанавливаем следующий узел и продолжаем
         currentNode = GetNodeByGuid(nextNodeGuid);
-        ProcessNextNode(); // ← сразу, без задержки
+        ProcessNextNode();
     }
 
     /// <summary>
@@ -7608,9 +7588,9 @@ public class StringConditionNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 74
-// Total Size: 270,36 KB
-// Total Lines: 7454
+// Total Size: 270,01 KB
+// Total Lines: 7434
 // Classes: 77
-// Methods: 453
-// Comments: 720
+// Methods: 452
+// Comments: 719
 // =====================================
