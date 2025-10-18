@@ -17,8 +17,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   Description: 
   NameColor: {r: 1, g: 1, b: 1, a: 1}
-  SpeechTextMessagePrefab: {fileID: 0}
+  Variables: []
+  SpeechTextMessagePrefab: {fileID: 3713886175979679301, guid: e2cfc6b0e0075ee4582e3ca65b60706d, type: 3}
   SpeechImageMessagePrefab: {fileID: 0}
   SpeechAudioMessagePrefab: {fileID: 0}
-  OptionTextMessagePrefab: {fileID: 0}
-  Variables: []

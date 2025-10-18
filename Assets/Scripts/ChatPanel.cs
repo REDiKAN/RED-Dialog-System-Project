@@ -1,70 +1,105 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class ChatPanel : MonoBehaviour
 {
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Transform contentContainer;
 
-    [Header("Prefabs")]
-    [SerializeField] private SpeechTextMessage speechTextMessagePrefab;
-    [SerializeField] private OptionTextMessage optionTextMessagePrefab;
+    // РљСЌС€ РІР°Р»РёРґРЅРѕСЃС‚Рё РїСЂРµС„Р°Р±РѕРІ: (character, messageType) в†’ isValid
+    private Dictionary<(CharacterData, MessageTypeDialogue), bool> _prefabValidationCache = new();
 
-    /// <summary>
-    /// Добавляет сообщение в чат
-    /// </summary>
-    /// <param name="message">Данные сообщения</param>
-    public void AddMessage(Message message, MessageType messageType)
+    public void AddMessage(Message message, MessageTypeDialogue messageType)
     {
-        // Проверяем обязательные ссылки
-        if (speechTextMessagePrefab == null)
-        {
-            Debug.LogError("Message prefab не назначен в ChatPanel");
-            return;
-        }
-
         if (contentContainer == null)
         {
-            Debug.LogError("Content container не назначен в ChatPanel");
+            Debug.LogError("Content container not assigned in ChatPanel");
             return;
         }
-
         if (scrollRect == null)
         {
-            Debug.LogError("ScrollRect не назначен в ChatPanel");
+            Debug.LogError("ScrollRect not assigned in ChatPanel");
             return;
         }
 
-        // Обработка сообщений
-        if (message.Type == SenderType.NPC)
+        // РћРїСЂРµРґРµР»СЏРµРј РЅСѓР¶РЅС‹Р№ РїСЂРµС„Р°Р± РїРѕ С‚РёРїСѓ СЃРѕРѕР±С‰РµРЅРёСЏ Рё РѕС‚РїСЂР°РІРёС‚РµР»СЋ
+        GameObject prefabToInstantiate = GetPrefabForMessage(message, messageType);
+        if (prefabToInstantiate == null)
+            return; // РѕС€РёР±РєР° СѓР¶Рµ Р·Р°Р»РѕРіРёСЂРѕРІР°РЅР° РІ GetPrefabForMessage
+
+        // РРЅСЃС‚Р°РЅС†РёРёСЂСѓРµРј Рё РЅР°СЃС‚СЂР°РёРІР°РµРј
+        GameObject messageGO = Instantiate(prefabToInstantiate, contentContainer);
+        messageGO.transform.SetAsLastSibling();
+
+        if (messageGO.TryGetComponent(out IMessageObject messageObject))
         {
-            GameObject messageGO = Instantiate(speechTextMessagePrefab.gameObject, contentContainer);
-            // ИСПРАВЛЕНО: добавляем NPC сообщения в конец списка (а не в начало)
-            messageGO.transform.SetAsLastSibling();
-            if (messageGO.TryGetComponent(out SpeechTextMessage speechText))
-                speechText.InitializationContent(message);
-        }
-        else if (message.Type == SenderType.Player)
-        {
-            GameObject messageGO = Instantiate(optionTextMessagePrefab.gameObject, contentContainer);
-            // Добавляем сообщения игрока в конец списка
-            messageGO.transform.SetAsLastSibling();
-            if (messageGO.TryGetComponent(out OptionTextMessage optionText))
-                optionText.InitializationContent(message);
-        }
-        else if (message.Type == SenderType.System)
-        {
-            // Системное сообщение
-            //if (textComponent != null)
-            //{
-            //    textComponent.text = message.Text;
-            //    Debug.Log(textComponent.text);
-            //    // Можно добавить стилизацию для системных сообщений
-            //}
+            messageObject.InitializationContent(message);
+            messageObject.SetCharacterAvatar(message.Sender);
+            messageObject.SetCharacterName(message.Sender);
         }
 
-        // Автопрокрутка вниз
+        // РџСЂРѕРєСЂСѓС‚РєР° РІРЅРёР·
         if (scrollRect.content != null)
             scrollRect.verticalNormalizedPosition = 1;
+    }
+
+    private GameObject GetPrefabForMessage(Message message, MessageTypeDialogue messageType)
+    {
+        if (message.Sender == null)
+        {
+            Debug.LogError($"Message sender is null for type {messageType}");
+            return null;
+        }
+
+        var character = message.Sender;
+        string characterName = $"{character.FirstName} {character.LastName}".Trim();
+
+        // РћРїСЂРµРґРµР»СЏРµРј, РєР°РєРѕР№ РїСЂРµС„Р°Р± Р±СЂР°С‚СЊ
+        Object prefab = null;
+        string typeName = "";
+        switch (messageType)
+        {
+            case MessageTypeDialogue.Speech:
+            case MessageTypeDialogue.SpeechText:
+                prefab = character.SpeechTextMessagePrefab;
+                typeName = "SpeechText";
+                break;
+            case MessageTypeDialogue.SpeechImage:
+                prefab = character.SpeechImageMessagePrefab;
+                typeName = "SpeechImage";
+                break;
+            case MessageTypeDialogue.SpeechAudio:
+                prefab = character.SpeechAudioMessagePrefab;
+                typeName = "SpeechAudio";
+                break;
+            default:
+                // РћРїС†РёРё Рё СЃРёСЃС‚РµРјРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ вЂ” РЅРµ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРј Р·РґРµСЃСЊ
+                Debug.LogError($"Unsupported message type for prefab resolution: {messageType}");
+                return null;
+        }
+
+        // РџСЂРѕРІРµСЂРєР°: РЅР°Р·РЅР°С‡РµРЅ Р»Рё РїСЂРµС„Р°Р±?
+        if (prefab == null)
+        {
+            Debug.LogError($"Missing {typeName} message prefab for character '{characterName}'.");
+            return null;
+        }
+
+        // РљСЌС€РёСЂРѕРІР°РЅРЅР°СЏ РїСЂРѕРІРµСЂРєР° РЅР° IMessageObject
+        var cacheKey = (character, messageType);
+        if (!_prefabValidationCache.TryGetValue(cacheKey, out bool isValid))
+        {
+            isValid = prefab is GameObject go && go.TryGetComponent(out IMessageObject _);
+            _prefabValidationCache[cacheKey] = isValid;
+        }
+
+        if (!isValid)
+        {
+            Debug.LogError($"Assigned prefab for {typeName} does not implement IMessageObject.");
+            return null;
+        }
+
+        return (prefab as GameObject);
     }
 }

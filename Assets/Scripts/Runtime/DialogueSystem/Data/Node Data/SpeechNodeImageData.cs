@@ -8,4 +8,5 @@ public class SpeechNodeImageData : BaseNodeData
 
     public string NodeType;
     public string SpeakerGuid;
+    public string SpeakerName;
 }

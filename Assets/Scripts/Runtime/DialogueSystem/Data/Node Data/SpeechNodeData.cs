@@ -15,6 +15,7 @@ public class SpeechNodeData : BaseNodeData
 
     [Tooltip("GUID of the speaker character asset")]
     public string SpeakerGuid;
+    public string SpeakerName;
 
     public string NodeType;
 }

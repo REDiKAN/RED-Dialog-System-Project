@@ -1,4 +1,4 @@
-using UnityEditor;
+п»їusing UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ public class CharacterEditorWindow : EditorWindow
     private Vector2 scrollPosition;
     private string searchString = "";
 
-    // Добавляем переменные для прокрутки
+    // Р”РѕР±Р°РІР»СЏРµРј РїРµСЂРµРјРµРЅРЅС‹Рµ РґР»СЏ РїСЂРѕРєСЂСѓС‚РєРё
     private Vector2 characterListScrollPosition;
     private Vector2 variablesScrollPosition;
     private int variableToRemove = -1;
@@ -35,12 +35,12 @@ public class CharacterEditorWindow : EditorWindow
         DrawCharacterDetails();
         EditorGUILayout.EndHorizontal();
 
-        // Обрабатываем удаление переменных после отрисовки GUI
+        // РћР±СЂР°Р±Р°С‚С‹РІР°РµРј СѓРґР°Р»РµРЅРёРµ РїРµСЂРµРјРµРЅРЅС‹С… РїРѕСЃР»Рµ РѕС‚СЂРёСЃРѕРІРєРё GUI
         if (variableToRemove != -1)
         {
             selectedCharacter.RemoveVariable(variableToRemove);
             variableToRemove = -1;
-            GUIUtility.ExitGUI(); // Выходим из текущего GUI цикла
+            GUIUtility.ExitGUI(); // Р’С‹С…РѕРґРёРј РёР· С‚РµРєСѓС‰РµРіРѕ GUI С†РёРєР»Р°
         }
     }
 
@@ -75,7 +75,7 @@ public class CharacterEditorWindow : EditorWindow
         EditorGUILayout.BeginVertical(GUILayout.Width(250));
         EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
 
-        // Добавляем прокрутку для списка персонажей
+        // Р”РѕР±Р°РІР»СЏРµРј РїСЂРѕРєСЂСѓС‚РєСѓ РґР»СЏ СЃРїРёСЃРєР° РїРµСЂСЃРѕРЅР°Р¶РµР№
         characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
 
         var filteredCharacters = string.IsNullOrEmpty(searchString)
@@ -98,7 +98,6 @@ public class CharacterEditorWindow : EditorWindow
     private void DrawCharacterDetails()
     {
         EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-
         if (selectedCharacter == null)
         {
             EditorGUILayout.HelpBox("Select a character or create a new one", UnityEditor.MessageType.Info);
@@ -118,33 +117,47 @@ public class CharacterEditorWindow : EditorWindow
 
         EditorGUILayout.Space();
 
+        // Message Prefabs
+        EditorGUILayout.LabelField("Message Prefabs", EditorStyles.boldLabel);
+
+        DrawPrefabFieldWithValidation(
+            "Speech Text Message",
+            ref selectedCharacter.SpeechTextMessagePrefab,
+            typeof(SpeechTextMessage)
+        );
+
+        DrawPrefabFieldWithValidation(
+            "Speech Image Message",
+            ref selectedCharacter.SpeechImageMessagePrefab,
+            typeof(SpeechImageMessage)
+        );
+
+        DrawPrefabFieldWithValidation(
+            "Speech Audio Message",
+            ref selectedCharacter.SpeechAudioMessagePrefab,
+            typeof(SpeechAudioMessage)
+        );
+
+        EditorGUILayout.Space();
+
         // Variables
         EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
-
-        // Добавляем прокрутку для списка переменных
         variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
-
         for (int i = 0; i < selectedCharacter.Variables.Count; i++)
         {
             EditorGUILayout.BeginHorizontal();
-
             selectedCharacter.Variables[i].VariableName = EditorGUILayout.TextField(
                 GUIContent.none,
                 selectedCharacter.Variables[i].VariableName);
-
             selectedCharacter.Variables[i].Value = EditorGUILayout.IntField(
                 GUIContent.none,
                 selectedCharacter.Variables[i].Value);
-
             if (GUILayout.Button("X", GUILayout.Width(20)))
             {
-                // Запоминаем индекс для удаления, но удаляем после отрисовки GUI
                 variableToRemove = i;
             }
-
             EditorGUILayout.EndHorizontal();
         }
-
         EditorGUILayout.EndScrollView();
 
         if (GUILayout.Button("Add Variable"))
@@ -158,6 +171,45 @@ public class CharacterEditorWindow : EditorWindow
         }
 
         EditorGUILayout.EndVertical();
+    }
+
+    private void DrawValidationMessage(Object prefab, System.Type expectedType)
+    {
+        if (prefab == null)
+        {
+            EditorGUILayout.HelpBox("вљ пёЏ Not assigned", MessageType.Warning);
+        }
+        else if (prefab is GameObject go && go.GetComponent(expectedType) != null)
+        {
+            EditorGUILayout.HelpBox("вњ… Valid: implements IMessageObject", MessageType.Info);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("вќЊ Invalid: does not implement IMessageObject", MessageType.Error);
+        }
+    }
+
+    private void DrawPrefabFieldWithValidation(string label, ref GameObject prefab, System.Type expectedComponentType)
+    {
+        prefab = (GameObject)EditorGUILayout.ObjectField(label, prefab, typeof(GameObject), false);
+
+        if (prefab == null)
+        {
+            EditorGUILayout.HelpBox("вљ пёЏ Not assigned", MessageType.Warning);
+        }
+        else
+        {
+            // РџСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РЅСѓР¶РЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚, СЂРµР°Р»РёР·СѓСЋС‰РёР№ IMessageObject
+            var component = prefab.GetComponent(expectedComponentType);
+            if (component != null && component is IMessageObject)
+            {
+                EditorGUILayout.HelpBox("вњ… Valid: implements IMessageObject", MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("вќЊ Invalid: missing required component or it doesn't implement IMessageObject", MessageType.Error);
+            }
+        }
     }
 
     private void CreateNewCharacter()

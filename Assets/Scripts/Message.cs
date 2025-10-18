@@ -42,7 +42,7 @@ public enum SenderType
     System    // Системное сообщение (например, "Диалог завершён")
 }
 
-public enum MessageType
+public enum MessageTypeDialogue
 {
     System,
     Speech, SpeechText, SpeechImage, SpeechAudio,

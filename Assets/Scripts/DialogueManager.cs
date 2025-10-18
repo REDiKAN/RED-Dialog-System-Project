@@ -261,7 +261,7 @@ public class DialogueManager : MonoBehaviour
             Audio = null,
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageType.Speech);
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
 
         // Обработка исходящих связей — как в SpeechNode
         var outgoingLinks = currentDialogue.NodeLinks
@@ -364,7 +364,13 @@ public class DialogueManager : MonoBehaviour
     /// <param name="speechNode">Данные узла речи</param>
     private void ProcessSpeechNode(SpeechNodeData speechNode)
     {
-        CharacterData speaker = GetCharacterByGuid(speechNode.SpeakerGuid);
+        CharacterData speaker = GetCharacterByName(speechNode.SpeakerName); // ← изменено
+        if (speaker == null)
+        {
+            Debug.LogError($"SpeechNode '{speechNode.Guid}' has no valid speaker. Assign a CharacterData in the graph editor.");
+            return;
+        }
+
         var message = new Message
         {
             Type = SenderType.NPC,
@@ -373,12 +379,10 @@ public class DialogueManager : MonoBehaviour
             Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid),
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageType.Speech);
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
 
         if (message.Audio != null)
-        {
             StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
-        }
 
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechNode.Guid)
@@ -467,7 +471,13 @@ public class DialogueManager : MonoBehaviour
     /// <param name="speechImageNode">Данные узла изображения речи</param>
     private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
     {
-        CharacterData speaker = GetCharacterByGuid(speechImageNode.SpeakerGuid);
+        CharacterData speaker = GetCharacterByName(speechImageNode.SpeakerName); // ← изменено
+        if (speaker == null)
+        {
+            Debug.LogError($"SpeechImageNode '{speechImageNode.Guid}' has no valid speaker...");
+            return;
+        }
+
         var message = new Message
         {
             Type = SenderType.NPC,
@@ -476,7 +486,7 @@ public class DialogueManager : MonoBehaviour
             Audio = null,
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageType.SpeechImage);
+        chatPanel.AddMessage(message, MessageTypeDialogue.SpeechImage);
 
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechImageNode.Guid)
@@ -810,7 +820,7 @@ public class DialogueManager : MonoBehaviour
             Type = SenderType.System,
             Text = "Диалог завершен"
         };
-        chatPanel.AddMessage(message, MessageType.System);
+        chatPanel.AddMessage(message, MessageTypeDialogue.System);
 
         // Если указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
@@ -955,15 +965,23 @@ public class DialogueManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Получает персонажа по GUID (заглушка для runtime)
+    /// Получает персонажа по имени из Resources/Characters
     /// </summary>
-    /// <param name="guid">GUID персонажа</param>
-    /// <returns>CharacterData или null</returns>
-    private CharacterData GetCharacterByGuid(string guid)
+    private CharacterData GetCharacterByName(string characterName)
     {
-        // В runtime нет AssetDatabase, поэтому используем заглушку
-        // В реальной системе нужно реализовать загрузку из Resources
-        return null;
+        if (string.IsNullOrEmpty(characterName))
+            return null;
+
+        // Ищем в кэше CharacterManager
+        var character = CharacterManager.Instance?.GetCharacter(characterName);
+        if (character != null)
+            return character;
+
+        // Fallback: загрузка напрямую из Resources
+        character = Resources.Load<CharacterData>($"Characters/{characterName}");
+        if (character == null)
+            Debug.LogError($"Character '{characterName}' not found in Resources/Characters");
+        return character;
     }
 
     /// <summary>

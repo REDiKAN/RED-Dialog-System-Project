@@ -94,6 +94,7 @@ public class GraphSaveUtility
                     Position = node.GetPosition().position,
                     AudioClipGuid = "",
                     SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
+                    SpeakerName = speechNodeText.Speaker ? speechNodeText.Speaker.name : "",
                     NodeType = "SpeechNodeText"
                 });
             }
@@ -117,6 +118,7 @@ public class GraphSaveUtility
                     Position = node.GetPosition().position,
                     ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : "",
                     SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
+                    SpeakerName = speechNodeImage.Speaker ? speechNodeImage.Speaker.name : "",
                     NodeType = "SpeechNodeImage"
                 });
             }

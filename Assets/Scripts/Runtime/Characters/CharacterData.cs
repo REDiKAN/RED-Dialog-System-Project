@@ -1,3 +1,5 @@
+// Assets/Scripts/Runtime/Characters/CharacterData.cs
+
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -13,6 +15,11 @@ public class CharacterData : ScriptableObject
 
     [Header("Variables")]
     public List<CharacterVariable> Variables = new List<CharacterVariable>();
+
+    [Header("Message Prefabs")]
+    public GameObject SpeechTextMessagePrefab;
+    public GameObject SpeechImageMessagePrefab;
+    public GameObject SpeechAudioMessagePrefab;
 
     public void AddVariable(string variableName = "NewVariable", int initialValue = 0)
     {
