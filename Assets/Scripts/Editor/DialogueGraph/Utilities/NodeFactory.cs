@@ -55,11 +55,20 @@ public static class NodeFactory
             return CreateTimerNode(position);
         else if (nodeType == typeof(PauseNode))
             return CreatePauseNode(position);
+        else if (nodeType == typeof(WireNode))
+            return CreateWireNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
+    }
+
+    public static WireNode CreateWireNode(Vector2 position)
+    {
+        var node = new WireNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static PauseNode CreatePauseNode(Vector2 position)

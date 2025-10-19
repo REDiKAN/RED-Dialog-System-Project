@@ -474,7 +474,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00056566147}
+  m_AnchoredPosition: {x: 0, y: -0.000060939958}
   m_SizeDelta: {x: 0, y: 1370}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &216657489
@@ -534,6 +534,7 @@ RectTransform:
   - {fileID: 1238354589}
   - {fileID: 877129116}
   - {fileID: 808698044}
+  - {fileID: 1859932805}
   - {fileID: 871629836}
   m_Father: {fileID: 865566016}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -710,7 +711,7 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: 5ff1a7134f2f6cc4397dd8b229256b5c, type: 2}
+  currentDialogue: {fileID: 11400000, guid: dee1fe4ab4b01c648993a5a9eec90c93, type: 2}
   _timerDisplayController: {fileID: 1859932804}
 --- !u!4 &541927738
 Transform:
@@ -920,7 +921,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 17927149}
-  - {fileID: 1859932805}
   m_Father: {fileID: 245914489}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2350,7 +2350,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 542612191}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9998789
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2550,7 +2550,7 @@ RectTransform:
   m_Children:
   - {fileID: 107998336}
   - {fileID: 492053148}
-  m_Father: {fileID: 871629836}
+  m_Father: {fileID: 245914489}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}

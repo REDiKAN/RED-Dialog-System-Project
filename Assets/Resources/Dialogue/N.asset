@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: N
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: 28aee756-af71-411f-9970-d900255c3bce
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: 28aee756-af71-411f-9970-d900255c3bce
+    PortName: Next
+    TargetNodeGuid: d178011e-95ef-4f52-8c9e-c5a70ac2e526
+  - BaseNodeGuid: d178011e-95ef-4f52-8c9e-c5a70ac2e526
+    PortName: Next
+    TargetNodeGuid: 509facc7-46dc-4498-a5d8-df159f597dcb
+  - BaseNodeGuid: 509facc7-46dc-4498-a5d8-df159f597dcb
+    PortName: Output
+    TargetNodeGuid: 9f91d62c-1e9d-43bb-a757-629ba94a4c1d
+  SpeechNodeDatas:
+  - Guid: d178011e-95ef-4f52-8c9e-c5a70ac2e526
+    Position: {x: 206, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
+    SpeakerName: Character
+    NodeType: SpeechNodeText
+  - Guid: 9f91d62c-1e9d-43bb-a757-629ba94a4c1d
+    Position: {x: 744, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
+    SpeakerName: Character
+    NodeType: SpeechNodeText
+  OptionNodeDatas: []
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 7cc18e99728988b4ba1670b927c885a6
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas: []
+  PauseNodeDatas: []
+  WireNodeDatas:
+  - Guid: 509facc7-46dc-4498-a5d8-df159f597dcb
+    Position: {x: 549, y: 200}
+  - Guid: 509facc7-46dc-4498-a5d8-df159f597dcb
+    Position: {x: 549, y: 200}

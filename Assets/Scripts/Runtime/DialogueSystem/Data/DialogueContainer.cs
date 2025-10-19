@@ -73,4 +73,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Pause Nodes")]
     public List<PauseNodeData> PauseNodeDatas = new List<PauseNodeData>();
+
+    [Header("Wire Nodes")]
+    public List<WireNodeData> WireNodeDatas = new List<WireNodeData>();
 }

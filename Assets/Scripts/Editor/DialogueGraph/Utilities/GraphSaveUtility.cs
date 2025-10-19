@@ -304,7 +304,14 @@ public class GraphSaveUtility
                     DurationSeconds = pauseNode.DurationSeconds
                 });
             }
-
+            else if (node is WireNode wireNode)
+            {
+                dialogueContainer.WireNodeDatas.Add(new WireNodeData
+                {
+                    Guid = wireNode.GUID,
+                    Position = node.GetPosition().position
+                });
+            }
         }
     }
 
@@ -706,6 +713,13 @@ public class GraphSaveUtility
             tempNode.SetDuration(nodeData.DurationSeconds);
             targetGraphView.AddElement(tempNode);
         }
+
+        foreach (var nodeData in containerCache.WireNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateWireNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            targetGraphView.AddElement(tempNode);
+        }
     }
 
     /// <summary>
@@ -828,6 +842,26 @@ public class GraphSaveUtility
                     else if (nodeList[i] is EventNode eventNode)
                     {
                         outputPort = eventNode.outputContainer[0].Q<Port>();
+                    }
+                    else if (nodeList[i] is WireNode wireNode)
+                    {
+                        foreach (var port in wireNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет
+                            outputPort = wireNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = connection.PortName; // Должно быть "Output"
+                            wireNode.outputContainer.Add(outputPort);
+                            wireNode.RefreshPorts();
+                            wireNode.RefreshExpandedState();
+                        }
                     }
 
                     // Получаем inputPort у целевого узла

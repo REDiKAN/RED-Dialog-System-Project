@@ -160,6 +160,9 @@ public class DialogueManager : MonoBehaviour
             case PauseNodeData pauseNode:
                 ProcessPauseNode(pauseNode);
                 return;
+            case WireNodeData wireNode:
+                GoToNextNode(wireNode.Guid);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
@@ -1044,6 +1047,9 @@ public class DialogueManager : MonoBehaviour
 
         var pauseNode = currentDialogue.PauseNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (pauseNode != null) return pauseNode;
+
+        var wireNode = currentDialogue.WireNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (wireNode != null) return wireNode;
 
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)

@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: ue
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: a3bc5cbd-65c1-4b2c-ab77-d5e34d8afc5b
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: a3bc5cbd-65c1-4b2c-ab77-d5e34d8afc5b
+    PortName: Next
+    TargetNodeGuid: 3fac00c3-d718-42c4-ba99-39605221fc98
+  - BaseNodeGuid: 3fac00c3-d718-42c4-ba99-39605221fc98
+    PortName: Next
+    TargetNodeGuid: f991eb3d-9ad7-458d-bd30-446e74624778
+  - BaseNodeGuid: f991eb3d-9ad7-458d-bd30-446e74624778
+    PortName: Output
+    TargetNodeGuid: e42cda90-ff4e-4bb3-8724-0345efb9c661
+  SpeechNodeDatas:
+  - Guid: 3fac00c3-d718-42c4-ba99-39605221fc98
+    Position: {x: 218, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
+    SpeakerName: Character
+    NodeType: SpeechNodeText
+  - Guid: e42cda90-ff4e-4bb3-8724-0345efb9c661
+    Position: {x: 770, y: 200}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
+    SpeakerName: Character
+    NodeType: SpeechNodeText
+  OptionNodeDatas: []
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 7cc18e99728988b4ba1670b927c885a6
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas: []
+  PauseNodeDatas: []
+  WireNodeDatas:
+  - Guid: f991eb3d-9ad7-458d-bd30-446e74624778
+    Position: {x: 579, y: 200}
