@@ -21,16 +21,13 @@ MonoBehaviour:
     TargetNodeGuid: 889e6e25-014a-4f90-b6a5-e963b019d174
   - BaseNodeGuid: 889e6e25-014a-4f90-b6a5-e963b019d174
     PortName: Next
-    TargetNodeGuid: 34c34288-ddb6-4d8c-89eb-010efb8e8b79
-  - BaseNodeGuid: 63e7665e-dac2-400e-bfac-4d83dbdc05e5
+    TargetNodeGuid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+  - BaseNodeGuid: 889e6e25-014a-4f90-b6a5-e963b019d174
+    PortName: Next
+    TargetNodeGuid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+  - BaseNodeGuid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
     PortName: Next
     TargetNodeGuid: f3ad7b4c-47b0-4f4e-8ff7-92c2508cf295
-  - BaseNodeGuid: 34c34288-ddb6-4d8c-89eb-010efb8e8b79
-    PortName: Timeout
-    TargetNodeGuid: 5dcae3dc-2fc9-481f-9fc4-03207e30dc4c
-  - BaseNodeGuid: 34c34288-ddb6-4d8c-89eb-010efb8e8b79
-    PortName: Options
-    TargetNodeGuid: 63e7665e-dac2-400e-bfac-4d83dbdc05e5
   SpeechNodeDatas:
   - Guid: 889e6e25-014a-4f90-b6a5-e963b019d174
     Position: {x: 251, y: 200}
@@ -39,26 +36,14 @@ MonoBehaviour:
     SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
     SpeakerName: Character
     NodeType: SpeechNodeText
-  - Guid: 5dcae3dc-2fc9-481f-9fc4-03207e30dc4c
-    Position: {x: 799, y: 297}
-    DialogueText: 3
-    AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
-    NodeType: SpeechNodeText
   - Guid: f3ad7b4c-47b0-4f4e-8ff7-92c2508cf295
-    Position: {x: 1117, y: 200}
+    Position: {x: 820, y: 200}
     DialogueText: 4
     AudioClipGuid: 
     SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
     SpeakerName: Character
     NodeType: SpeechNodeText
-  OptionNodeDatas:
-  - Guid: 63e7665e-dac2-400e-bfac-4d83dbdc05e5
-    Position: {x: 799, y: 200}
-    ResponseText: 2
-    AudioClipGuid: 
-    NodeType: OptionNodeText
+  OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []
   StringExposedProperties: []
@@ -78,7 +63,23 @@ MonoBehaviour:
   SpeechRandNodeDatas: []
   RandomBranchNodeDatas: []
   noteNodeDatas: []
-  TimerNodeDatas:
-  - Guid: 34c34288-ddb6-4d8c-89eb-010efb8e8b79
-    Position: {x: 614, y: 200}
-    DurationSeconds: 10
+  TimerNodeDatas: []
+  PauseNodeDatas:
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30
+  - Guid: acb430be-32cc-4f0f-bd1a-b8b216a1c943
+    Position: {x: 619, y: 200}
+    DurationSeconds: 30

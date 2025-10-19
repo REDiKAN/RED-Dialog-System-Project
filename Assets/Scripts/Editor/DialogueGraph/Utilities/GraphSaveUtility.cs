@@ -295,6 +295,15 @@ public class GraphSaveUtility
                     DurationSeconds = timerNode.DurationSeconds
                 });
             }
+            else if (node is PauseNode pauseNode)
+            {
+                dialogueContainer.PauseNodeDatas.Add(new PauseNodeData
+                {
+                    Guid = pauseNode.GUID,
+                    Position = node.GetPosition().position,
+                    DurationSeconds = pauseNode.DurationSeconds
+                });
+            }
 
         }
     }
@@ -689,6 +698,14 @@ public class GraphSaveUtility
                 timerNode.SetDuration(nodeData.DurationSeconds);
             }
         }
+
+        foreach (var nodeData in containerCache.PauseNodeDatas)
+        {
+            var tempNode = NodeFactory.CreatePauseNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            tempNode.SetDuration(nodeData.DurationSeconds);
+            targetGraphView.AddElement(tempNode);
+        }
     }
 
     /// <summary>
@@ -778,6 +795,26 @@ public class GraphSaveUtility
                             timerNode.outputContainer.Add(outputPort);
                             timerNode.RefreshPorts();
                             timerNode.RefreshExpandedState();
+                        }
+                    }
+                    else if (nodeList[i] is PauseNode pauseNode)
+                    {
+                        foreach (var port in pauseNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет (например, после загрузки)
+                            outputPort = pauseNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = connection.PortName;
+                            pauseNode.outputContainer.Add(outputPort);
+                            pauseNode.RefreshPorts();
+                            pauseNode.RefreshExpandedState();
                         }
                     }
                     else if (nodeList[i] is ModifyIntNode modifyNode)

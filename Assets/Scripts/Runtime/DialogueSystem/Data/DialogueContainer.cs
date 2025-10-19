@@ -70,4 +70,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Timer Nodes")]
     public List<TimerNodeData> TimerNodeDatas = new List<TimerNodeData>();
+
+    [Header("Pause Nodes")]
+    public List<PauseNodeData> PauseNodeDatas = new List<PauseNodeData>();
 }

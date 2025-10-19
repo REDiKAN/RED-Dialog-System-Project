@@ -157,10 +157,59 @@ public class DialogueManager : MonoBehaviour
             case TimerNodeData timerNode:
                 ProcessTimerNode(timerNode);
                 break;
+            case PauseNodeData pauseNode:
+                ProcessPauseNode(pauseNode);
+                return;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
                 break;
+        }
+    }
+
+    private void ProcessPauseNode(PauseNodeData pauseNode)
+    {
+        if (_timerDisplayController == null)
+        {
+            Debug.LogError("TimerDisplayController is not assigned in DialogueManager. Pause timer will not be displayed.");
+            // fallback: просто ждём без отображения
+            StartCoroutine(DelayedGoToNextNode(pauseNode));
+            return;
+        }
+
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == pauseNode.Guid);
+        string nextGuid = nextLink?.TargetNodeGuid;
+
+        void OnPauseTimeout()
+        {
+            if (!string.IsNullOrEmpty(nextGuid))
+            {
+                currentNode = GetNodeByGuid(nextGuid);
+                ProcessNextNode();
+            }
+            else
+            {
+                currentNode = null;
+            }
+        }
+
+        _timerDisplayController.StartTimer(pauseNode.DurationSeconds, OnPauseTimeout);
+    }
+
+    private IEnumerator DelayedGoToNextNode(PauseNodeData pauseNode)
+    {
+        yield return new WaitForSeconds(pauseNode.DurationSeconds);
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == pauseNode.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
         }
     }
 
@@ -637,9 +686,10 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
-    private IEnumerator DelayedGoToNode(string nextNodeGuid)
+    private IEnumerator DelayedGoToNode(string nextNodeGuid, float delay = -1f)
     {
-        yield return new WaitForSeconds(messageDelay);
+        if (delay < 0f) delay = messageDelay;
+        yield return new WaitForSeconds(delay);
         currentNode = GetNodeByGuid(nextNodeGuid);
         ProcessNextNode();
     }
@@ -991,6 +1041,9 @@ public class DialogueManager : MonoBehaviour
 
         var timerNode = currentDialogue.TimerNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (timerNode != null) return timerNode;
+
+        var pauseNode = currentDialogue.PauseNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (pauseNode != null) return pauseNode;
 
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)
