@@ -28,6 +28,8 @@ public class DialogueManager : MonoBehaviour
 
     private readonly System.Random random = new System.Random();
 
+    [SerializeField] private TimerDisplayController _timerDisplayController;
+
     private void Start()
     {
         // Подписываемся на событие выбора опции
@@ -152,11 +154,79 @@ public class DialogueManager : MonoBehaviour
             case RandomBranchNodeData randomBranchNode:
                 ProcessRandomBranchNode(randomBranchNode);
                 break;
+            case TimerNodeData timerNode:
+                ProcessTimerNode(timerNode);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
                 break;
         }
+    }
+
+    private void ProcessTimerNode(TimerNodeData timerNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == timerNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks
+            .Where(link => link.PortName == "Options")
+            .Select(link => GetNodeByGuid(link.TargetNodeGuid))
+            .Where(node => node is OptionNodeData or OptionNodeImageData)
+            .ToList();
+
+        string timeoutTargetGuid = null;
+        var timeoutLink = outgoingLinks.FirstOrDefault(l => l.PortName == "Timeout");
+        if (timeoutLink != null)
+            timeoutTargetGuid = timeoutLink.TargetNodeGuid;
+
+        if (optionLinks.Count > 0 && optionPanel != null)
+        {
+            var options = new List<Option>();
+            foreach (var optNode in optionLinks)
+            {
+                string text = "Изображение";
+                if (optNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                // ← Ищем связь ИЗ опции к следующему узлу — для ВСЕХ типов опций
+                var nextLink = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optNode).Guid);
+
+                if (nextLink != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLink.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0)
+            {
+                optionPanel.ShowOptions(options);
+            }
+        }
+
+        void OnTimeout()
+        {
+            if (optionPanel != null && optionPanel.gameObject.activeSelf)
+                optionPanel.Hide();
+
+            if (!string.IsNullOrEmpty(timeoutTargetGuid))
+            {
+                currentNode = GetNodeByGuid(timeoutTargetGuid);
+                ProcessNextNode();
+            }
+            else
+            {
+                currentNode = null;
+            }
+        }
+
+        _timerDisplayController?.StartTimer(timerNode.DurationSeconds, OnTimeout);
     }
 
     private void ProcessRandomBranchNode(RandomBranchNodeData randomBranchNode)
@@ -847,11 +917,11 @@ public class DialogueManager : MonoBehaviour
     /// </summary>
     public void HandleOptionSelection(string nextNodeGuid)
     {
-        // Сразу скрываем панель
         if (optionPanel != null)
             optionPanel.Hide();
 
-        // Устанавливаем следующий узел и продолжаем
+        _timerDisplayController?.StopTimer();
+
         currentNode = GetNodeByGuid(nextNodeGuid);
         ProcessNextNode();
     }
@@ -918,6 +988,9 @@ public class DialogueManager : MonoBehaviour
         // Добавлено: поддержка SpeechRandNodeData
         var speechRandNode = currentDialogue.SpeechRandNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechRandNode != null) return speechRandNode;
+
+        var timerNode = currentDialogue.TimerNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (timerNode != null) return timerNode;
 
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)

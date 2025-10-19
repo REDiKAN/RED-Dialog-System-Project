@@ -286,6 +286,15 @@ public class GraphSaveUtility
                     ConnectedNodeGuids = noteNode.ConnectedNodeGuids
                 });
             }
+            else if (node is TimerNode timerNode)
+            {
+                dialogueContainer.TimerNodeDatas.Add(new TimerNodeData
+                {
+                    Guid = timerNode.GUID,
+                    Position = node.GetPosition().position,
+                    DurationSeconds = timerNode.DurationSeconds
+                });
+            }
 
         }
     }
@@ -646,6 +655,40 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
+
+        foreach (var nodeData in containerCache.TimerNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            tempNode.SetDuration(nodeData.DurationSeconds);
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.TimerNodeDatas)
+        {
+            // Проверяем, существует ли уже узел с таким GUID
+            var existingNode = GetNodes().FirstOrDefault(n => n.GUID == nodeData.Guid);
+            BaseNode tempNode;
+            if (existingNode != null)
+            {
+                // Если существует — используем его
+                tempNode = existingNode;
+                // Обновляем позицию
+                tempNode.SetPosition(new Rect(nodeData.Position, targetGraphView.DefaultNodeSize));
+            }
+            else
+            {
+                // Если не существует — создаём новый
+                tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
+                tempNode.GUID = nodeData.Guid;
+                targetGraphView.AddElement(tempNode);
+            }
+            // Обновляем данные узла
+            if (tempNode is TimerNode timerNode)
+            {
+                timerNode.SetDuration(nodeData.DurationSeconds);
+            }
+        }
     }
 
     /// <summary>
@@ -715,6 +758,26 @@ public class GraphSaveUtility
                         if (outputPort == null)
                         {
                             Debug.LogWarning($"Port '{connection.PortName}' not found on condition node {nodeList[i].GUID}");
+                        }
+                    }
+                    else if (nodeList[i] is TimerNode timerNode)
+                    {
+                        foreach (var port in timerNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет (например, после загрузки)
+                            outputPort = timerNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = connection.PortName;
+                            timerNode.outputContainer.Add(outputPort);
+                            timerNode.RefreshPorts();
+                            timerNode.RefreshExpandedState();
                         }
                     }
                     else if (nodeList[i] is ModifyIntNode modifyNode)
@@ -852,7 +915,7 @@ public class GraphSaveUtility
             return;
         }
 
-        // Очищаем старые данные
+        // === ОЧИЩАЕМ ВСЕ СПИСКИ, ВКЛЮЧАЯ TimerNodeDatas ===
         existingContainer.NodeLinks.Clear();
         existingContainer.SpeechNodeDatas.Clear();
         existingContainer.OptionNodeDatas.Clear();
@@ -862,10 +925,11 @@ public class GraphSaveUtility
         existingContainer.EndNodeDatas.Clear();
         existingContainer.SpeechNodeImageDatas.Clear();
         existingContainer.OptionNodeImageDatas.Clear();
+        existingContainer.TimerNodeDatas.Clear(); // ← ДОБАВЛЕНО здесь
         existingContainer.IntExposedProperties.Clear();
         existingContainer.StringExposedProperties.Clear();
 
-        // Сохраняем новые данные
+        // === Сохраняем новые данные ===
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
 

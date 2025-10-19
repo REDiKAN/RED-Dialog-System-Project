@@ -51,11 +51,20 @@ public static class NodeFactory
             return CreateRandomBranchNode(position);
         if (nodeType == typeof(NoteNode))
             return CreateNoteNode(position);
+        else if (nodeType == typeof(TimerNode))
+            return CreateTimerNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
+    }
+
+    public static TimerNode CreateTimerNode(Vector2 position)
+    {
+        var node = new TimerNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static BaseNode CreateNoteNode(Vector2 position)

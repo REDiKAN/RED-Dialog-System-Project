@@ -67,4 +67,7 @@ public class DialogueContainer : ScriptableObject
 
     [SerializeField] private List<NoteNodeData> noteNodeDatas = new List<NoteNodeData>();
     public List<NoteNodeData> NoteNodeDatas => noteNodeDatas;
+
+    [Header("Timer Nodes")]
+    public List<TimerNodeData> TimerNodeDatas = new List<TimerNodeData>();
 }
