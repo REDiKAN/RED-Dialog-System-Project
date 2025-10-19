@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71b8807f077013447b3a6744d0fb19c4, type: 3}
-  m_Name: Character
+  m_Name: Lora
   m_EditorClassIdentifier: 
-  FirstName: New
+  FirstName: Lora
   LastName: Character
   Icon: {fileID: 0}
   Description: 
-  NameColor: {r: 1, g: 1, b: 1, a: 1}
+  NameColor: {r: 0.4085675, g: 0.17661981, b: 0.46226418, a: 0.77254903}
   Variables: []
   SpeechTextMessagePrefab: {fileID: 3713886175979679301, guid: 0110fc194df2bd2449b6128658dab362, type: 3}
   SpeechImageMessagePrefab: {fileID: 0}
-  SpeechAudioMessagePrefab: {fileID: 6814576880483628660, guid: 0110fc194df2bd2449b6128658dab362, type: 3}
+  SpeechAudioMessagePrefab: {fileID: 0}

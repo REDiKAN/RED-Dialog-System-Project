@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9b3b66331a6f67746ae47626248b3833
+guid: bd3a5e97cc807a242aab285f2a222757
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8192811052962512379
-    second: 8083_year-landscape-red_1080x1920_0
+      213: 4821499735090501366
+    second: Frame 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -96,24 +96,11 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 8083_year-landscape-red_1080x1920_0
+      name: Frame 1_0
       rect:
         serializedVersion: 2
         x: 0
@@ -128,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 502864431c94d4e80800000000000000
-      internalID: -8192811052962512379
+      spriteID: 6f695b2b67869e240800000000000000
+      internalID: 4821499735090501366
       vertices: []
       indices: 
       edges: []
@@ -147,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      8083_year-landscape-red_1080x1920_0: -8192811052962512379
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

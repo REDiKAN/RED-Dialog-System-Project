@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b8807f077013447b3a6744d0fb19c4, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: 
-  FirstName: New
+  FirstName: "\u0418\u0433\u0440\u043E\u043A"
   LastName: Character
   Icon: {fileID: 0}
   Description: 

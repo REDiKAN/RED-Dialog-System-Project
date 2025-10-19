@@ -39,14 +39,7 @@ public class OptionPanel : MonoBehaviour
                 Debug.LogError("Text component not found in option button prefab");
 
             if (button != null)
-            {
-                button.onClick.AddListener(() =>
-                {
-                    onOptionSelected?.Invoke(option.NextNodeGuid);
-                    // ”дал€ем ¬—≈ кнопки и скрываем панель Ч но делаем это в DialogueManager
-                    // «десь просто вызываем событие Ч очистка будет в HandleOptionSelection
-                }); ;
-            }
+                button.onClick.AddListener(() => onOptionSelected?.Invoke(option.NextNodeGuid));
         }
 
         gameObject.SetActive(true);
@@ -57,6 +50,7 @@ public class OptionPanel : MonoBehaviour
     /// </summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
+        while (contentContainer.transform.childCount > 0)
+            GameObject.DestroyImmediate(contentContainer.transform.GetChild(0).gameObject);
     }
 }
