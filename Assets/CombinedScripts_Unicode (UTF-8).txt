@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 19.10.2025 16:26:37
+// Generation Time: 20.10.2025 20:57:54
 // Total Files: 83
 // =================================
 
@@ -1595,14 +1595,7 @@ public class OptionPanel : MonoBehaviour
                 Debug.LogError("Text component not found in option button prefab");
 
             if (button != null)
-            {
-                button.onClick.AddListener(() =>
-                {
-                    onOptionSelected?.Invoke(option.NextNodeGuid);
-                    // ������� ��� ������ � �������� ������ � �� ������ ��� � DialogueManager
-                    // ����� ������ �������� ������� � ������� ����� � HandleOptionSelection
-                }); ;
-            }
+                button.onClick.AddListener(() => onOptionSelected?.Invoke(option.NextNodeGuid));
         }
 
         gameObject.SetActive(true);
@@ -1613,7 +1606,8 @@ public class OptionPanel : MonoBehaviour
     /// </summary>
     public void Hide()
     {
-        gameObject.SetActive(false);
+        while (contentContainer.transform.childCount > 0)
+            GameObject.DestroyImmediate(contentContainer.transform.GetChild(0).gameObject);
     }
 }
 
@@ -7357,13 +7351,6 @@ public class GraphSaveUtility
             tempNode.GUID = nodeData.Guid;
             targetGraphView.AddElement(tempNode);
         }
-
-        foreach (var nodeData in containerCache.WireNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateWireNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            targetGraphView.AddElement(tempNode);
-        }
     }
 
     /// <summary>
@@ -8371,9 +8358,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 297,21 KB
-// Total Lines: 8199
+// Total Size: 296,79 KB
+// Total Lines: 8186
 // Classes: 86
 // Methods: 494
-// Comments: 741
+// Comments: 739
 // =====================================

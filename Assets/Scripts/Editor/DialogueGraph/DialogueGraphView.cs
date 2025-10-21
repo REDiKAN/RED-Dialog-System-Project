@@ -138,91 +138,26 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, разрешено ли соединение между портами
-    /// SpeechNode может соединяться только с OptionNode, OptionNode может соединяться только с SpeechNode
-    /// EndNode может соединяться только с OptionNode
+    /// Проверяет, разрешено ли соединение между портами.
+    /// Запрещает любые соединения между OptionNode и его подтипами.
+    /// Все остальные соединения разрешены без ограничений.
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
 
-        // Определяем типы узлов
-        bool IsCondition(BaseNode n) => n is IntConditionNode or StringConditionNode;
-        bool IsSpeech(BaseNode n) => n is SpeechNode;
-        bool IsSpeechImage(BaseNode n) => n is SpeechNodeImage;
-        bool IsOption(BaseNode n) => n is OptionNode;
-        bool IsOptionImage(BaseNode n) => n is OptionNodeImage;
-        bool IsModify(BaseNode n) => n is ModifyIntNode;
-        bool IsEnd(BaseNode n) => n is EndNode;
-        bool IsEntry(BaseNode n) => n is EntryNode;
-        bool IsEvent(BaseNode n) => n is EventNode;
-        bool IsSpeechRand(BaseNode n) => n is SpeechNodeRandText;
-        bool IsRandomBranch(BaseNode n) => n is RandomBranchNode;
-        bool IsNote(BaseNode n) => n is NoteNode;
-        bool IsPause(BaseNode n) => n is PauseNode;
-        bool IsWire(BaseNode n) => n is WireNode;
+        if (startNode == null || targetNode == null)
+            return false;
 
-        // Специальная логика для EventNode на выходе
-        if (startPort.direction == Direction.Output && IsEvent(startNode))
-        {
-            // Найти входную ноду, подключённую к EventNode.Input
-            var inputPort = startNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
-            if (inputPort?.connections != null)
-            {
-                // Исправление 1: используем FirstOrDefault() вместо индексации
-                var connection = inputPort.connections.FirstOrDefault();
-                if (connection != null)
-                {
-                    var sourceNode = connection.output.node as BaseNode;
-                    if (sourceNode != null)
-                    {
-                        // Наследуем правила от sourceNode
-                        return (sourceNode, targetNode) switch
-                        {
-                            (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
-                            (EntryNode _, _) when IsSpeech(targetNode) => true, 
-                            (SpeechNodeRandText _, _) when IsSpeech(targetNode) || IsSpeechRand(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                            (RandomBranchNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) || IsSpeechRand(targetNode) || IsRandomBranch(targetNode) => true,
-                            (NoteNode _, _) => true,
-                            (_, NoteNode _) => true,
-                            (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) || IsPause(targetNode) => true,
-                            (PauseNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) || IsPause(targetNode) => true,
-                            (WireNode _,_) => true,
-                            (_, WireNode _) => true,
-                            _ => false
-                        };
-                    }
-                }
-            }
-            // Если вход не подключён — разрешаем всё (или ничего, по желанию)
-            return true; // или false, если хотите запретить
-        }
+        // Проверяем, являются ли оба узла OptionNode (включая подтипы)
+        bool IsOptionNode(BaseNode node) =>
+            node is OptionNode || node is OptionNodeText || node is OptionNodeAudio || node is OptionNodeImage;
 
-        // Стандартная логика для всех остальных нод
-        if (startPort.direction == Direction.Output)
-        {
-            return (startNode, targetNode) switch
-            {
-                (EntryNode _, _) when IsSpeech(targetNode) => true,
-                (SpeechNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (SpeechNodeImage _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (OptionNode _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (OptionNodeImage _, _) when IsSpeech(targetNode) || IsCondition(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (IntConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (StringConditionNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsModify(targetNode) || IsEnd(targetNode) => true,
-                (ModifyIntNode _, _) when IsSpeech(targetNode) || IsOption(targetNode) || IsCondition(targetNode) || IsEnd(targetNode) => true,
-                _ => false
-            };
-        }
+        if (IsOptionNode(startNode) && IsOptionNode(targetNode))
+            return false;
 
-        // Для input портов — зеркальная логика (или разрешить всё)
+        // Все остальные соединения разрешены
         return true;
     }
 
