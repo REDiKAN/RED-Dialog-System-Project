@@ -25,21 +25,41 @@ MonoBehaviour:
   - BaseNodeGuid: f991eb3d-9ad7-458d-bd30-446e74624778
     PortName: Output
     TargetNodeGuid: e42cda90-ff4e-4bb3-8724-0345efb9c661
+  - BaseNodeGuid: 3fac00c3-d718-42c4-ba99-39605221fc98
+    PortName: Next
+    TargetNodeGuid: 8527475e-5313-40f7-a1b4-41dfa09fd460
+  - BaseNodeGuid: 8527475e-5313-40f7-a1b4-41dfa09fd460
+    PortName: Next
+    TargetNodeGuid: e42cda90-ff4e-4bb3-8724-0345efb9c661
   SpeechNodeDatas:
   - Guid: 3fac00c3-d718-42c4-ba99-39605221fc98
     Position: {x: 218, y: 200}
     DialogueText: New Dialogue
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: e42cda90-ff4e-4bb3-8724-0345efb9c661
     Position: {x: 770, y: 200}
     DialogueText: New Dialogue
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
+  - Guid: 487f1aae-55a6-490a-83b6-4fbacaff9bd4
+    Position: {x: 517, y: 338}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  - Guid: de5f2554-8703-4989-8d34-a5ecac6db0fa
+    Position: {x: 390, y: 474}
+    DialogueText: 
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeAudio
   OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []
@@ -48,7 +68,13 @@ MonoBehaviour:
   StringConditionNodeDatas: []
   ModifyIntNodeDatas: []
   EndNodeDatas: []
-  SpeechNodeImageDatas: []
+  SpeechNodeImageDatas:
+  - Guid: 8527475e-5313-40f7-a1b4-41dfa09fd460
+    Position: {x: 336, y: 378}
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 
+    SpeakerName: 
   OptionNodeImageDatas: []
   BaseCharacterGuid: 7cc18e99728988b4ba1670b927c885a6
   EventNodeDatas: []
@@ -63,5 +89,7 @@ MonoBehaviour:
   TimerNodeDatas: []
   PauseNodeDatas: []
   WireNodeDatas:
+  - Guid: f991eb3d-9ad7-458d-bd30-446e74624778
+    Position: {x: 579, y: 200}
   - Guid: f991eb3d-9ad7-458d-bd30-446e74624778
     Position: {x: 579, y: 200}

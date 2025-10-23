@@ -116,9 +116,10 @@ public class GraphSaveUtility
                 {
                     Guid = speechNodeImage.GUID,
                     Position = node.GetPosition().position,
-                    ImageSpritePath = speechNodeImage.ImageSprite? GetResourcePath(speechNodeImage.ImageSprite): "",
-                    SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
+                    ImageSpritePath = speechNodeImage.ImageSprite ? GetResourcePath(speechNodeImage.ImageSprite) : "",
+                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite) : "",
                     SpeakerName = speechNodeImage.Speaker ? speechNodeImage.Speaker.name : "",
+                    SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
                     NodeType = "SpeechNodeImage"
                 });
             }
@@ -321,11 +322,13 @@ public class GraphSaveUtility
         string path = AssetDatabase.GetAssetPath(sprite);
         if (!path.StartsWith("Assets/Resources/"))
         {
-            Debug.LogError($"Sprite {sprite.name} is not in a Resources folder.");
+            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources!");
             return "";
         }
-        string relative = path.Substring("Assets/Resources/".Length);
-        return relative.Replace(".sprite", "").Replace(".png", "").Replace(".jpg", "");
+        path = path.Substring("Assets/Resources/".Length);
+        if (path.LastIndexOf('.') > 0)
+            path = path.Substring(0, path.LastIndexOf('.'));
+        return path;
     }
 
     /// <summary>
@@ -443,22 +446,34 @@ public class GraphSaveUtility
                 // Восстанавливаем спрайт
                 if (!string.IsNullOrEmpty(nodeData.ImageSpritePath))
                 {
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-                        AssetDatabase.GUIDToAssetPath(nodeData.ImageSpritePath));
-                    speechNodeImage.ImageSprite = sprite;
-
-                    // Обновляем UI-поле, если оно инициализировано
-                    if (speechNodeImage.imageField != null)
+                    string fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}.sprite";
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    if (sprite == null)
                     {
-                        speechNodeImage.imageField.SetValueWithoutNotify(sprite);
+                        fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}";
+                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
                     }
+                    speechNodeImage.ImageSprite = sprite;
                 }
 
-                // Восстанавливаем спикера
+                CharacterData speaker = null;
                 if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
                 {
-                    var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
-                    speechNodeImage.SetSpeaker(speaker);
+                    speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
+                }
+                else if (!string.IsNullOrEmpty(nodeData.SpeakerName))
+                {
+                    speaker = CharacterManager.Instance?.GetCharacter(nodeData.SpeakerName);
+                }
+                speechNodeImage.SetSpeaker(speaker);
+
+                // Восстанавливаем спикера
+                if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
+                {
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(nodeData.ImageSpriteGuid);
+                    speechNodeImage.ImageSprite = sprite;
+                    if (speechNodeImage.imageField != null)
+                        speechNodeImage.imageField.SetValueWithoutNotify(sprite);
                 }
             }
 
@@ -979,6 +994,8 @@ public class GraphSaveUtility
     /// </summary>
     public void LoadGraphFromContainer(DialogueContainer container)
     {
+
+
         if (container == null)
         {
             Debug.LogError("Cannot load null container");

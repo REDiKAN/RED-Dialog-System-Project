@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 23.10.2025 22:03:18
+// Generation Time: 23.10.2025 23:45:41
 // Total Files: 83
 // =================================
 
@@ -848,7 +848,7 @@ public class DialogueManager : MonoBehaviour
         {
             Type = SenderType.NPC,
             Text = null,
-            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid),
+            Image = !string.IsNullOrEmpty(speechImageNode.ImageSpritePath)? Resources.Load<Sprite>(speechImageNode.ImageSpritePath): null,
             Audio = null,
             Sender = speaker
         };
@@ -6680,8 +6680,8 @@ public class GraphSaveUtility
                 {
                     Guid = speechNodeImage.GUID,
                     Position = node.GetPosition().position,
-                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : "",
-                    SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
+                    ImageSpritePath = speechNodeImage.ImageSprite ? GetResourcePath(speechNodeImage.ImageSprite) : "",
+                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite) : "",
                     SpeakerName = speechNodeImage.Speaker ? speechNodeImage.Speaker.name : "",
                     NodeType = "SpeechNodeImage"
                 });
@@ -6879,6 +6879,21 @@ public class GraphSaveUtility
         }
     }
 
+    private string GetResourcePath(Sprite sprite)
+    {
+        if (sprite == null) return "";
+        string path = AssetDatabase.GetAssetPath(sprite);
+        if (!path.StartsWith("Assets/Resources/"))
+        {
+            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources!");
+            return "";
+        }
+        path = path.Substring("Assets/Resources/".Length);
+        if (path.LastIndexOf('.') > 0)
+            path = path.Substring(0, path.LastIndexOf('.'));
+        return path;
+    }
+
     /// <summary>
     /// Сохранение свойств черной доски
     /// </summary>
@@ -6992,13 +7007,17 @@ public class GraphSaveUtility
             if (tempNode is SpeechNodeImage speechNodeImage)
             {
                 // Восстанавливаем спрайт
-                if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
+                if (!string.IsNullOrEmpty(nodeData.ImageSpritePath))
                 {
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-                        AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid));
+                    string fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}.sprite";
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    if (sprite == null)
+                    {
+                        // Попробуем без .sprite (если это обычный PNG/JPG в Resources)
+                        fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}";
+                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    }
                     speechNodeImage.ImageSprite = sprite;
-
-                    // Обновляем UI-поле, если оно инициализировано
                     if (speechNodeImage.imageField != null)
                     {
                         speechNodeImage.imageField.SetValueWithoutNotify(sprite);
@@ -7006,10 +7025,13 @@ public class GraphSaveUtility
                 }
 
                 // Восстанавливаем спикера
-                if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
+                if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
                 {
-                    var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
-                    speechNodeImage.SetSpeaker(speaker);
+                    string assetPath = AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid);
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+                    speechNodeImage.ImageSprite = sprite;
+                    if (speechNodeImage.imageField != null)
+                        speechNodeImage.imageField.SetValueWithoutNotify(sprite);
                 }
             }
 
@@ -7530,6 +7552,8 @@ public class GraphSaveUtility
     /// </summary>
     public void LoadGraphFromContainer(DialogueContainer container)
     {
+
+
         if (container == null)
         {
             Debug.LogError("Cannot load null container");
@@ -8233,7 +8257,8 @@ using System;
 [Serializable]
 public class SpeechNodeImageData : BaseNodeData
 {
-    public string ImageSpriteGuid;
+    public string ImageSpritePath = "";        // ← оставить для runtime
+    public string ImageSpriteGuid = "";        // ← добавить для редактора
 
     public string NodeType;
     public string SpeakerGuid;
@@ -8295,9 +8320,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 291,88 KB
-// Total Lines: 8123
+// Total Size: 293,06 KB
+// Total Lines: 8148
 // Classes: 86
-// Methods: 481
+// Methods: 487
 // Comments: 735
 // =====================================

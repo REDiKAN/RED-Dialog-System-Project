@@ -109,7 +109,8 @@ MonoBehaviour:
   EndNodeDatas: []
   SpeechNodeImageDatas:
   - Guid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
-    Position: {x: 217, y: 197}
+    Position: {x: 218, y: 197}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
     ImageSpritePath: Sprites/image(4)
     NodeType: SpeechNodeImage
     SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
