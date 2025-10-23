@@ -116,7 +116,7 @@ public class GraphSaveUtility
                 {
                     Guid = speechNodeImage.GUID,
                     Position = node.GetPosition().position,
-                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite)) : "",
+                    ImageSpritePath = speechNodeImage.ImageSprite? GetResourcePath(speechNodeImage.ImageSprite): "",
                     SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
                     SpeakerName = speechNodeImage.Speaker ? speechNodeImage.Speaker.name : "",
                     NodeType = "SpeechNodeImage"
@@ -315,6 +315,19 @@ public class GraphSaveUtility
         }
     }
 
+    private string GetResourcePath(Sprite sprite)
+    {
+        if (sprite == null) return "";
+        string path = AssetDatabase.GetAssetPath(sprite);
+        if (!path.StartsWith("Assets/Resources/"))
+        {
+            Debug.LogError($"Sprite {sprite.name} is not in a Resources folder.");
+            return "";
+        }
+        string relative = path.Substring("Assets/Resources/".Length);
+        return relative.Replace(".sprite", "").Replace(".png", "").Replace(".jpg", "");
+    }
+
     /// <summary>
     /// Сохранение свойств черной доски
     /// </summary>
@@ -419,28 +432,32 @@ public class GraphSaveUtility
         }
 
         // Создаем SpeechNodeImage
+        // Создаем SpeechNodeImage
         foreach (var nodeData in containerCache.SpeechNodeImageDatas)
         {
             var tempNode = NodeFactory.CreateSpeechNodeImage(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
 
-            // Восстанавливаем изображение по GUID
-            if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
+            if (tempNode is SpeechNodeImage speechNodeImage)
             {
-                var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid));
-                if (tempNode is SpeechNodeImage speechNodeImage)
+                // Восстанавливаем спрайт
+                if (!string.IsNullOrEmpty(nodeData.ImageSpritePath))
                 {
-                    speechNodeImage.ImageSprite = imageSprite;
-                }
-            }
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                        AssetDatabase.GUIDToAssetPath(nodeData.ImageSpritePath));
+                    speechNodeImage.ImageSprite = sprite;
 
-            // Восстанавливаем спикера по GUID
-            if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
-            {
-                var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
-                if (tempNode is SpeechNodeImage speechNodeImage)
+                    // Обновляем UI-поле, если оно инициализировано
+                    if (speechNodeImage.imageField != null)
+                    {
+                        speechNodeImage.imageField.SetValueWithoutNotify(sprite);
+                    }
+                }
+
+                // Восстанавливаем спикера
+                if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
                 {
+                    var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
                     speechNodeImage.SetSpeaker(speaker);
                 }
             }

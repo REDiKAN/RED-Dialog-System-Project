@@ -4,7 +4,8 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Префаб сообщения с изображением от персонажа
+/// Компонент для отображения сообщения в виде изображения от персонажа
+/// Реализует интерфейс IMessageObject для интеграции с ChatPanel
 /// </summary>
 public class SpeechImageMessage : MonoBehaviour, IMessageObject
 {

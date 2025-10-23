@@ -1,0 +1,21 @@
+#node-border {
+    border-width: 2px;
+    border-color: #808080;
+}
+
+.speech-text-preview,
+.option-text-preview {
+    font-size: 12px;
+    color: white;
+    padding: 4px;
+}
+
+.speech-text-preview,
+.option-text-preview {
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    white-space: normal;
+    overflow: visible;
+    align-self: stretch;
+}

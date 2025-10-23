@@ -604,7 +604,7 @@ public class DialogueManager : MonoBehaviour
         {
             Type = SenderType.NPC,
             Text = null,
-            Image = AssetLoader.LoadSprite(speechImageNode.ImageSpriteGuid),
+            Image = !string.IsNullOrEmpty(speechImageNode.ImageSpritePath)? Resources.Load<Sprite>(speechImageNode.ImageSpritePath): null,
             Audio = null,
             Sender = speaker
         };

@@ -18,13 +18,7 @@ MonoBehaviour:
   NodeLinks:
   - BaseNodeGuid: 677238c3-f6a3-4a54-8f7e-a9cdb35f5b15
     PortName: Next
-    TargetNodeGuid: 3d7a2167-24ad-4303-b400-5f97c29a1348
-  - BaseNodeGuid: 3d7a2167-24ad-4303-b400-5f97c29a1348
-    PortName: Next
-    TargetNodeGuid: c3081c52-a74a-4359-a211-56262707f0ea
-  - BaseNodeGuid: 3d7a2167-24ad-4303-b400-5f97c29a1348
-    PortName: Next
-    TargetNodeGuid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
+    TargetNodeGuid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
   - BaseNodeGuid: b91b7308-cf5b-4c88-81ed-d87f9ef51cef
     PortName: Next
     TargetNodeGuid: 1adc34fe-00e6-4dc9-940b-c688ce70c236
@@ -34,6 +28,12 @@ MonoBehaviour:
   - BaseNodeGuid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
     PortName: Next
     TargetNodeGuid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
+  - BaseNodeGuid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
+    PortName: Next
+    TargetNodeGuid: c3081c52-a74a-4359-a211-56262707f0ea
+  - BaseNodeGuid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
+    PortName: Next
+    TargetNodeGuid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
   - BaseNodeGuid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
     PortName: Next
     TargetNodeGuid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
@@ -47,13 +47,6 @@ MonoBehaviour:
     PortName: Next
     TargetNodeGuid: 26d33410-1fff-4008-8f23-2a1c53e18fcb
   SpeechNodeDatas:
-  - Guid: 3d7a2167-24ad-4303-b400-5f97c29a1348
-    Position: {x: 229, y: 200}
-    DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442 !"
-    AudioClipGuid: 
-    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
-    SpeakerName: Lora
-    NodeType: SpeechNodeText
   - Guid: b91b7308-cf5b-4c88-81ed-d87f9ef51cef
     Position: {x: 832, y: 149}
     DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442 <b>Lora</b>"
@@ -114,7 +107,13 @@ MonoBehaviour:
   StringConditionNodeDatas: []
   ModifyIntNodeDatas: []
   EndNodeDatas: []
-  SpeechNodeImageDatas: []
+  SpeechNodeImageDatas:
+  - Guid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
+    Position: {x: 217, y: 197}
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
   OptionNodeImageDatas: []
   BaseCharacterGuid: 3a1ec005e0d02b64894bcc932a4e8333
   EventNodeDatas: []
