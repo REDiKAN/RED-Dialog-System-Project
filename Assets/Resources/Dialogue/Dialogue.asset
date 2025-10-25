@@ -22,36 +22,48 @@ MonoBehaviour:
   - BaseNodeGuid: 4797c091-37e4-41d5-8de9-87b0146dfbd9
     PortName: Next
     TargetNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+  - BaseNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+    PortName: Next
+    TargetNodeGuid: 765432d0-6c24-455e-a897-8409f4d88dc7
   - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
     PortName: Timeout
     TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
   - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
     PortName: Options
     TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
-  - BaseNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
-    PortName: Next
-    TargetNodeGuid: 765432d0-6c24-455e-a897-8409f4d88dc7
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
   SpeechNodeDatas:
-  - Guid: 4797c091-37e4-41d5-8de9-87b0146dfbd9
-    Position: {x: 222, y: 200}
-    DialogueText: 1
-    AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
-    NodeType: SpeechNodeText
   - Guid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
     Position: {x: 724, y: 274}
     DialogueText: 3
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: 765432d0-6c24-455e-a897-8409f4d88dc7
     Position: {x: 1058, y: 175}
     DialogueText: 4
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  - Guid: 4797c091-37e4-41d5-8de9-87b0146dfbd9
+    Position: {x: 184, y: 41}
+    DialogueText: 1
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
@@ -80,7 +92,7 @@ MonoBehaviour:
   noteNodeDatas: []
   TimerNodeDatas:
   - Guid: 96bb6006-99cd-4a56-a828-1853b269bec7
-    Position: {x: 609, y: 232}
+    Position: {x: 553, y: 200}
     DurationSeconds: 5
   - Guid: 96bb6006-99cd-4a56-a828-1853b269bec7
     Position: {x: 554, y: 200}
@@ -88,3 +100,5 @@ MonoBehaviour:
   - Guid: 96bb6006-99cd-4a56-a828-1853b269bec7
     Position: {x: 553, y: 200}
     DurationSeconds: 5
+  PauseNodeDatas: []
+  WireNodeDatas: []

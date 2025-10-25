@@ -30,6 +30,66 @@ public class DialogueGraph : EditorWindow
     {
         ConstructGraphView();
         GenerateToolbar();
+
+        rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+    }
+
+    private void OnKeyDownEvent(KeyDownEvent evt)
+    {
+        // Проверяем комбинацию Ctrl + S (только Windows)
+        if (!evt.ctrlKey || evt.keyCode != KeyCode.S)
+            return;
+
+        // Проверяем, что окно редактора активно
+        if (EditorWindow.focusedWindow != this)
+            return;
+
+        evt.StopPropagation(); // Предотвращаем системное сохранение сцены
+
+        var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
+        var container = assetField?.value as DialogueContainer;
+
+        // Случай: нет привязанного файла
+        if (container == null)
+        {
+            // Проверяем, есть ли хоть какой-то контент помимо EntryNode
+            bool hasContent = graphView?.nodes != null &&
+                              graphView.nodes.OfType<BaseNode>().Any(n => !n.EntryPoint);
+
+            if (!hasContent)
+            {
+                EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded. Please create or load one first.", "OK");
+                return;
+            }
+
+            string path = EditorUtility.SaveFilePanelInProject(
+                "Save Dialogue As",
+                "NewDialogue",
+                "asset",
+                "Choose location and name for the dialogue file"
+            );
+
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            // Создаём новый контейнер
+            var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
+            var saveUtility = GraphSaveUtility.GetInstance(graphView);
+            saveUtility.SaveGraphToExistingContainer(newContainer);
+
+            // Сохраняем в AssetDatabase
+            AssetDatabase.CreateAsset(newContainer, path);
+            AssetDatabase.SaveAssets();
+
+            // Обновляем ObjectField
+            assetField.SetValueWithoutNotify(newContainer);
+
+            EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
+            return;
+        }
+
+        // Случай: файл уже задан — просто сохраняем
+        SaveCurrentDialogue();
     }
 
     /// <summary>
