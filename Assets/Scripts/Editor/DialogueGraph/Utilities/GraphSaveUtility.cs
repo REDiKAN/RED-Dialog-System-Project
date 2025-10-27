@@ -994,8 +994,6 @@ public class GraphSaveUtility
     /// </summary>
     public void LoadGraphFromContainer(DialogueContainer container)
     {
-
-
         if (container == null)
         {
             Debug.LogError("Cannot load null container");

@@ -1,101 +1,99 @@
+п»ї// Assets/Scripts/Editor/DialogueGraph/Nodes/SpeechNode.cs
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
-using UnityEditor.Search;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.UIElements;
 
 /// <summary>
-/// Узел речи NPC - содержит диалог и озвучку
-/// Может иметь множество исходящих соединений к OptionNode
+/// Р‘Р°Р·РѕРІС‹Р№ СѓР·РµР» СЂРµС‡Рё NPC вЂ” РїРѕР·РІРѕР»СЏРµС‚ РІС‹Р±РёСЂР°С‚СЊ СЃРїРёРєРµСЂР° РёР· РІС‹РїР°РґР°СЋС‰РµРіРѕ СЃРїРёСЃРєР° РїРµСЂСЃРѕРЅР°Р¶РµР№ РёР· Resources/Characters
 /// </summary>
 public class SpeechNode : BaseNode
 {
-    public string DialogueText { get; set; } // Текст диалога
-    public AudioClip AudioClip { get; set; } // Аудиофайл озвучки
+    public string DialogueText { get; set; }
+    public AudioClip AudioClip { get; set; }
+    public CharacterData Speaker;
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
+    private DropdownField speakerDropdown;
 
-    public CharacterData Speaker;
-    private ObjectField speakerField;
-
-
+    private List<string> _characterNames = new List<string>();
+    private List<CharacterData> _characterList = new List<CharacterData>();
 
     /// <summary>
-    /// Инициализация узла речи NPC
+    /// Р—Р°РіСЂСѓР¶Р°РµС‚ РІСЃРµС… РїРµСЂСЃРѕРЅР°Р¶РµР№ РёР· Resources/Characters
     /// </summary>
+    private void LoadCharacters()
+    {
+        _characterList.Clear();
+        _characterNames.Clear();
+
+        var characters = Resources.LoadAll<CharacterData>("Characters");
+        foreach (var character in characters)
+        {
+            if (character != null)
+            {
+                _characterList.Add(character);
+                _characterNames.Add(character.name);
+            }
+        }
+    }
+
     public override void Initialize(Vector2 position)
     {
+        LoadCharacters(); // в†ђ Р·Р°РіСЂСѓР¶Р°РµРј РїРµСЂСЃРѕРЅР°Р¶РµР№ Р”Рћ СЃРѕР·РґР°РЅРёСЏ UI
+
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
 
-        // Создаем входной порт с возможностью множественных подключений
+        // Input port
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // Создаем выходной порт с возможностью множественных подключений
+        // Output port
         var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 
-        // Поле для текста диалога
+        // Dialogue text
         dialogueTextField = new TextField("Dialogue Text:");
         dialogueTextField.multiline = true;
-        dialogueTextField.RegisterValueChangedCallback(evt =>
-        {
-            DialogueText = evt.newValue;
-            //title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
-        });
+        dialogueTextField.RegisterValueChangedCallback(evt => DialogueText = evt.newValue);
         dialogueTextField.SetValueWithoutNotify(DialogueText);
         mainContainer.Add(dialogueTextField);
 
-        // Поле для выбора аудиофайла
-        audioField = new ObjectField("Audio Clip");
-        audioField.objectType = typeof(AudioClip);
-        audioField.RegisterValueChangedCallback(evt =>
-        {
-            AudioClip = evt.newValue as AudioClip;
-        });
+        // Audio clip
+        audioField = new ObjectField("Audio Clip") { objectType = typeof(AudioClip) };
+        audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
 
-        speakerField = new ObjectField("Speaker");
-        speakerField.objectType = typeof(CharacterData);
-        speakerField.RegisterValueChangedCallback(evt =>
+        // Speaker dropdown
+        speakerDropdown = new DropdownField(_characterNames, 0) // РІС‹Р±РёСЂР°РµС‚ РїРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚
         {
-            Speaker = evt.newValue as CharacterData;
+            label = "Speaker"
+        };
+        speakerDropdown.RegisterValueChangedCallback(evt =>
+        {
+            int index = _characterNames.IndexOf(evt.newValue);
+            Speaker = index >= 0 ? _characterList[index] : null;
         });
-        mainContainer.Add(speakerField);
+        mainContainer.Add(speakerDropdown);
 
-        // Обновляем визуальное состояние узла
         RefreshExpandedState();
         RefreshPorts();
-
-        // Добавляем специальный стиль для SpeechNode
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
-    }
-
-    /// <summary>
-    /// Находит порт по имени
-    /// </summary>
-    public Port GetPortByName(string portName)
-    {
-        foreach (var port in outputContainer.Children())
-        {
-            if (port is Port portElement && portElement.portName == portName)
-            {
-                return portElement;
-            }
-        }
-        return null;
     }
 
     public void SetSpeaker(CharacterData speaker)
     {
         Speaker = speaker;
-        if (speakerField != null)
+        if (speakerDropdown != null)
         {
-            speakerField.SetValueWithoutNotify(speaker);
+            speakerDropdown.value = Speaker != null ? Speaker.name : "";
         }
     }
 
