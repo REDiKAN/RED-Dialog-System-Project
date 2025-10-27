@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 36cd32fd14c214ff49459b9fd5c446b3
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 326028
+  packageName: Rounded Rect Mask 2D
+  packageVersion: 1.0
+  assetPath: Assets/AntoineCherel/RoundedRectMask2D/Shaders/RoundedMaskCommon.hlsl
+  uploadId: 771759

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 2fa3c67be732d4f38be87103967c4b10
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 326028
+  packageName: Rounded Rect Mask 2D
+  packageVersion: 1.0
+  assetPath: Assets/AntoineCherel/RoundedRectMask2D/Shaders/RoundedMaskDefault.shader
+  uploadId: 771759
