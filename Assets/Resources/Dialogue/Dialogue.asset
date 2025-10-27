@@ -43,6 +43,42 @@ MonoBehaviour:
   - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
     PortName: Options
     TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Timeout
+    TargetNodeGuid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
+  - BaseNodeGuid: 96bb6006-99cd-4a56-a828-1853b269bec7
+    PortName: Options
+    TargetNodeGuid: 54f9c02e-bd6e-4145-ab0b-4b3db56081b9
   SpeechNodeDatas:
   - Guid: e2b5eedc-3934-4fcb-85cc-f91faf448e0d
     Position: {x: 724, y: 274}
@@ -59,7 +95,7 @@ MonoBehaviour:
     SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: 4797c091-37e4-41d5-8de9-87b0146dfbd9
-    Position: {x: 184, y: 41}
+    Position: {x: 236, y: 468}
     DialogueText: 1
     AudioClipGuid: 
     SpeakerGuid: 

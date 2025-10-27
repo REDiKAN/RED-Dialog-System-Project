@@ -16,12 +16,17 @@ public class TextEditorModalWindow : VisualElement
     private string _nodeGuid;
     private Action<string> _onTextChanged;
 
+    // === Undo/Redo система ===
+    private readonly int _maxHistorySteps = 50;
+    private readonly List<string> _undoStack = new List<string>();
+    private readonly List<string> _redoStack = new List<string>();
+    private bool _isUndoRedoOperation = false;
+
     public TextEditorModalWindow(string initialText, string nodeGuid, Action<string> onTextChanged)
     {
         _text = initialText ?? "";
         _nodeGuid = nodeGuid;
         _onTextChanged = onTextChanged;
-
         style.flexDirection = FlexDirection.Column;
         style.backgroundColor = new StyleColor(new Color(0.15f, 0.15f, 0.15f));
         style.borderTopWidth = style.borderBottomWidth = style.borderLeftWidth = style.borderRightWidth = 1;
@@ -57,34 +62,29 @@ public class TextEditorModalWindow : VisualElement
         };
         Add(formatHeader);
 
-        // --- Контейнер для всех кнопок форматирования ---
         var formattingGroup = new VisualElement
         {
             style =
-    {
-        //backgroundColor = new StyleColor(new Color(0.2f, 0.2f, 0.2f)),
-        paddingTop = 8,
-        paddingBottom = 8,
-        paddingLeft = 8,
-        paddingRight = 8,
-        //borderRadius = 4,
-        marginBottom = 8,
-        flexWrap = Wrap.Wrap,
-        flexDirection = FlexDirection.Row,
-        alignItems = Align.FlexStart,
-        justifyContent = Justify.FlexStart,
-        minHeight = 36 // Минимум под 1 строку кнопок
-    }
+            {
+                paddingTop = 8,
+                paddingBottom = 8,
+                paddingLeft = 8,
+                paddingRight = 8,
+                marginBottom = 8,
+                flexWrap = Wrap.Wrap,
+                flexDirection = FlexDirection.Row,
+                alignItems = Align.FlexStart,
+                justifyContent = Justify.FlexStart,
+                minHeight = 36
+            }
         };
-        formattingGroup.style.flexGrow = 0; // Не растягивать по высоте принудительно
+        formattingGroup.style.flexGrow = 0;
 
-        // Базовое форматирование
         AddButton(formattingGroup, "B", "<b>", "</b>", "жирный текст");
         AddButton(formattingGroup, "I", "<i>", "</i>", "курсив");
         AddButton(formattingGroup, "S", "<s>", "</s>", "зачёркнутый");
         AddButton(formattingGroup, "U", "<u>", "</u>", "подчёркнутый");
 
-        // Расширенное форматирование
         var btnColor = new Button(OpenColorPicker) { text = "Цвет" };
         var btnSize = new Button(OpenSizePicker) { text = "Размер" };
         var btnSprite = new Button(OpenSpritePicker) { text = "Спрайт" };
@@ -98,11 +98,10 @@ public class TextEditorModalWindow : VisualElement
         foreach (var btn in advancedButtons)
         {
             btn.style.marginRight = 4;
-            btn.style.marginBottom = 4; // ← Добавлен нижний отступ для переноса
+            btn.style.marginBottom = 4;
             btn.style.height = 24;
             formattingGroup.Add(btn);
         }
-
         Add(formattingGroup);
 
         // --- Кнопки конвертации (отдельно) ---
@@ -111,12 +110,10 @@ public class TextEditorModalWindow : VisualElement
         btnToTMP.style.backgroundColor = new StyleColor(new Color(0.2f, 0.4f, 0.6f));
         btnToTMP.style.color = Color.white;
         btnToTMP.style.marginLeft = 4;
-
         var btnToMD = new Button(ConvertToMarkdown) { text = "← MD" };
         btnToMD.style.backgroundColor = new StyleColor(new Color(0.4f, 0.2f, 0.6f));
         btnToMD.style.color = Color.white;
         btnToMD.style.marginLeft = 4;
-
         convertToolbar.Add(btnToTMP);
         convertToolbar.Add(btnToMD);
         Add(convertToolbar);
@@ -126,24 +123,63 @@ public class TextEditorModalWindow : VisualElement
         {
             EditorGUI.BeginChangeCheck();
             var rect = GUILayoutUtility.GetRect(0, 1000, 200, 600);
+
+            // ВАЖНО: всегда используем _text как источник истины
             var newText = EditorGUI.TextArea(rect, _text);
+
+            // Обработка горячих клавиш
+            if (Event.current.type == EventType.KeyDown && Event.current.control)
+            {
+                if (Event.current.keyCode == KeyCode.Z && !_isUndoRedoOperation)
+                {
+                    PerformUndo();
+                    Event.current.Use();
+                    GUI.changed = true; // ← критически важно
+                    return; // ← выходим, чтобы не обрабатывать EndChangeCheck
+                }
+                else if (Event.current.keyCode == KeyCode.Y && !_isUndoRedoOperation)
+                {
+                    PerformRedo();
+                    Event.current.Use();
+                    GUI.changed = true;
+                    return;
+                }
+            }
+
             if (Event.current.type == EventType.Repaint)
             {
                 var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
                 _selectionStart = editor.cursorIndex;
                 _selectionEnd = editor.selectIndex;
             }
-            if (EditorGUI.EndChangeCheck())
+
+            if (EditorGUI.EndChangeCheck() && !_isUndoRedoOperation)
             {
+                PushToUndoStack(_text);
                 _text = newText;
                 _onTextChanged?.Invoke(_text);
+                _redoStack.Clear();
             }
         });
         _imguiContainer.style.flexGrow = 1;
         Add(_imguiContainer);
 
-        // Кнопки Copy / Paste / Clear
+        // Кнопки Copy / Paste / Clear + Undo / Redo
         var buttonRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
+
+        var undoBtn = new Button(PerformUndo) { text = "Undo" };
+        var redoBtn = new Button(PerformRedo) { text = "Redo" };
+
+        // Обновление состояния кнопок
+        _imguiContainer.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            undoBtn.SetEnabled(_undoStack.Count > 0);
+            redoBtn.SetEnabled(_redoStack.Count > 0);
+        });
+
+        buttonRow.Add(undoBtn);
+        buttonRow.Add(redoBtn);
+
         var copyBtn = new Button(() => EditorGUIUtility.systemCopyBuffer = _text) { text = "Copy" };
         var pasteBtn = new Button(() =>
         {
@@ -151,6 +187,8 @@ public class TextEditorModalWindow : VisualElement
             {
                 _text = EditorGUIUtility.systemCopyBuffer;
                 _onTextChanged?.Invoke(_text);
+                PushToUndoStack(_text);
+                _redoStack.Clear();
             }
         })
         { text = "Paste" };
@@ -158,8 +196,11 @@ public class TextEditorModalWindow : VisualElement
         {
             _text = "";
             _onTextChanged?.Invoke("");
+            PushToUndoStack("");
+            _redoStack.Clear();
         })
         { text = "Clear" };
+
         buttonRow.Add(copyBtn);
         buttonRow.Add(pasteBtn);
         buttonRow.Add(clearBtn);
@@ -347,9 +388,11 @@ public class TextEditorModalWindow : VisualElement
 
     public void Close()
     {
+        _undoStack.Clear();
+        _redoStack.Clear();
+
         this.RemoveFromHierarchy();
     }
-
     private void ConvertToTMP()
     {
         if (string.IsNullOrEmpty(_text)) return;
@@ -366,5 +409,48 @@ public class TextEditorModalWindow : VisualElement
         _text = markdown;
         _onTextChanged?.Invoke(_text);
         _imguiContainer.MarkDirtyRepaint();
+    }
+
+    // === Undo/Redo вспомогательные методы ===
+
+    private void PushToUndoStack(string state)
+    {
+        _undoStack.Add(state);
+        if (_undoStack.Count > _maxHistorySteps)
+            _undoStack.RemoveAt(0);
+    }
+
+    private void PerformUndo()
+    {
+        if (_undoStack.Count == 0) return;
+
+        _isUndoRedoOperation = true;
+        _redoStack.Add(_text);
+        _text = _undoStack[_undoStack.Count - 1];
+        _undoStack.RemoveAt(_undoStack.Count - 1);
+        _onTextChanged?.Invoke(_text);
+        _isUndoRedoOperation = false;
+
+        _imguiContainer.MarkDirtyRepaint();
+
+        _imguiContainer.MarkDirtyRepaint();
+        GUI.changed = true;
+    }
+
+    private void PerformRedo()
+    {
+        if (_redoStack.Count == 0) return;
+
+        _isUndoRedoOperation = true;
+        _undoStack.Add(_text);
+        _text = _redoStack[_redoStack.Count - 1];
+        _redoStack.RemoveAt(_redoStack.Count - 1);
+        _onTextChanged?.Invoke(_text);
+        _isUndoRedoOperation = false;
+
+        _imguiContainer.MarkDirtyRepaint();
+
+        _imguiContainer.MarkDirtyRepaint();
+        GUI.changed = true;
     }
 }
