@@ -18,7 +18,6 @@ public class SpeechNodeRandText : BaseNode
     {
         public SpeechVariant Data;
         public VisualElement Container;
-        public TextEditorModalWindow ModalWindow;
         public Label PreviewLabel;
         public FloatField WeightField;
         public Button RemoveButton;
@@ -228,16 +227,11 @@ public class SpeechNodeRandText : BaseNode
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
 
-        var modal = new TextEditorModalWindow(variant.Text, GUID, newText =>
+        graphView.OpenTextEditor(variant.Text, GUID, newText =>
         {
             variant.Text = newText;
             previewLabel.text = string.IsNullOrEmpty(newText) ? "(empty)" : newText;
         });
-        modal.style.position = Position.Absolute;
-        modal.style.top = 30;
-        modal.style.right = 0;
-        modal.style.width = 500;
-        graphView.Add(modal);
     }
 
     private void UpdateTotalWeight()

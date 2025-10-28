@@ -6,7 +6,6 @@ public class DebugWarningNode : BaseNode
 {
     public Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     public string MessageText { get; set; } = "";
 
     public override void Initialize(Vector2 position)
@@ -23,7 +22,6 @@ public class DebugWarningNode : BaseNode
         outputContainer.Add(outputPort);
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -63,15 +61,6 @@ public class DebugWarningNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         var contentHeight = _previewLabel.layout.height;
@@ -87,15 +76,11 @@ public class DebugWarningNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null) _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(MessageText, GUID, newText =>
+
+        graphView.OpenTextEditor(MessageText, GUID, newText =>
         {
             MessageText = newText;
             _previewLabel.text = MessageText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 }

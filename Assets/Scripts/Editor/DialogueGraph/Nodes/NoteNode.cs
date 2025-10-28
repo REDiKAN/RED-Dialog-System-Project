@@ -14,7 +14,6 @@ public class NoteNode : BaseNode
 
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     private ColorField _colorField;
 
     public override void Initialize(Vector2 position)
@@ -33,7 +32,6 @@ public class NoteNode : BaseNode
         capabilities |= Capabilities.Collapsible;
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -94,15 +92,6 @@ public class NoteNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         // Автоматически подстраиваем высоту узла под содержимое
@@ -121,18 +110,11 @@ public class NoteNode : BaseNode
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
 
-        if (_modalWindow != null)
-            _modalWindow.Close();
-
-        _modalWindow = new TextEditorModalWindow(NoteText, GUID, newText =>
+        graphView.OpenTextEditor(NoteText, GUID, newText =>
         {
             NoteText = newText;
             _previewLabel.text = NoteText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 
     private void UpdateBackgroundColor()

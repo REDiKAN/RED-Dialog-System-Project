@@ -7,7 +7,6 @@ public class SpeechNodeText : SpeechNode
 {
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
 
     public override void Initialize(Vector2 position)
     {
@@ -76,20 +75,17 @@ public class SpeechNodeText : SpeechNode
     private void OpenTextEditor()
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
-        if (graphView == null) return;
+        if (graphView == null)
+        {
+            Debug.LogWarning("SpeechNodeText: DialogueGraphView not found. Cannot open text editor.");
+            return;
+        }
 
-        if (_modalWindow != null)
-            _modalWindow.Close();
-
-        _modalWindow = new TextEditorModalWindow(DialogueText, GUID, newText =>
+        graphView.OpenTextEditor(DialogueText, GUID, newText =>
         {
             DialogueText = newText;
             _previewLabel.text = DialogueText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 
     public override void SetDialogueText(string text)

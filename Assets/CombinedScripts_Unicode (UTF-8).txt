@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.10.2025 19:17:01
+// Generation Time: 28.10.2025 21:07:28
 // Total Files: 83
 // =================================
 
@@ -2195,9 +2195,22 @@ public class DialogueGraph : EditorWindow
 
     private void UpdateAllSpeechNodesSpeaker(CharacterData character)
     {
-        foreach (var node in graphView.nodes.ToList().OfType<SpeechNode>())
+        if (character == null) return;
+
+        foreach (var node in graphView.nodes.ToList())
         {
-            node.SetSpeaker(character);
+            switch (node)
+            {
+                case SpeechNode speechNode when speechNode.Speaker == null:
+                    speechNode.SetSpeaker(character);
+                    break;
+                case SpeechNodeImage speechImageNode when speechImageNode.Speaker == null:
+                    speechImageNode.SetSpeaker(character);
+                    break;
+                case SpeechNodeRandText speechRandNode when speechRandNode.Speaker == null:
+                    speechRandNode.SetSpeaker(character);
+                    break;
+            }
         }
     }
 
@@ -2793,6 +2806,8 @@ public class DialogueGraphView : GraphView
     public bool _unsavedChangesWarningShown = false;
 
     private string _baseCharacterGuid;
+
+    private TextEditorModalWindow _activeTextEditorWindow;
     public string BaseCharacterGuid
     {
         get => _baseCharacterGuid;
@@ -3629,6 +3644,21 @@ public class DialogueGraphView : GraphView
             _hasUnsavedChangesWithoutFile = false;
             _unsavedChangesWarningShown = false;
         }
+    }
+
+    public void OpenTextEditor(string initialText, string nodeGuid, Action<string> onTextChanged)
+    {
+        if (_activeTextEditorWindow != null)
+        {
+            _activeTextEditorWindow.Close();
+            _activeTextEditorWindow = null;
+        }
+
+        _activeTextEditorWindow = new TextEditorModalWindow(initialText, nodeGuid, onTextChanged);
+        _activeTextEditorWindow.style.position = Position.Absolute;
+        _activeTextEditorWindow.style.top = 30;
+        _activeTextEditorWindow.style.right = 0;
+        Add(_activeTextEditorWindow);
     }
 }
 
@@ -5201,10 +5231,8 @@ public class NoteNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-
         if (_modalWindow != null)
             _modalWindow.Close();
-
         _modalWindow = new TextEditorModalWindow(NoteText, GUID, newText =>
         {
             NoteText = newText;
@@ -5494,10 +5522,8 @@ public class OptionNodeText : OptionNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-
         if (_modalWindow != null)
             _modalWindow.Close();
-
         _modalWindow = new TextEditorModalWindow(ResponseText, GUID, newText =>
         {
             ResponseText = newText;
@@ -5888,34 +5914,10 @@ public class SpeechNode : BaseNode
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
-    private DropdownField speakerDropdown;
-
-    private List<string> _characterNames = new List<string>();
-    private List<CharacterData> _characterList = new List<CharacterData>();
-
-    /// <summary>
-    /// Загружает всех персонажей из Resources/Characters
-    /// </summary>
-    private void LoadCharacters()
-    {
-        _characterList.Clear();
-        _characterNames.Clear();
-
-        var characters = Resources.LoadAll<CharacterData>("Characters");
-        foreach (var character in characters)
-        {
-            if (character != null)
-            {
-                _characterList.Add(character);
-                _characterNames.Add(character.name);
-            }
-        }
-    }
+    private ObjectField speakerField;
 
     public override void Initialize(Vector2 position)
     {
-        LoadCharacters(); // ← загружаем персонажей ДО создания UI
-
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
@@ -5942,17 +5944,13 @@ public class SpeechNode : BaseNode
         audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
 
-        // Speaker dropdown
-        speakerDropdown = new DropdownField(_characterNames, 0) // выбирает первый элемент
+        // Speaker drag-and-drop field
+        speakerField = new ObjectField("Speaker") { objectType = typeof(CharacterData) };
+        speakerField.RegisterValueChangedCallback(evt =>
         {
-            label = "Speaker"
-        };
-        speakerDropdown.RegisterValueChangedCallback(evt =>
-        {
-            int index = _characterNames.IndexOf(evt.newValue);
-            Speaker = index >= 0 ? _characterList[index] : null;
+            Speaker = evt.newValue as CharacterData;
         });
-        mainContainer.Add(speakerDropdown);
+        mainContainer.Add(speakerField);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -5962,10 +5960,8 @@ public class SpeechNode : BaseNode
     public void SetSpeaker(CharacterData speaker)
     {
         Speaker = speaker;
-        if (speakerDropdown != null)
-        {
-            speakerDropdown.value = Speaker != null ? Speaker.name : "";
-        }
+        if (speakerField != null)
+            speakerField.SetValueWithoutNotify(speaker);
     }
 
     public virtual void SetDialogueText(string text)
@@ -6274,7 +6270,6 @@ public class SpeechNodeRandText : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-
         var modal = new TextEditorModalWindow(variant.Text, GUID, newText =>
         {
             variant.Text = newText;
@@ -6417,19 +6412,28 @@ public class SpeechNodeText : SpeechNode
     private void OpenTextEditor()
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
-        if (graphView == null) return;
+        if (graphView == null)
+        {
+            Debug.LogWarning("SpeechNodeText: DialogueGraphView not found. Cannot open text editor.");
+            return;
+        }
 
         if (_modalWindow != null)
+        {
             _modalWindow.Close();
+            _modalWindow = null;
+        }
 
         _modalWindow = new TextEditorModalWindow(DialogueText, GUID, newText =>
         {
             DialogueText = newText;
             _previewLabel.text = DialogueText;
         });
+
         _modalWindow.style.position = Position.Absolute;
         _modalWindow.style.top = 30;
         _modalWindow.style.right = 0;
+
         graphView.Add(_modalWindow);
     }
 
@@ -8468,9 +8472,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 298,54 KB
-// Total Lines: 8296
+// Total Size: 299,03 KB
+// Total Lines: 8300
 // Classes: 86
-// Methods: 500
-// Comments: 737
+// Methods: 499
+// Comments: 734
 // =====================================

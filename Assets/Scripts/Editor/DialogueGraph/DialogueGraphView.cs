@@ -30,6 +30,8 @@ public class DialogueGraphView : GraphView
     public bool _unsavedChangesWarningShown = false;
 
     private string _baseCharacterGuid;
+
+    private TextEditorModalWindow _activeTextEditorWindow;
     public string BaseCharacterGuid
     {
         get => _baseCharacterGuid;
@@ -866,5 +868,20 @@ public class DialogueGraphView : GraphView
             _hasUnsavedChangesWithoutFile = false;
             _unsavedChangesWarningShown = false;
         }
+    }
+
+    public void OpenTextEditor(string initialText, string nodeGuid, Action<string> onTextChanged)
+    {
+        if (_activeTextEditorWindow != null)
+        {
+            _activeTextEditorWindow.Close();
+            _activeTextEditorWindow = null;
+        }
+
+        _activeTextEditorWindow = new TextEditorModalWindow(initialText, nodeGuid, onTextChanged);
+        _activeTextEditorWindow.style.position = Position.Absolute;
+        _activeTextEditorWindow.style.top = 30;
+        _activeTextEditorWindow.style.right = 0;
+        Add(_activeTextEditorWindow);
     }
 }

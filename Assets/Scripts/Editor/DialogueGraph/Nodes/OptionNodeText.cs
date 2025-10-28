@@ -7,7 +7,6 @@ public class OptionNodeText : OptionNode
 {
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
 
     public override void Initialize(Vector2 position)
     {
@@ -72,18 +71,11 @@ public class OptionNodeText : OptionNode
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
 
-        if (_modalWindow != null)
-            _modalWindow.Close();
-
-        _modalWindow = new TextEditorModalWindow(ResponseText, GUID, newText =>
+        graphView.OpenTextEditor(ResponseText, GUID, newText =>
         {
             ResponseText = newText;
             _previewLabel.text = ResponseText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 
     public override void SetResponseText(string text)
