@@ -29,6 +29,9 @@ public class DialogueGraphView : GraphView
     public bool _hasUnsavedChangesWithoutFile = false;
     public bool _unsavedChangesWarningShown = false;
 
+    private VisualElement _highlightedNode;
+    private StyleColor _originalNodeBgColor;
+
     private string _baseCharacterGuid;
 
     private TextEditorModalWindow _activeTextEditorWindow;
@@ -872,16 +875,81 @@ public class DialogueGraphView : GraphView
 
     public void OpenTextEditor(string initialText, string nodeGuid, Action<string> onTextChanged)
     {
-        if (_activeTextEditorWindow != null)
+        // Закрываем предыдущее окно (оно само вызовет ClearNodeHighlight)
+        _activeTextEditorWindow?.Close();
+        _activeTextEditorWindow = null;
+
+        // ←←← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: явно сбросить выделение, даже если окно не было открыто
+        ClearNodeHighlight();
+
+        // Находим целевой узел
+        var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == nodeGuid) as VisualElement;
+        if (targetNode != null)
         {
-            _activeTextEditorWindow.Close();
-            _activeTextEditorWindow = null;
+            _originalNodeBgColor = targetNode.style.backgroundColor;
+            targetNode.style.backgroundColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.2f));
+            _highlightedNode = targetNode;
         }
 
-        _activeTextEditorWindow = new TextEditorModalWindow(initialText, nodeGuid, onTextChanged);
+        _activeTextEditorWindow = new TextEditorModalWindow(this, initialText, nodeGuid, onTextChanged);
         _activeTextEditorWindow.style.position = Position.Absolute;
         _activeTextEditorWindow.style.top = 30;
         _activeTextEditorWindow.style.right = 0;
         Add(_activeTextEditorWindow);
+
+        ScrollToNode(nodeGuid);
+    }
+
+    public void ScrollToNode(string guid)
+    {
+        var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == guid);
+        if (targetNode == null) return;
+
+        var nodeRect = targetNode.GetPosition();
+        var center = nodeRect.center;
+
+        // Размер области просмотра
+        float viewWidth = this.layout.width;
+        float viewHeight = this.layout.height;
+
+        // Целевая позиция прокрутки с отступами 50px
+        Vector2 targetScroll = center - new Vector2(viewWidth * 0.5f - 50f, viewHeight * 0.5f - 50f);
+
+        // Применяем с небольшой задержкой для корректного layout
+        contentViewContainer.schedule.Execute(() =>
+        {
+            SetViewScroll(targetScroll);
+        }).ExecuteLater(50);
+    }
+
+    private void SetViewScroll(Vector2 scrollPosition)
+    {
+        var viewType = typeof(GraphView);
+        var field = viewType.GetField("_viewTransform", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field != null)
+        {
+            var matrix = Matrix4x4.Translate(new Vector3(-scrollPosition.x, -scrollPosition.y, 0));
+            field.SetValue(this, matrix);
+        }
+    }
+
+    public void ClearNodeSelection()
+    {
+        foreach (var element in selection.ToList())
+        {
+            if (element is VisualElement visualElement)
+            {
+                visualElement.RemoveFromClassList("selected");
+            }
+        }
+        selection.Clear();
+    }
+
+    public void ClearNodeHighlight()
+    {
+        if (_highlightedNode != null && _highlightedNode.parent != null)
+            _highlightedNode.style.backgroundColor = _originalNodeBgColor;
+
+        _highlightedNode = null;
     }
 }

@@ -16,14 +16,21 @@ public class TextEditorModalWindow : VisualElement
     private string _nodeGuid;
     private Action<string> _onTextChanged;
 
+    private DialogueGraphView _graphView;
+
     // === Undo/Redo система ===
     private readonly int _maxHistorySteps = 50;
     private readonly List<string> _undoStack = new List<string>();
     private readonly List<string> _redoStack = new List<string>();
     private bool _isUndoRedoOperation = false;
 
-    public TextEditorModalWindow(string initialText, string nodeGuid, Action<string> onTextChanged)
+    public TextEditorModalWindow(DialogueGraphView graphView, string initialText, string nodeGuid, Action<string> onTextChanged)
     {
+        _graphView = graphView;
+        _text = initialText ?? "";
+        _nodeGuid = nodeGuid;
+        _onTextChanged = onTextChanged;
+
         _text = initialText ?? "";
         _nodeGuid = nodeGuid;
         _onTextChanged = onTextChanged;
@@ -388,6 +395,8 @@ public class TextEditorModalWindow : VisualElement
 
     public void Close()
     {
+        _graphView?.ClearNodeHighlight();
+
         _undoStack.Clear();
         _redoStack.Clear();
 

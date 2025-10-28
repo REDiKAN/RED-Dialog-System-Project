@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.10.2025 21:07:28
+// Generation Time: 28.10.2025 22:13:18
 // Total Files: 83
 // =================================
 
@@ -2683,9 +2683,14 @@ public class TextEditorModalWindow : VisualElement
 
     public void Close()
     {
+        var graphView = this.parent?.GetFirstAncestorOfType<DialogueGraphView>();
+        if (graphView != null)
+        {
+            graphView.ClearNodeHighlight();   // Убирает фоновую подсветку
+            graphView.ClearNodeSelection();   // ← КРИТИЧЕСКИ ВАЖНО: сбрасывает selection
+        }
         _undoStack.Clear();
         _redoStack.Clear();
-
         this.RemoveFromHierarchy();
     }
     private void ConvertToTMP()
@@ -2804,6 +2809,9 @@ public class DialogueGraphView : GraphView
 
     public bool _hasUnsavedChangesWithoutFile = false;
     public bool _unsavedChangesWarningShown = false;
+
+    private VisualElement _highlightedNode;
+    private StyleColor _originalNodeBgColor;
 
     private string _baseCharacterGuid;
 
@@ -3654,11 +3662,79 @@ public class DialogueGraphView : GraphView
             _activeTextEditorWindow = null;
         }
 
+        // Найти узел по GUID
+        var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == nodeGuid) as VisualElement;
+        if (targetNode != null)
+        {
+            // Сохранить оригинальный фон
+            _originalNodeBgColor = targetNode.style.backgroundColor;
+            // Применить полупрозрачное выделение
+            targetNode.style.backgroundColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.2f));
+            _highlightedNode = targetNode;
+        }
+
         _activeTextEditorWindow = new TextEditorModalWindow(initialText, nodeGuid, onTextChanged);
         _activeTextEditorWindow.style.position = Position.Absolute;
         _activeTextEditorWindow.style.top = 30;
         _activeTextEditorWindow.style.right = 0;
         Add(_activeTextEditorWindow);
+
+        // Прокрутка к узлу (если реализована)
+        ScrollToNode(nodeGuid);
+    }
+
+    public void ScrollToNode(string guid)
+    {
+        var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == guid);
+        if (targetNode == null) return;
+
+        var nodeRect = targetNode.GetPosition();
+        var center = nodeRect.center;
+
+        // Размер области просмотра
+        float viewWidth = this.layout.width;
+        float viewHeight = this.layout.height;
+
+        // Целевая позиция прокрутки с отступами 50px
+        Vector2 targetScroll = center - new Vector2(viewWidth * 0.5f - 50f, viewHeight * 0.5f - 50f);
+
+        // Применяем с небольшой задержкой для корректного layout
+        contentViewContainer.schedule.Execute(() =>
+        {
+            SetViewScroll(targetScroll);
+        }).ExecuteLater(50);
+    }
+
+    private void SetViewScroll(Vector2 scrollPosition)
+    {
+        var viewType = typeof(GraphView);
+        var field = viewType.GetField("_viewTransform", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field != null)
+        {
+            var matrix = Matrix4x4.Translate(new Vector3(-scrollPosition.x, -scrollPosition.y, 0));
+            field.SetValue(this, matrix);
+        }
+    }
+
+    public void ClearNodeSelection()
+    {
+        foreach (var element in selection.ToList())
+        {
+            if (element is VisualElement visualElement)
+            {
+                visualElement.RemoveFromClassList("selected");
+            }
+        }
+        selection.Clear();
+    }
+
+    public void ClearNodeHighlight()
+    {
+        if (_highlightedNode != null && _highlightedNode.parent != null)
+        {
+            _highlightedNode.style.backgroundColor = _originalNodeBgColor;
+        }
+        _highlightedNode = null;
     }
 }
 
@@ -4372,7 +4448,6 @@ public class DebugErrorNode : BaseNode
 {
     public Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     public string MessageText { get; set; } = "";
 
     public override void Initialize(Vector2 position)
@@ -4389,7 +4464,6 @@ public class DebugErrorNode : BaseNode
         outputContainer.Add(outputPort);
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -4429,15 +4503,6 @@ public class DebugErrorNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         var contentHeight = _previewLabel.layout.height;
@@ -4453,16 +4518,12 @@ public class DebugErrorNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null) _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(MessageText, GUID, newText =>
+
+        graphView.OpenTextEditor(MessageText, GUID, newText =>
         {
             MessageText = newText;
             _previewLabel.text = MessageText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 }
 
@@ -4475,7 +4536,6 @@ public class DebugLogNode : BaseNode
 {
     public Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     public string MessageText { get; set; } = "";
 
     public override void Initialize(Vector2 position)
@@ -4492,7 +4552,6 @@ public class DebugLogNode : BaseNode
         outputContainer.Add(outputPort);
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -4532,15 +4591,6 @@ public class DebugLogNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         var contentHeight = _previewLabel.layout.height;
@@ -4556,16 +4606,12 @@ public class DebugLogNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null) _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(MessageText, GUID, newText =>
+
+        graphView.OpenTextEditor(MessageText, GUID, newText =>
         {
             MessageText = newText;
             _previewLabel.text = MessageText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 }
 
@@ -4578,7 +4624,6 @@ public class DebugWarningNode : BaseNode
 {
     public Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     public string MessageText { get; set; } = "";
 
     public override void Initialize(Vector2 position)
@@ -4595,7 +4640,6 @@ public class DebugWarningNode : BaseNode
         outputContainer.Add(outputPort);
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -4635,15 +4679,6 @@ public class DebugWarningNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         var contentHeight = _previewLabel.layout.height;
@@ -4659,16 +4694,12 @@ public class DebugWarningNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null) _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(MessageText, GUID, newText =>
+
+        graphView.OpenTextEditor(MessageText, GUID, newText =>
         {
             MessageText = newText;
             _previewLabel.text = MessageText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 }
 
@@ -5125,7 +5156,6 @@ public class NoteNode : BaseNode
 
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
     private ColorField _colorField;
 
     public override void Initialize(Vector2 position)
@@ -5144,7 +5174,6 @@ public class NoteNode : BaseNode
         capabilities |= Capabilities.Collapsible;
 
         this.RegisterCallback<AttachToPanelEvent>(OnAttachedToPanel);
-        this.RegisterCallback<DetachFromPanelEvent>(OnDetachedFromPanel);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -5205,15 +5234,6 @@ public class NoteNode : BaseNode
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
     }
 
-    private void OnDetachedFromPanel(DetachFromPanelEvent evt)
-    {
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-    }
-
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         // Автоматически подстраиваем высоту узла под содержимое
@@ -5231,17 +5251,12 @@ public class NoteNode : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null)
-            _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(NoteText, GUID, newText =>
+
+        graphView.OpenTextEditor(NoteText, GUID, newText =>
         {
             NoteText = newText;
             _previewLabel.text = NoteText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 
     private void UpdateBackgroundColor()
@@ -5458,7 +5473,6 @@ public class OptionNodeText : OptionNode
 {
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
 
     public override void Initialize(Vector2 position)
     {
@@ -5522,17 +5536,12 @@ public class OptionNodeText : OptionNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        if (_modalWindow != null)
-            _modalWindow.Close();
-        _modalWindow = new TextEditorModalWindow(ResponseText, GUID, newText =>
+
+        graphView.OpenTextEditor(ResponseText, GUID, newText =>
         {
             ResponseText = newText;
             _previewLabel.text = ResponseText;
         });
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-        graphView.Add(_modalWindow);
     }
 
     public override void SetResponseText(string text)
@@ -6061,7 +6070,6 @@ public class SpeechNodeRandText : BaseNode
     {
         public SpeechVariant Data;
         public VisualElement Container;
-        public TextEditorModalWindow ModalWindow;
         public Label PreviewLabel;
         public FloatField WeightField;
         public Button RemoveButton;
@@ -6270,16 +6278,12 @@ public class SpeechNodeRandText : BaseNode
     {
         var graphView = GetFirstAncestorOfType<DialogueGraphView>();
         if (graphView == null) return;
-        var modal = new TextEditorModalWindow(variant.Text, GUID, newText =>
+
+        graphView.OpenTextEditor(variant.Text, GUID, newText =>
         {
             variant.Text = newText;
             previewLabel.text = string.IsNullOrEmpty(newText) ? "(empty)" : newText;
         });
-        modal.style.position = Position.Absolute;
-        modal.style.top = 30;
-        modal.style.right = 0;
-        modal.style.width = 500;
-        graphView.Add(modal);
     }
 
     private void UpdateTotalWeight()
@@ -6343,7 +6347,6 @@ public class SpeechNodeText : SpeechNode
 {
     private Label _previewLabel;
     private Button _editButton;
-    private TextEditorModalWindow _modalWindow;
 
     public override void Initialize(Vector2 position)
     {
@@ -6418,23 +6421,11 @@ public class SpeechNodeText : SpeechNode
             return;
         }
 
-        if (_modalWindow != null)
-        {
-            _modalWindow.Close();
-            _modalWindow = null;
-        }
-
-        _modalWindow = new TextEditorModalWindow(DialogueText, GUID, newText =>
+        graphView.OpenTextEditor(DialogueText, GUID, newText =>
         {
             DialogueText = newText;
             _previewLabel.text = DialogueText;
         });
-
-        _modalWindow.style.position = Position.Absolute;
-        _modalWindow.style.top = 30;
-        _modalWindow.style.right = 0;
-
-        graphView.Add(_modalWindow);
     }
 
     public override void SetDialogueText(string text)
@@ -8472,9 +8463,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 299,03 KB
-// Total Lines: 8300
+// Total Size: 298,86 KB
+// Total Lines: 8291
 // Classes: 86
 // Methods: 499
-// Comments: 734
+// Comments: 741
 // =====================================
