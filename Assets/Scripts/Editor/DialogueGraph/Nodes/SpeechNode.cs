@@ -17,34 +17,10 @@ public class SpeechNode : BaseNode
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
-    private DropdownField speakerDropdown;
-
-    private List<string> _characterNames = new List<string>();
-    private List<CharacterData> _characterList = new List<CharacterData>();
-
-    /// <summary>
-    /// Загружает всех персонажей из Resources/Characters
-    /// </summary>
-    private void LoadCharacters()
-    {
-        _characterList.Clear();
-        _characterNames.Clear();
-
-        var characters = Resources.LoadAll<CharacterData>("Characters");
-        foreach (var character in characters)
-        {
-            if (character != null)
-            {
-                _characterList.Add(character);
-                _characterNames.Add(character.name);
-            }
-        }
-    }
+    private ObjectField speakerField;
 
     public override void Initialize(Vector2 position)
     {
-        LoadCharacters(); // ← загружаем персонажей ДО создания UI
-
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
@@ -71,17 +47,13 @@ public class SpeechNode : BaseNode
         audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
 
-        // Speaker dropdown
-        speakerDropdown = new DropdownField(_characterNames, 0) // выбирает первый элемент
+        // Speaker drag-and-drop field
+        speakerField = new ObjectField("Speaker") { objectType = typeof(CharacterData) };
+        speakerField.RegisterValueChangedCallback(evt =>
         {
-            label = "Speaker"
-        };
-        speakerDropdown.RegisterValueChangedCallback(evt =>
-        {
-            int index = _characterNames.IndexOf(evt.newValue);
-            Speaker = index >= 0 ? _characterList[index] : null;
+            Speaker = evt.newValue as CharacterData;
         });
-        mainContainer.Add(speakerDropdown);
+        mainContainer.Add(speakerField);
 
         RefreshExpandedState();
         RefreshPorts();
@@ -91,10 +63,8 @@ public class SpeechNode : BaseNode
     public void SetSpeaker(CharacterData speaker)
     {
         Speaker = speaker;
-        if (speakerDropdown != null)
-        {
-            speakerDropdown.value = Speaker != null ? Speaker.name : "";
-        }
+        if (speakerField != null)
+            speakerField.SetValueWithoutNotify(speaker);
     }
 
     public virtual void SetDialogueText(string text)

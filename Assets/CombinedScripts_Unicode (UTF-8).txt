@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.10.2025 0:39:17
+// Generation Time: 28.10.2025 19:17:01
 // Total Files: 83
 // =================================
 
@@ -5869,104 +5869,102 @@ public class RandomBranchNode : BaseNode
 }
 
 //==== File 44 of 83: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Nodes\SpeechNode.cs ====
+// Assets/Scripts/Editor/DialogueGraph/Nodes/SpeechNode.cs
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
-using UnityEditor.Search;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.UIElements;
 
 /// <summary>
-/// ���� ���� NPC - �������� ������ � �������
-/// ����� ����� ��������� ��������� ���������� � OptionNode
+/// Базовый узел речи NPC — позволяет выбирать спикера из выпадающего списка персонажей из Resources/Characters
 /// </summary>
 public class SpeechNode : BaseNode
 {
-    public string DialogueText { get; set; } // ����� �������
-    public AudioClip AudioClip { get; set; } // ��������� �������
+    public string DialogueText { get; set; }
+    public AudioClip AudioClip { get; set; }
+    public CharacterData Speaker;
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
+    private DropdownField speakerDropdown;
 
-    public CharacterData Speaker;
-    private ObjectField speakerField;
-
-
+    private List<string> _characterNames = new List<string>();
+    private List<CharacterData> _characterList = new List<CharacterData>();
 
     /// <summary>
-    /// ������������� ���� ���� NPC
+    /// Загружает всех персонажей из Resources/Characters
     /// </summary>
+    private void LoadCharacters()
+    {
+        _characterList.Clear();
+        _characterNames.Clear();
+
+        var characters = Resources.LoadAll<CharacterData>("Characters");
+        foreach (var character in characters)
+        {
+            if (character != null)
+            {
+                _characterList.Add(character);
+                _characterNames.Add(character.name);
+            }
+        }
+    }
+
     public override void Initialize(Vector2 position)
     {
+        LoadCharacters(); // ← загружаем персонажей ДО создания UI
+
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
 
-        // ������� ������� ���� � ������������ ������������� �����������
+        // Input port
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // ������� �������� ���� � ������������ ������������� �����������
+        // Output port
         var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 
-        // ���� ��� ������ �������
+        // Dialogue text
         dialogueTextField = new TextField("Dialogue Text:");
         dialogueTextField.multiline = true;
-        dialogueTextField.RegisterValueChangedCallback(evt =>
-        {
-            DialogueText = evt.newValue;
-            //title = DialogueText.Length > 15 ? DialogueText.Substring(0, 15) + "..." : DialogueText;
-        });
+        dialogueTextField.RegisterValueChangedCallback(evt => DialogueText = evt.newValue);
         dialogueTextField.SetValueWithoutNotify(DialogueText);
         mainContainer.Add(dialogueTextField);
 
-        // ���� ��� ������ ����������
-        audioField = new ObjectField("Audio Clip");
-        audioField.objectType = typeof(AudioClip);
-        audioField.RegisterValueChangedCallback(evt =>
-        {
-            AudioClip = evt.newValue as AudioClip;
-        });
+        // Audio clip
+        audioField = new ObjectField("Audio Clip") { objectType = typeof(AudioClip) };
+        audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
 
-        speakerField = new ObjectField("Speaker");
-        speakerField.objectType = typeof(CharacterData);
-        speakerField.RegisterValueChangedCallback(evt =>
+        // Speaker dropdown
+        speakerDropdown = new DropdownField(_characterNames, 0) // выбирает первый элемент
         {
-            Speaker = evt.newValue as CharacterData;
+            label = "Speaker"
+        };
+        speakerDropdown.RegisterValueChangedCallback(evt =>
+        {
+            int index = _characterNames.IndexOf(evt.newValue);
+            Speaker = index >= 0 ? _characterList[index] : null;
         });
-        mainContainer.Add(speakerField);
+        mainContainer.Add(speakerDropdown);
 
-        // ��������� ���������� ��������� ����
         RefreshExpandedState();
         RefreshPorts();
-
-        // ��������� ����������� ����� ��� SpeechNode
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
-    }
-
-    /// <summary>
-    /// ������� ���� �� �����
-    /// </summary>
-    public Port GetPortByName(string portName)
-    {
-        foreach (var port in outputContainer.Children())
-        {
-            if (port is Port portElement && portElement.portName == portName)
-            {
-                return portElement;
-            }
-        }
-        return null;
     }
 
     public void SetSpeaker(CharacterData speaker)
     {
         Speaker = speaker;
-        if (speakerField != null)
+        if (speakerDropdown != null)
         {
-            speakerField.SetValueWithoutNotify(speaker);
+            speakerDropdown.value = Speaker != null ? Speaker.name : "";
         }
     }
 
@@ -7704,8 +7702,6 @@ public class GraphSaveUtility
     /// </summary>
     public void LoadGraphFromContainer(DialogueContainer container)
     {
-
-
         if (container == null)
         {
             Debug.LogError("Cannot load null container");
@@ -8472,9 +8468,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 298,39 KB
-// Total Lines: 8300
+// Total Size: 298,54 KB
+// Total Lines: 8296
 // Classes: 86
 // Methods: 500
-// Comments: 742
+// Comments: 737
 // =====================================

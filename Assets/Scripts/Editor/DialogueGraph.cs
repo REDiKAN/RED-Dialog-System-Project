@@ -314,9 +314,22 @@ public class DialogueGraph : EditorWindow
 
     private void UpdateAllSpeechNodesSpeaker(CharacterData character)
     {
-        foreach (var node in graphView.nodes.ToList().OfType<SpeechNode>())
+        if (character == null) return;
+
+        foreach (var node in graphView.nodes.ToList())
         {
-            node.SetSpeaker(character);
+            switch (node)
+            {
+                case SpeechNode speechNode when speechNode.Speaker == null:
+                    speechNode.SetSpeaker(character);
+                    break;
+                case SpeechNodeImage speechImageNode when speechImageNode.Speaker == null:
+                    speechImageNode.SetSpeaker(character);
+                    break;
+                case SpeechNodeRandText speechRandNode when speechRandNode.Speaker == null:
+                    speechRandNode.SetSpeaker(character);
+                    break;
+            }
         }
     }
 
