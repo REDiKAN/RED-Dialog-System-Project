@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c1b7d161973994bb4a4c82890c04da, type: 3}
+  m_Name: DialogueSettings
+  m_EditorClassIdentifier: 
+  General:
+    DefaultMessageDelay: 0.5
+    AutoScrollEnabled: 1
+    MaxMessageHistory: 88
+  UI:
+    BackgroundColor: {r: 0.9339623, g: 0, b: 0, a: 1}
+    ShowTimestamps: 0
+    FontName: Default
+  Audio:
+    MasterVolume: 1
+    MuteOnPause: 1
+    AudioMixerPath: Audio/Mixer

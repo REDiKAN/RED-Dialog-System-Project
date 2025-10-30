@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.10.2025 22:13:18
+// Generation Time: 29.10.2025 22:05:41
 // Total Files: 83
 // =================================
 
@@ -2311,14 +2311,21 @@ public class TextEditorModalWindow : VisualElement
     private string _nodeGuid;
     private Action<string> _onTextChanged;
 
+    private DialogueGraphView _graphView;
+
     // === Undo/Redo система ===
     private readonly int _maxHistorySteps = 50;
     private readonly List<string> _undoStack = new List<string>();
     private readonly List<string> _redoStack = new List<string>();
     private bool _isUndoRedoOperation = false;
 
-    public TextEditorModalWindow(string initialText, string nodeGuid, Action<string> onTextChanged)
+    public TextEditorModalWindow(DialogueGraphView graphView, string initialText, string nodeGuid, Action<string> onTextChanged)
     {
+        _graphView = graphView;
+        _text = initialText ?? "";
+        _nodeGuid = nodeGuid;
+        _onTextChanged = onTextChanged;
+
         _text = initialText ?? "";
         _nodeGuid = nodeGuid;
         _onTextChanged = onTextChanged;
@@ -2683,14 +2690,11 @@ public class TextEditorModalWindow : VisualElement
 
     public void Close()
     {
-        var graphView = this.parent?.GetFirstAncestorOfType<DialogueGraphView>();
-        if (graphView != null)
-        {
-            graphView.ClearNodeHighlight();   // Убирает фоновую подсветку
-            graphView.ClearNodeSelection();   // ← КРИТИЧЕСКИ ВАЖНО: сбрасывает selection
-        }
+        _graphView?.ClearNodeHighlight();
+
         _undoStack.Clear();
         _redoStack.Clear();
+
         this.RemoveFromHierarchy();
     }
     private void ConvertToTMP()
@@ -3656,30 +3660,28 @@ public class DialogueGraphView : GraphView
 
     public void OpenTextEditor(string initialText, string nodeGuid, Action<string> onTextChanged)
     {
-        if (_activeTextEditorWindow != null)
-        {
-            _activeTextEditorWindow.Close();
-            _activeTextEditorWindow = null;
-        }
+        // Закрываем предыдущее окно (оно само вызовет ClearNodeHighlight)
+        _activeTextEditorWindow?.Close();
+        _activeTextEditorWindow = null;
 
-        // Найти узел по GUID
+        // ←←← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: явно сбросить выделение, даже если окно не было открыто
+        ClearNodeHighlight();
+
+        // Находим целевой узел
         var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == nodeGuid) as VisualElement;
         if (targetNode != null)
         {
-            // Сохранить оригинальный фон
             _originalNodeBgColor = targetNode.style.backgroundColor;
-            // Применить полупрозрачное выделение
             targetNode.style.backgroundColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.2f));
             _highlightedNode = targetNode;
         }
 
-        _activeTextEditorWindow = new TextEditorModalWindow(initialText, nodeGuid, onTextChanged);
+        _activeTextEditorWindow = new TextEditorModalWindow(this, initialText, nodeGuid, onTextChanged);
         _activeTextEditorWindow.style.position = Position.Absolute;
         _activeTextEditorWindow.style.top = 30;
         _activeTextEditorWindow.style.right = 0;
         Add(_activeTextEditorWindow);
 
-        // Прокрутка к узлу (если реализована)
         ScrollToNode(nodeGuid);
     }
 
@@ -3731,9 +3733,8 @@ public class DialogueGraphView : GraphView
     public void ClearNodeHighlight()
     {
         if (_highlightedNode != null && _highlightedNode.parent != null)
-        {
             _highlightedNode.style.backgroundColor = _originalNodeBgColor;
-        }
+
         _highlightedNode = null;
     }
 }
@@ -8463,9 +8464,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 83
-// Total Size: 298,86 KB
-// Total Lines: 8291
+// Total Size: 298,77 KB
+// Total Lines: 8292
 // Classes: 86
 // Methods: 499
-// Comments: 741
+// Comments: 740
 // =====================================
