@@ -17,6 +17,9 @@ public class DialogueSettingsData : ScriptableObject
         public Color BackgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
         public bool ShowTimestamps = false;
         public string FontName = "Default";
+
+        public bool UseCustomBackgroundColor = false;
+        public Color CustomBackgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
     }
 
     [System.Serializable]

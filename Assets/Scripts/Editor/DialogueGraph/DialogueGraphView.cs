@@ -34,6 +34,9 @@ public class DialogueGraphView : GraphView
 
     private string _baseCharacterGuid;
 
+    private VisualElement _customBackground;
+    private GridBackground _gridBackground;
+
     private TextEditorModalWindow _activeTextEditorWindow;
     public string BaseCharacterGuid
     {
@@ -51,34 +54,72 @@ public class DialogueGraphView : GraphView
     public DialogueGraphView(EditorWindow editorWindow)
     {
         this.editorWindow = editorWindow;
-
-        // Загружаем стили для графа
         styleSheets.Add(Resources.Load<StyleSheet>("DialogueGraph"));
-
-        // Настраиваем масштабирование
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
-
-        // Добавляем манипуляторы для перемещения и выделения
         this.AddManipulator(new ContentDragger());
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
 
-        // Добавляем сетку в качестве фона
-        var grid = new GridBackground();
-        Insert(0, grid);
-        grid.StretchToParentSize();
+        // === ЗАМЕНА: инициализируем оба фона, но показываем только один ===
+        _gridBackground = new GridBackground();
+        _customBackground = new VisualElement();
+        _customBackground.StretchToParentSize();
 
-        // Создаем стартовый узел
+        // Пока не знаем настройки — показываем сетку по умолчанию
+        Insert(0, _gridBackground);
+        _gridBackground.StretchToParentSize();
+
         AddElement(NodeFactory.CreateEntryNode(new Vector2(100, 200)));
-
-        // Добавляем окно поиска узлов
         AddSearchWindow();
-
-        // Создаем черную доску для свойств
         GenerateBlackBoard();
-
-        // Регистрируем обработчик нажатия клавиш для удаления узлов
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
+    }
+
+    public void UpdateGraphBackgroundInternal()
+    {
+        // Загружаем актуальные настройки
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        DialogueSettingsData settings = null;
+        if (guids.Length > 0)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            settings = AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
+        }
+
+        if (settings == null)
+            return;
+
+        bool useCustom = settings.UI.UseCustomBackgroundColor;
+        Color customColor = settings.UI.CustomBackgroundColor;
+
+        // Убираем текущий фон
+        if (_gridBackground.parent != null)
+            _gridBackground.RemoveFromHierarchy();
+        if (_customBackground.parent != null)
+            _customBackground.RemoveFromHierarchy();
+
+        // Вставляем нужный
+        if (useCustom)
+        {
+            _customBackground.style.backgroundColor = new StyleColor(customColor);
+            Insert(0, _customBackground);
+        }
+        else
+        {
+            Insert(0, _gridBackground);
+            _gridBackground.StretchToParentSize();
+        }
+    }
+
+    public static void UpdateGraphBackgroundForAllInstances()
+    {
+        // Находим все открытые окна DialogueGraph
+        var graphWindows = Resources.FindObjectsOfTypeAll<DialogueGraph>();
+        foreach (var window in graphWindows)
+        {
+            if (window.graphView != null)
+                window.graphView.UpdateGraphBackgroundInternal();
+        }
     }
 
     /// <summary>

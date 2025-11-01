@@ -119,6 +119,17 @@ public class DialogueSettingsWindow : EditorWindow
     {
         _rightPanel.Add(new Label("UI Settings") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold } });
 
+        var useCustomBgToggle = new Toggle("Use Custom Background Color") { value = _settings.UI.UseCustomBackgroundColor };
+        useCustomBgToggle.RegisterValueChangedCallback(evt => _settings.UI.UseCustomBackgroundColor = evt.newValue);
+        _rightPanel.Add(useCustomBgToggle);
+
+        var customBgField = new ColorField("Custom Background Color") { value = _settings.UI.CustomBackgroundColor };
+        customBgField.RegisterValueChangedCallback(evt => _settings.UI.CustomBackgroundColor = evt.newValue);
+        customBgField.SetEnabled(_settings.UI.UseCustomBackgroundColor); // начальное состояние
+        useCustomBgToggle.RegisterValueChangedCallback(evt => customBgField.SetEnabled(evt.newValue));
+        _rightPanel.Add(customBgField);
+
+        // Остальное без изменений
         var bgField = new ColorField("Background Color") { value = _settings.UI.BackgroundColor };
         bgField.RegisterValueChangedCallback(evt => _settings.UI.BackgroundColor = evt.newValue);
         _rightPanel.Add(bgField);
@@ -153,5 +164,7 @@ public class DialogueSettingsWindow : EditorWindow
     {
         EditorUtility.SetDirty(_settings);
         AssetDatabase.SaveAssets();
+        // Обновляем фон во всех открытых графах
+        DialogueGraphView.UpdateGraphBackgroundForAllInstances();
     }
 }

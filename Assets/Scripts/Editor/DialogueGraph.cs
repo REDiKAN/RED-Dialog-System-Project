@@ -268,12 +268,15 @@ public class DialogueGraph : EditorWindow
         var container = GetCurrentLoadedContainer();
         if (container == null)
         {
-            EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded. Please create or load one first.", "OK");
+            EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded...", "OK");
             return;
         }
-
         var saveUtility = GraphSaveUtility.GetInstance(graphView);
         saveUtility.SaveGraphToExistingContainer(container);
+
+        // === НОВОЕ: обновляем фон после сохранения настроек ===
+        DialogueGraphView.UpdateGraphBackgroundForAllInstances();
+
         EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
     }
 
