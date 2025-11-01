@@ -25,7 +25,7 @@ public class OptionNode : BaseNode
         ResponseText = "New Response";
 
         // Создаем входной порт (только одно подключение)
-        var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(float));
+        var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 

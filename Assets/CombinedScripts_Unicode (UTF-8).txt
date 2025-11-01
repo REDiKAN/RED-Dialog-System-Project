@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 01.11.2025 14:30:17
+// Generation Time: 01.11.2025 14:37:37
 // Total Files: 85
 // =================================
 
@@ -2156,7 +2156,7 @@ public class DialogueGraph : EditorWindow
         saveUtility.SaveGraphToExistingContainer(container);
 
         // === НОВОЕ: обновляем фон после сохранения настроек ===
-        graphView.UpdateGraphBackgroundForAllInstances();
+        DialogueGraphView.UpdateGraphBackgroundForAllInstances();
 
         EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
     }
