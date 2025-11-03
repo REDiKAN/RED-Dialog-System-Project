@@ -1,5 +1,4 @@
-﻿// Assets/Scripts/Editor/DialogueGraph/Nodes/OptionNodeText.cs
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
 
