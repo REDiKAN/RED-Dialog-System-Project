@@ -3,12 +3,17 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "DialogueSettings", menuName = "Dialogue System/Settings Data")]
 public class DialogueSettingsData : ScriptableObject
 {
+    public GeneralSettings General = new GeneralSettings();
+    public UISettings UI = new UISettings();
+    public AudioSettings Audio = new AudioSettings();
+
     [System.Serializable]
     public class GeneralSettings
     {
         public string DefaultMessageDelay = "0.5";
         public bool AutoScrollEnabled = true;
         public int MaxMessageHistory = 50;
+        public bool EnableQuickNodeCreationOnDragDrop = true;
     }
 
     [System.Serializable]
@@ -30,7 +35,4 @@ public class DialogueSettingsData : ScriptableObject
         public string AudioMixerPath = "Audio/Mixer";
     }
 
-    public GeneralSettings General = new GeneralSettings();
-    public UISettings UI = new UISettings();
-    public AudioSettings Audio = new AudioSettings();
 }

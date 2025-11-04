@@ -79,6 +79,13 @@ MonoBehaviour:
     SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
     SpeakerName: Lora
     NodeType: SpeechNodeText
+  - Guid: 99dbe395-420c-49c5-b446-07cecdd08771
+    Position: {x: 1195, y: -62}
+    DialogueText: 
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeAudio
   OptionNodeDatas:
   - Guid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
     Position: {x: 542, y: 251}
@@ -101,7 +108,11 @@ MonoBehaviour:
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
-  IntExposedProperties: []
+  IntExposedProperties:
+  - PropertyName: New Int Property
+    IntValue: 0
+    MinValue: 0
+    MaxValue: 100
   StringExposedProperties: []
   IntConditionNodeDatas: []
   StringConditionNodeDatas: []
@@ -119,13 +130,29 @@ MonoBehaviour:
   BaseCharacterGuid: 3a1ec005e0d02b64894bcc932a4e8333
   EventNodeDatas: []
   CharacterIntConditionNodeDatas: []
-  CharacterModifyIntNodeDatas: []
+  CharacterModifyIntNodeDatas:
+  - Guid: e1762567-7dae-46ac-a572-93d24a5ff01c
+    Position: {x: 417, y: -157}
+    CharacterName: 
+    SelectedVariable: 
+    Operator: 0
+    Value: 0
   DebugLogNodeDatas: []
   DebugWarningNodeDatas: []
   DebugErrorNodeDatas: []
   SpeechRandNodeDatas: []
-  RandomBranchNodeDatas: []
-  noteNodeDatas: []
+  RandomBranchNodeDatas:
+  - Guid: 616f3a6d-7356-469a-b807-611997d5fba3
+    Position: {x: 832, y: -128}
+    Variants:
+    - PortName: Variant 1
+      WeightPercent: 10
+  noteNodeDatas:
+  - Guid: c26e0aae-3ded-455d-a6d6-5b008fcf941b
+    Position: {x: 1273, y: -216}
+    NoteText: 
+    BackgroundColor: {r: 1, g: 0.98, b: 0.77, a: 1}
+    ConnectedNodeGuids: []
   TimerNodeDatas: []
   PauseNodeDatas: []
   WireNodeDatas: []

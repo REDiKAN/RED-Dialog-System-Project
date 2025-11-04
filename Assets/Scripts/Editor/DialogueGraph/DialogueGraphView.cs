@@ -38,6 +38,9 @@ public class DialogueGraphView : GraphView
     private GridBackground _gridBackground;
 
     private TextEditorModalWindow _activeTextEditorWindow;
+
+    private Port _draggedOutputPort;
+    private Vector2 _dragReleasePosition;
     public string BaseCharacterGuid
     {
         get => _baseCharacterGuid;
@@ -71,6 +74,9 @@ public class DialogueGraphView : GraphView
 
         AddElement(NodeFactory.CreateEntryNode(new Vector2(100, 200)));
         AddSearchWindow();
+
+        this.RegisterCallback<PointerDownEvent>(OnPortPointerDown, TrickleDown.TrickleDown);
+
         GenerateBlackBoard();
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
     }
@@ -992,5 +998,118 @@ public class DialogueGraphView : GraphView
             _highlightedNode.style.backgroundColor = _originalNodeBgColor;
 
         _highlightedNode = null;
+    }
+
+    private void OnPortPointerDown(PointerDownEvent evt)
+    {
+        if (evt.target is Port port && port.direction == Direction.Output)
+        {
+            _draggedOutputPort = port;
+            // Устанавливаем начальную позицию перетаскивания
+            _dragReleasePosition = evt.position;
+            port.RegisterCallback<PointerUpEvent>(OnPortPointerUp, TrickleDown.TrickleDown);
+        }
+    }
+
+    private void OnPortPointerUp(PointerUpEvent evt)
+    {
+        if (_draggedOutputPort == null) return;
+
+        // Фиксируем конечную позицию в локальных координатах contentViewContainer
+        _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
+
+        _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
+
+        // Проверка: уже есть соединение и Capacity == Single?
+        if (_draggedOutputPort.capacity == Port.Capacity.Single && _draggedOutputPort.connections.Any())
+        {
+            _draggedOutputPort = null;
+            return;
+        }
+
+        // Проверка опции в настройках
+        var settings = LoadDialogueSettings();
+        if (!settings || !settings.General.EnableQuickNodeCreationOnDragDrop)
+        {
+            _draggedOutputPort = null;
+            return;
+        }
+
+        // Определяем, произошло ли подключение
+        bool connectionWasMade = this.selection.Any(el => el is Edge);
+        if (!connectionWasMade)
+        {
+            ShowFilteredNodeSearchWindow();
+        }
+        else
+        {
+            _draggedOutputPort = null;
+        }
+    }
+
+    // Замените метод ShowFilteredNodeSearchWindow на этот:
+    private void ShowFilteredNodeSearchWindow()
+    {
+        if (_draggedOutputPort?.node is not BaseNode sourceNode) return;
+
+        // Правильное получение экранных координат в UI Toolkit
+        Vector2 screenPosition = _dragReleasePosition;
+        if (editorWindow != null && editorWindow.rootVisualElement != null)
+        {
+            Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
+            Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
+
+            // Преобразуем в экранные координаты с учетом позиции окна редактора
+            Rect windowRect = editorWindow.position;
+            screenPosition = new Vector2(
+                windowRect.x + rootPosition.x,
+                Screen.height - (windowRect.y + rootPosition.y)  // Инвертируем Y для правильного позиционирования
+            );
+        }
+
+        // Корректируем позицию, чтобы окно не перекрывало курсор полностью
+        screenPosition += new Vector2(10, 10);
+
+        var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
+        searchWindow.Init(editorWindow, this, sourceNode, (nodeType) =>
+        {
+            if (nodeType != null)
+            {
+                // Используем скорректированную позицию для создания узла
+                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
+                if (newNode != null)
+                {
+                    AddElement(newNode);
+                    MarkUnsavedChangeWithoutFile();
+
+                    // Подключение: находим единственный input-порт
+                    if (newNode.inputContainer.childCount > 0)
+                    {
+                        var inputPort = newNode.inputContainer[0] as Port;
+                        if (inputPort != null && _draggedOutputPort != null)
+                        {
+                            var edge = new Edge { output = _draggedOutputPort, input = inputPort };
+                            _draggedOutputPort.Connect(edge);
+                            inputPort.Connect(edge);
+                            Add(edge);
+                        }
+                    }
+                }
+            }
+            _draggedOutputPort = null;
+        });
+
+        // Открываем окно поиска в позиции курсора
+        SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
+    }
+    private DialogueSettingsData LoadDialogueSettings()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length == 0)
+            return null;
+
+        // Берём первый найденный (по соглашению — должен быть один)
+        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
 }

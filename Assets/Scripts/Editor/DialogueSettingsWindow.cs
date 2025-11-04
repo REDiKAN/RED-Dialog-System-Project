@@ -113,6 +113,10 @@ public class DialogueSettingsWindow : EditorWindow
         var historyField = new IntegerField("Max Message History") { value = _settings.General.MaxMessageHistory };
         historyField.RegisterValueChangedCallback(evt => _settings.General.MaxMessageHistory = evt.newValue);
         _rightPanel.Add(historyField);
+
+        var quickCreateToggle = new Toggle("Enable Quick Node Creation on Drag Drop") { value = _settings.General.EnableQuickNodeCreationOnDragDrop };
+        quickCreateToggle.RegisterValueChangedCallback(evt => _settings.General.EnableQuickNodeCreationOnDragDrop = evt.newValue);
+        _rightPanel.Add(quickCreateToggle);
     }
 
     private void DrawUISettings()

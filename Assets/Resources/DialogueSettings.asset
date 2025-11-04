@@ -16,12 +16,13 @@ MonoBehaviour:
     DefaultMessageDelay: 0.5
     AutoScrollEnabled: 1
     MaxMessageHistory: 88
+    EnableQuickNodeCreationOnDragDrop: 1
   UI:
     BackgroundColor: {r: 0.8113208, g: 0, b: 0, a: 1}
     ShowTimestamps: 0
     FontName: Default
-    UseCustomBackgroundColor: 0
-    CustomBackgroundColor: {r: 0.6698113, g: 0.13585795, b: 0.13585795, a: 1}
+    UseCustomBackgroundColor: 1
+    CustomBackgroundColor: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}
   Audio:
     MasterVolume: 1
     MuteOnPause: 1
