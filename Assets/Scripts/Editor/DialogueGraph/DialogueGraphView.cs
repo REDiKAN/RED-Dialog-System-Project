@@ -81,6 +81,7 @@ public class DialogueGraphView : GraphView
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
     }
 
+
     public void UpdateGraphBackgroundInternal()
     {
         // Загружаем актуальные настройки

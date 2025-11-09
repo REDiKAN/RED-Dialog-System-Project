@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 04.11.2025 16:32:37
+// Generation Time: 09.11.2025 21:34:50
 // Total Files: 86
 // =================================
 
@@ -4056,19 +4056,36 @@ public class DialogueGraphView : GraphView
     {
         if (_draggedOutputPort?.node is not BaseNode sourceNode) return;
 
-        // Используем позицию отпускания в локальных координатах contentViewContainer напрямую
-        Vector2 localPos = contentViewContainer.WorldToLocal(_dragReleasePosition);
+        // Правильное получение экранных координат в UI Toolkit
+        Vector2 screenPosition = _dragReleasePosition;
+        if (editorWindow != null && editorWindow.rootVisualElement != null)
+        {
+            Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
+            Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
+
+            // Преобразуем в экранные координаты с учетом позиции окна редактора
+            Rect windowRect = editorWindow.position;
+            screenPosition = new Vector2(
+                windowRect.x + rootPosition.x,
+                Screen.height - (windowRect.y + rootPosition.y)  // Инвертируем Y для правильного позиционирования
+            );
+        }
+
+        // Корректируем позицию, чтобы окно не перекрывало курсор полностью
+        screenPosition += new Vector2(10, 10);
 
         var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
         searchWindow.Init(editorWindow, this, sourceNode, (nodeType) =>
         {
             if (nodeType != null)
             {
-                var newNode = NodeFactory.CreateNode(nodeType, localPos);
+                // Используем скорректированную позицию для создания узла
+                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
                 if (newNode != null)
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
+
                     // Подключение: находим единственный input-порт
                     if (newNode.inputContainer.childCount > 0)
                     {
@@ -4085,7 +4102,9 @@ public class DialogueGraphView : GraphView
             }
             _draggedOutputPort = null;
         });
-        SearchWindow.Open(new SearchWindowContext(_dragReleasePosition), searchWindow);
+
+        // Открываем окно поиска в позиции курсора
+        SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
     private DialogueSettingsData LoadDialogueSettings()
     {
@@ -9009,9 +9028,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 86
-// Total Size: 319,93 KB
-// Total Lines: 8831
+// Total Size: 320,97 KB
+// Total Lines: 8850
 // Classes: 92
 // Methods: 528
-// Comments: 761
+// Comments: 765
 // =====================================
