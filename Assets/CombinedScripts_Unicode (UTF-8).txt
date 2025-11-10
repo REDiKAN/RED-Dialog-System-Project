@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 10.11.2025 22:17:13
+// Generation Time: 10.11.2025 22:46:36
 // Total Files: 93
 // =================================
 
@@ -7435,20 +7435,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor.Experimental.GraphView;
 using System;
-
-[System.Serializable]
-public class NodeLinkData
-{
-    public string BaseNodeGuid;
-    public string PortName;
-    public string TargetNodeGuid;
-}
+using DialogueSystem;
 
 public class DeleteElementCommand : GraphCommand
 {
     private ISelectable element;
     private Vector2 position;
-    private Type elementType;
+    private System.Type elementType;
     private string guid;
     // ��������: ������ �������� ������ ��� NodeLinkData, ������ �������� Edge
     private List<Edge> connections = new List<Edge>();
@@ -7507,18 +7500,29 @@ public class DeleteElementCommand : GraphCommand
             // ��������������� �����
             foreach (var edge in connections)
             {
-                // ������� ����� �� GUID � ������
-                var outputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edge.output.node.GUID);
-                var inputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edge.input.node.GUID);
+                // ����������� ���� � BaseNode ��� ������� � GUID
+                BaseNode edgeOutputNode = edge.output.node as BaseNode;
+                BaseNode edgeInputNode = edge.input.node as BaseNode;
 
+                // ����������, ���� �������������� �� �������
+                if (edgeOutputNode == null || edgeInputNode == null)
+                    continue;
+
+                // ���� ��������������� ���� � ����� �� GUID
+                var outputNode = graphView.nodes.ToList().FirstOrDefault(n =>
+                    n is BaseNode bn && bn.GUID == edgeOutputNode.GUID);
+                var inputNode = graphView.nodes.ToList().FirstOrDefault(n =>
+                    n is BaseNode bn && bn.GUID == edgeInputNode.GUID);
+
+                // ���������, ��� ����� ���� � ��� �������� BaseNode
                 if (outputNode is BaseNode outputBaseNode &&
                     inputNode is BaseNode inputBaseNode)
                 {
+                    // ������� ��������������� �����
                     Port outputPort = FindPortByName(outputBaseNode, edge.output.portName);
                     Port inputPort = FindPortByName(inputBaseNode, edge.input.portName);
 
+                    // ������� � ��������� ����� ����������
                     if (outputPort != null && inputPort != null)
                     {
                         var newEdge = new Edge
@@ -7533,7 +7537,6 @@ public class DeleteElementCommand : GraphCommand
                 }
             }
         }
-
         graphView.MarkUnsavedChangeWithoutFile();
     }
 
@@ -9470,9 +9473,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 93
-// Total Size: 334,05 KB
-// Total Lines: 9278
-// Classes: 99
+// Total Size: 334,51 KB
+// Total Lines: 9281
+// Classes: 98
 // Methods: 551
-// Comments: 786
+// Comments: 791
 // =====================================

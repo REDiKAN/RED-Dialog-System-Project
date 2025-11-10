@@ -92,9 +92,6 @@ public class DialogueSettingsWindow : EditorWindow
             case 1:
                 DrawUISettings();
                 break;
-            case 2:
-                DrawAudioSettings();
-                break;
         }
     }
 
@@ -110,13 +107,14 @@ public class DialogueSettingsWindow : EditorWindow
         autoScrollToggle.RegisterValueChangedCallback(evt => _settings.General.AutoScrollEnabled = evt.newValue);
         _rightPanel.Add(autoScrollToggle);
 
-        var historyField = new IntegerField("Max Message History") { value = _settings.General.MaxMessageHistory };
-        historyField.RegisterValueChangedCallback(evt => _settings.General.MaxMessageHistory = evt.newValue);
-        _rightPanel.Add(historyField);
-
         var quickCreateToggle = new Toggle("Enable Quick Node Creation on Drag Drop") { value = _settings.General.EnableQuickNodeCreationOnDragDrop };
         quickCreateToggle.RegisterValueChangedCallback(evt => _settings.General.EnableQuickNodeCreationOnDragDrop = evt.newValue);
         _rightPanel.Add(quickCreateToggle);
+
+        // Новая настройка горячих клавиш
+        var hotkeyToggle = new Toggle("Enable Undo/Redo Hotkeys (Ctrl+Z/Y)") { value = _settings.General.EnableHotkeyUndoRedo };
+        hotkeyToggle.RegisterValueChangedCallback(evt => _settings.General.EnableHotkeyUndoRedo = evt.newValue);
+        _rightPanel.Add(hotkeyToggle);
     }
 
     private void DrawUISettings()
@@ -129,39 +127,9 @@ public class DialogueSettingsWindow : EditorWindow
 
         var customBgField = new ColorField("Custom Background Color") { value = _settings.UI.CustomBackgroundColor };
         customBgField.RegisterValueChangedCallback(evt => _settings.UI.CustomBackgroundColor = evt.newValue);
-        customBgField.SetEnabled(_settings.UI.UseCustomBackgroundColor); // начальное состояние
+        customBgField.SetEnabled(_settings.UI.UseCustomBackgroundColor);
         useCustomBgToggle.RegisterValueChangedCallback(evt => customBgField.SetEnabled(evt.newValue));
         _rightPanel.Add(customBgField);
-
-        // Остальное без изменений
-        var bgField = new ColorField("Background Color") { value = _settings.UI.BackgroundColor };
-        bgField.RegisterValueChangedCallback(evt => _settings.UI.BackgroundColor = evt.newValue);
-        _rightPanel.Add(bgField);
-
-        var timestampsToggle = new Toggle("Show Timestamps") { value = _settings.UI.ShowTimestamps };
-        timestampsToggle.RegisterValueChangedCallback(evt => _settings.UI.ShowTimestamps = evt.newValue);
-        _rightPanel.Add(timestampsToggle);
-
-        var fontField = new TextField("Font Name") { value = _settings.UI.FontName };
-        fontField.RegisterValueChangedCallback(evt => _settings.UI.FontName = evt.newValue);
-        _rightPanel.Add(fontField);
-    }
-
-    private void DrawAudioSettings()
-    {
-        _rightPanel.Add(new Label("Audio Settings") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold } });
-
-        var volumeSlider = new Slider("Master Volume", 0f, 1f) { value = _settings.Audio.MasterVolume };
-        volumeSlider.RegisterValueChangedCallback(evt => _settings.Audio.MasterVolume = evt.newValue);
-        _rightPanel.Add(volumeSlider);
-
-        var muteToggle = new Toggle("Mute On Pause") { value = _settings.Audio.MuteOnPause };
-        muteToggle.RegisterValueChangedCallback(evt => _settings.Audio.MuteOnPause = evt.newValue);
-        _rightPanel.Add(muteToggle);
-
-        var mixerField = new TextField("Audio Mixer Path") { value = _settings.Audio.AudioMixerPath };
-        mixerField.RegisterValueChangedCallback(evt => _settings.Audio.AudioMixerPath = evt.newValue);
-        _rightPanel.Add(mixerField);
     }
 
     private void SaveSettings()

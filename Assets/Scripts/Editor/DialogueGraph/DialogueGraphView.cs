@@ -91,9 +91,19 @@ public class DialogueGraphView : GraphView
 
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {
-        // Игнорируем горячие клавиши когда открыто окно текстового редактора
+        // Игнорируем горячие клавиши, когда открыто окно текстового редактора
         if (_activeTextEditorWindow != null)
             return;
+
+        // Получаем текущие настройки
+        var settings = LoadDialogueSettings();
+
+        // Проверяем, разрешены ли горячие клавиши
+        if (settings != null && !settings.General.EnableHotkeyUndoRedo)
+        {
+            // Если горячие клавиши отключены, не обрабатываем комбинации
+            return;
+        }
 
         if (evt.ctrlKey && evt.keyCode == KeyCode.Z && !isUndoRedoOperation)
         {
@@ -1176,7 +1186,7 @@ public class DialogueGraphView : GraphView
         if (guids.Length == 0)
             return null;
 
-        // Берём первый найденный (по соглашению — должен быть один)
+        // Берем первый найденный файл настроек
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }

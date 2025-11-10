@@ -130,19 +130,21 @@ public class TextEditorModalWindow : VisualElement
         {
             EditorGUI.BeginChangeCheck();
             var rect = GUILayoutUtility.GetRect(0, 1000, 200, 600);
-
-            // ВАЖНО: всегда используем _text как источник истины
             var newText = EditorGUI.TextArea(rect, _text);
 
-            // Обработка горячих клавиш
-            if (Event.current.type == EventType.KeyDown && Event.current.control)
+            // Получаем текущие настройки
+            var settings = LoadDialogueSettings();
+            bool hotkeysEnabled = settings == null || settings.General.EnableHotkeyUndoRedo;
+
+            // Обработка горячих клавиш только если они разрешены
+            if (hotkeysEnabled && Event.current.type == EventType.KeyDown && Event.current.control)
             {
                 if (Event.current.keyCode == KeyCode.Z && !_isUndoRedoOperation)
                 {
                     PerformUndo();
                     Event.current.Use();
-                    GUI.changed = true; // ← критически важно
-                    return; // ← выходим, чтобы не обрабатывать EndChangeCheck
+                    GUI.changed = true;
+                    return;
                 }
                 else if (Event.current.keyCode == KeyCode.Y && !_isUndoRedoOperation)
                 {
@@ -216,6 +218,16 @@ public class TextEditorModalWindow : VisualElement
         // GUID узла
         _guidLabel = new Label($"Node GUID: {_nodeGuid}") { style = { fontSize = 9, color = Color.gray, marginTop = 8 } };
         Add(_guidLabel);
+    }
+
+    private DialogueSettingsData LoadDialogueSettings()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length == 0)
+            return null;
+
+        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
 
     private void AddButton(VisualElement parent, string label, string openTag, string closeTag, string placeholder)
