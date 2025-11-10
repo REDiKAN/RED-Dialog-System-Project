@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 10.11.2025 22:46:36
+// Generation Time: 11.11.2025 0:54:23
 // Total Files: 93
 // =================================
 
@@ -2228,24 +2228,19 @@ public class DialogueSettingsData : ScriptableObject
 {
     public GeneralSettings General = new GeneralSettings();
     public UISettings UI = new UISettings();
-    public AudioSettings Audio = new AudioSettings();
 
     [System.Serializable]
     public class GeneralSettings
     {
         public string DefaultMessageDelay = "0.5";
         public bool AutoScrollEnabled = true;
-        public int MaxMessageHistory = 50;
         public bool EnableQuickNodeCreationOnDragDrop = true;
+        public bool EnableHotkeyUndoRedo = true; // ��������� �������� ���������� ������
     }
 
     [System.Serializable]
     public class UISettings
     {
-        public Color BackgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
-        public bool ShowTimestamps = false;
-        public string FontName = "Default";
-
         public bool UseCustomBackgroundColor = false;
         public Color CustomBackgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
     }
@@ -2355,9 +2350,6 @@ public class DialogueSettingsWindow : EditorWindow
             case 1:
                 DrawUISettings();
                 break;
-            case 2:
-                DrawAudioSettings();
-                break;
         }
     }
 
@@ -2373,13 +2365,14 @@ public class DialogueSettingsWindow : EditorWindow
         autoScrollToggle.RegisterValueChangedCallback(evt => _settings.General.AutoScrollEnabled = evt.newValue);
         _rightPanel.Add(autoScrollToggle);
 
-        var historyField = new IntegerField("Max Message History") { value = _settings.General.MaxMessageHistory };
-        historyField.RegisterValueChangedCallback(evt => _settings.General.MaxMessageHistory = evt.newValue);
-        _rightPanel.Add(historyField);
-
         var quickCreateToggle = new Toggle("Enable Quick Node Creation on Drag Drop") { value = _settings.General.EnableQuickNodeCreationOnDragDrop };
         quickCreateToggle.RegisterValueChangedCallback(evt => _settings.General.EnableQuickNodeCreationOnDragDrop = evt.newValue);
         _rightPanel.Add(quickCreateToggle);
+
+        // ����� ��������� ������� ������
+        var hotkeyToggle = new Toggle("Enable Undo/Redo Hotkeys (Ctrl+Z/Y)") { value = _settings.General.EnableHotkeyUndoRedo };
+        hotkeyToggle.RegisterValueChangedCallback(evt => _settings.General.EnableHotkeyUndoRedo = evt.newValue);
+        _rightPanel.Add(hotkeyToggle);
     }
 
     private void DrawUISettings()
@@ -2392,39 +2385,9 @@ public class DialogueSettingsWindow : EditorWindow
 
         var customBgField = new ColorField("Custom Background Color") { value = _settings.UI.CustomBackgroundColor };
         customBgField.RegisterValueChangedCallback(evt => _settings.UI.CustomBackgroundColor = evt.newValue);
-        customBgField.SetEnabled(_settings.UI.UseCustomBackgroundColor); // ��������� ���������
+        customBgField.SetEnabled(_settings.UI.UseCustomBackgroundColor);
         useCustomBgToggle.RegisterValueChangedCallback(evt => customBgField.SetEnabled(evt.newValue));
         _rightPanel.Add(customBgField);
-
-        // ��������� ��� ���������
-        var bgField = new ColorField("Background Color") { value = _settings.UI.BackgroundColor };
-        bgField.RegisterValueChangedCallback(evt => _settings.UI.BackgroundColor = evt.newValue);
-        _rightPanel.Add(bgField);
-
-        var timestampsToggle = new Toggle("Show Timestamps") { value = _settings.UI.ShowTimestamps };
-        timestampsToggle.RegisterValueChangedCallback(evt => _settings.UI.ShowTimestamps = evt.newValue);
-        _rightPanel.Add(timestampsToggle);
-
-        var fontField = new TextField("Font Name") { value = _settings.UI.FontName };
-        fontField.RegisterValueChangedCallback(evt => _settings.UI.FontName = evt.newValue);
-        _rightPanel.Add(fontField);
-    }
-
-    private void DrawAudioSettings()
-    {
-        _rightPanel.Add(new Label("Audio Settings") { style = { fontSize = 14, unityFontStyleAndWeight = FontStyle.Bold } });
-
-        var volumeSlider = new Slider("Master Volume", 0f, 1f) { value = _settings.Audio.MasterVolume };
-        volumeSlider.RegisterValueChangedCallback(evt => _settings.Audio.MasterVolume = evt.newValue);
-        _rightPanel.Add(volumeSlider);
-
-        var muteToggle = new Toggle("Mute On Pause") { value = _settings.Audio.MuteOnPause };
-        muteToggle.RegisterValueChangedCallback(evt => _settings.Audio.MuteOnPause = evt.newValue);
-        _rightPanel.Add(muteToggle);
-
-        var mixerField = new TextField("Audio Mixer Path") { value = _settings.Audio.AudioMixerPath };
-        mixerField.RegisterValueChangedCallback(evt => _settings.Audio.AudioMixerPath = evt.newValue);
-        _rightPanel.Add(mixerField);
     }
 
     private void SaveSettings()
@@ -2644,19 +2607,21 @@ public class TextEditorModalWindow : VisualElement
         {
             EditorGUI.BeginChangeCheck();
             var rect = GUILayoutUtility.GetRect(0, 1000, 200, 600);
-
-            // ВАЖНО: всегда используем _text как источник истины
             var newText = EditorGUI.TextArea(rect, _text);
 
-            // Обработка горячих клавиш
-            if (Event.current.type == EventType.KeyDown && Event.current.control)
+            // Получаем текущие настройки
+            var settings = LoadDialogueSettings();
+            bool hotkeysEnabled = settings == null || settings.General.EnableHotkeyUndoRedo;
+
+            // Обработка горячих клавиш только если они разрешены
+            if (hotkeysEnabled && Event.current.type == EventType.KeyDown && Event.current.control)
             {
                 if (Event.current.keyCode == KeyCode.Z && !_isUndoRedoOperation)
                 {
                     PerformUndo();
                     Event.current.Use();
-                    GUI.changed = true; // ← критически важно
-                    return; // ← выходим, чтобы не обрабатывать EndChangeCheck
+                    GUI.changed = true;
+                    return;
                 }
                 else if (Event.current.keyCode == KeyCode.Y && !_isUndoRedoOperation)
                 {
@@ -2730,6 +2695,16 @@ public class TextEditorModalWindow : VisualElement
         // GUID узла
         _guidLabel = new Label($"Node GUID: {_nodeGuid}") { style = { fontSize = 9, color = Color.gray, marginTop = 8 } };
         Add(_guidLabel);
+    }
+
+    private DialogueSettingsData LoadDialogueSettings()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length == 0)
+            return null;
+
+        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
 
     private void AddButton(VisualElement parent, string label, string openTag, string closeTag, string placeholder)
@@ -3095,9 +3070,19 @@ public class DialogueGraphView : GraphView
 
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {
-        // Игнорируем горячие клавиши когда открыто окно текстового редактора
+        // Игнорируем горячие клавиши, когда открыто окно текстового редактора
         if (_activeTextEditorWindow != null)
             return;
+
+        // Получаем текущие настройки
+        var settings = LoadDialogueSettings();
+
+        // Проверяем, разрешены ли горячие клавиши
+        if (settings != null && !settings.General.EnableHotkeyUndoRedo)
+        {
+            // Если горячие клавиши отключены, не обрабатываем комбинации
+            return;
+        }
 
         if (evt.ctrlKey && evt.keyCode == KeyCode.Z && !isUndoRedoOperation)
         {
@@ -4180,7 +4165,7 @@ public class DialogueGraphView : GraphView
         if (guids.Length == 0)
             return null;
 
-        // Берём первый найденный (по соглашению — должен быть один)
+        // Берем первый найденный файл настроек
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
@@ -9473,9 +9458,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 93
-// Total Size: 334,51 KB
-// Total Lines: 9281
+// Total Size: 333,46 KB
+// Total Lines: 9266
 // Classes: 98
-// Methods: 551
-// Comments: 791
+// Methods: 552
+// Comments: 794
 // =====================================
