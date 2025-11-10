@@ -41,6 +41,11 @@ public class DialogueGraphView : GraphView
 
     private Port _draggedOutputPort;
     private Vector2 _dragReleasePosition;
+
+    public DialogueContainer containerCache { get; set; }
+
+    public UndoManager undoManager;
+    private bool isUndoRedoOperation = false;
     public string BaseCharacterGuid
     {
         get => _baseCharacterGuid;
@@ -63,6 +68,8 @@ public class DialogueGraphView : GraphView
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
 
+        undoManager = new UndoManager(this);
+
         // === ЗАМЕНА: инициализируем оба фона, но показываем только один ===
         _gridBackground = new GridBackground();
         _customBackground = new VisualElement();
@@ -79,6 +86,25 @@ public class DialogueGraphView : GraphView
 
         GenerateBlackBoard();
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
+        RegisterCallback<KeyDownEvent>(OnGlobalKeyDown);
+    }
+
+    private void OnGlobalKeyDown(KeyDownEvent evt)
+    {
+        // Игнорируем горячие клавиши когда открыто окно текстового редактора
+        if (_activeTextEditorWindow != null)
+            return;
+
+        if (evt.ctrlKey && evt.keyCode == KeyCode.Z && !isUndoRedoOperation)
+        {
+            undoManager.Undo();
+            evt.StopPropagation();
+        }
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.Y && !isUndoRedoOperation)
+        {
+            undoManager.Redo();
+            evt.StopPropagation();
+        }
     }
 
 
@@ -241,14 +267,10 @@ public class DialogueGraphView : GraphView
     /// <summary>
     /// Создает узел указанного типа в заданной позиции
     /// </summary>
-    public void CreateNode(System.Type nodeType, Vector2 position)
+    public void CreateNode(Type nodeType, Vector2 position)
     {
-        var node = NodeFactory.CreateNode(nodeType, position);
-        if (node != null)
-        {
-            AddElement(node);
-            MarkUnsavedChangeWithoutFile();
-        }
+        var command = new CreateNodeCommand(this, nodeType, position);
+        undoManager.ExecuteCommand(command);
     }
 
     /// <summary>
@@ -840,30 +862,16 @@ public class DialogueGraphView : GraphView
     private void DeleteSelection()
     {
         var selectionCopy = selection.ToList();
-        bool hadChange = false;
         foreach (var selectedElement in selectionCopy)
         {
-            if (selectedElement is BaseNode node)
-            {
-                // Используем this.edges, а не Edges
-                var edgesToRemove = this.edges
-                    .Where(e => e.input.node == node || e.output.node == node)
-                    .ToList(); // ← ToList() делает его IList
-                foreach (var edge in edgesToRemove)
-                {
-                    RemoveElement(edge);
-                }
-                RemoveElement(node);
-                hadChange = true;
-            }
-            else if (selectedElement is Edge edge)
-            {
-                RemoveElement(edge);
-                hadChange = true;
-            }
+            var command = new DeleteElementCommand(this, selectedElement);
+            undoManager.ExecuteCommand(command);
         }
-        if (hadChange)
-            MarkUnsavedChangeWithoutFile();
+    }
+
+    public void ClearUndoRedoStacks()
+    {
+        undoManager.ClearStacks();
     }
 
     // Метод для обработки изменений базового персонажа
@@ -1018,7 +1026,6 @@ public class DialogueGraphView : GraphView
 
         // Фиксируем конечную позицию в локальных координатах contentViewContainer
         _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
-
         _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
 
         // Проверка: уже есть соединение и Capacity == Single?
@@ -1036,16 +1043,76 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        // Определяем, произошло ли подключение
-        bool connectionWasMade = this.selection.Any(el => el is Edge);
-        if (!connectionWasMade)
+        Edge createdEdge = null;
+        BaseNode newNode = null;
+
+        // Проверяем, было ли создано соединение
+        bool connectionWasMade = false;
+
+        // Проверяем все ребра в графе, чтобы определить, было ли создано новое соединение
+        foreach (var edge in edges.ToList())
         {
-            ShowFilteredNodeSearchWindow();
+            if (edge.output == _draggedOutputPort && edge.input != null)
+            {
+                createdEdge = edge;
+                connectionWasMade = true;
+                break;
+            }
+        }
+
+        if (connectionWasMade && createdEdge != null)
+        {
+            // Создаем команду для отмены создания связи
+            var command = new CreateConnectionCommand(this, createdEdge);
+            undoManager.ExecuteCommand(command);
         }
         else
         {
-            _draggedOutputPort = null;
+            // Показываем фильтрованное окно поиска узлов для создания нового узла
+            ShowFilteredNodeSearchWindowForUndo();
         }
+    }
+
+    private void ShowFilteredNodeSearchWindowForUndo()
+    {
+        if (_draggedOutputPort?.node is not BaseNode sourceNode)
+        {
+            _draggedOutputPort = null;
+            return;
+        }
+
+        Vector2 screenPosition = _dragReleasePosition;
+        if (editorWindow != null && editorWindow.rootVisualElement != null)
+        {
+            Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
+            Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
+            Rect windowRect = editorWindow.position;
+            screenPosition = new Vector2(
+                windowRect.x + rootPosition.x,
+                Screen.height - (windowRect.y + rootPosition.y)
+            );
+        }
+
+        screenPosition += new Vector2(10, 10);
+
+        var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
+        searchWindow.Init(editorWindow, this, sourceNode, (nodeType) =>
+        {
+            if (nodeType != null)
+            {
+                // Создаем узел в позиции отпускания
+                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
+                if (newNode != null)
+                {
+                    // Создаем команду для создания узла и соединения
+                    var command = new CreateNodeAndConnectionCommand(this, newNode, _draggedOutputPort);
+                    undoManager.ExecuteCommand(command);
+                }
+            }
+            _draggedOutputPort = null;
+        });
+
+        SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
 
     // Замените метод ShowFilteredNodeSearchWindow на этот:

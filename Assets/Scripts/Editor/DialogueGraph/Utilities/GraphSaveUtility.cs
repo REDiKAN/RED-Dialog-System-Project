@@ -1000,6 +1000,11 @@ public class GraphSaveUtility
             return;
         }
 
+        targetGraphView.containerCache = container;
+
+        // Очищаем стеки отмены перед загрузкой
+        targetGraphView.ClearUndoRedoStacks();
+
         containerCache = container;
         ClearGraph();
         CreateNodes();
@@ -1028,14 +1033,20 @@ public class GraphSaveUtility
         existingContainer.EndNodeDatas.Clear();
         existingContainer.SpeechNodeImageDatas.Clear();
         existingContainer.OptionNodeImageDatas.Clear();
-        existingContainer.TimerNodeDatas.Clear(); // ← ДОБАВЛЕНО здесь
+        existingContainer.TimerNodeDatas.Clear();
+        existingContainer.PauseNodeDatas.Clear();
+        existingContainer.WireNodeDatas.Clear();
         existingContainer.IntExposedProperties.Clear();
         existingContainer.StringExposedProperties.Clear();
+
+        targetGraphView.ClearUndoRedoStacks();
 
         // === Сохраняем новые данные ===
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
 
+        EditorUtility.SetDirty(existingContainer);
+        AssetDatabase.SaveAssets();
         EditorUtility.SetDirty(existingContainer);
         AssetDatabase.SaveAssets();
     }
