@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b8807f077013447b3a6744d0fb19c4, type: 3}
   m_Name: Lora
   m_EditorClassIdentifier: 
-  FirstName: Lora
+  FirstName: "\u044B\u0444\u0432\u0444\u044B\u0432"
   LastName: Character
   Icon: {fileID: 0}
   Description: 
