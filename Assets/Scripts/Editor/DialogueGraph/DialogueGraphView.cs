@@ -88,6 +88,14 @@ public class DialogueGraphView : GraphView
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
         RegisterCallback<KeyDownEvent>(OnGlobalKeyDown);
     }
+    private bool CanEditNodeWithDoubleClick(BaseNode node)
+    {
+        return node is SpeechNodeText ||
+               node is OptionNodeText ||
+               node is DebugLogNode ||
+               node is DebugWarningNode ||
+               node is DebugErrorNode;
+    }
 
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {

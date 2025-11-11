@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
+using System.Linq;
 
 public class DebugLogNode : BaseNode
 {
@@ -25,6 +26,60 @@ public class DebugLogNode : BaseNode
 
         RefreshExpandedState();
         RefreshPorts();
+
+        SetupDoubleClickHandler();
+    }
+
+    private void SetupDoubleClickHandler()
+    {
+        this.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+        this.RegisterCallback<MouseMoveEvent>(OnMouseMove, TrickleDown.TrickleDown);
+
+        // Помечаем интерактивные элементы, которые не должны реагировать на двойной клик
+        if (_editButton != null)
+            _editButton.AddToClassList("no-double-click");
+
+        // Помечаем порты подключения
+        MarkPortsAsNonClickable();
+    }
+
+    private void MarkPortsAsNonClickable()
+    {
+        foreach (var port in inputContainer.Children().OfType<Port>())
+            port.AddToClassList("no-double-click");
+
+        foreach (var port in outputContainer.Children().OfType<Port>())
+            port.AddToClassList("no-double-click");
+    }
+
+    private void OnPointerDown(PointerDownEvent evt)
+    {
+        if (evt.clickCount != 2) return;
+
+        var target = evt.target as VisualElement;
+        while (target != null)
+        {
+            if (target.ClassListContains("no-double-click"))
+                return;
+            target = target.parent;
+        }
+
+        OpenTextEditor();
+        evt.StopPropagation();
+    }
+
+    private void OnMouseMove(MouseMoveEvent evt)
+    {
+        var target = evt.target as VisualElement;
+        while (target != null)
+        {
+            if (target.ClassListContains("no-double-click"))
+            {
+                this.style.cursor = StyleKeyword.Auto;
+                return;
+            }
+            target = target.parent;
+        }
     }
 
     private void OnAttachedToPanel(AttachToPanelEvent evt)

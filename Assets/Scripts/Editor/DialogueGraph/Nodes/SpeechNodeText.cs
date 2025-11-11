@@ -58,8 +58,55 @@ public class SpeechNodeText : SpeechNode
 
         // Подписываемся на изменение геометрии, чтобы обновлять высоту узла
         _previewLabel.RegisterCallback<GeometryChangedEvent>(OnPreviewLabelResized);
+
+        SetupDoubleClickHandler();
     }
 
+
+    private void SetupDoubleClickHandler()
+    {
+        this.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+        this.RegisterCallback<MouseMoveEvent>(OnMouseMove, TrickleDown.TrickleDown);
+
+        // Помечаем интерактивные элементы, которые не должны реагировать на двойной клик
+        if (_editButton != null)
+            _editButton.AddToClassList("no-double-click");
+    }
+
+    private void OnPointerDown(PointerDownEvent evt)
+    {
+        // Проверяем, что это двойной клик
+        if (evt.clickCount != 2) return;
+
+        // Проверяем, что клик не попал на интерактивные элементы
+        var target = evt.target as VisualElement;
+        while (target != null)
+        {
+            if (target.ClassListContains("no-double-click"))
+                return;
+            target = target.parent;
+        }
+
+        // Открываем редактор текста
+        OpenTextEditor();
+
+        // Предотвращаем распространение события
+        evt.StopPropagation();
+    }
+
+    private void OnMouseMove(MouseMoveEvent evt)
+    {
+        var target = evt.target as VisualElement;
+        while (target != null)
+        {
+            if (target.ClassListContains("no-double-click"))
+            {
+                this.style.cursor = StyleKeyword.Auto;
+                return;
+            }
+            target = target.parent;
+        }
+    }
     private void OnPreviewLabelResized(GeometryChangedEvent evt)
     {
         // Обновляем высоту узла на основе содержимого

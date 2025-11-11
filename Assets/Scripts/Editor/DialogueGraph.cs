@@ -13,6 +13,7 @@ public class DialogueGraph : EditorWindow
     public DialogueGraphView graphView;
     private string fileName = "New Narrative";
 
+
     /// <summary>
     /// Открывает окно редактора диалоговых графов
     /// </summary>
@@ -91,6 +92,7 @@ public class DialogueGraph : EditorWindow
         // Случай: файл уже задан — просто сохраняем
         SaveCurrentDialogue();
     }
+
 
     /// <summary>
     /// Создает область для редактирования графа
@@ -263,7 +265,7 @@ public class DialogueGraph : EditorWindow
     /// <summary>
     /// Сохраняет текущий граф в уже загруженный/созданный файл
     /// </summary>
-    private void SaveCurrentDialogue()
+    public void SaveCurrentDialogue()
     {
         var container = GetCurrentLoadedContainer();
         if (container == null)
@@ -273,17 +275,15 @@ public class DialogueGraph : EditorWindow
         }
         var saveUtility = GraphSaveUtility.GetInstance(graphView);
         saveUtility.SaveGraphToExistingContainer(container);
-
         // === НОВОЕ: обновляем фон после сохранения настроек ===
         DialogueGraphView.UpdateGraphBackgroundForAllInstances();
-
         EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
     }
 
     /// <summary>
     /// Вспомогательный метод: получает текущий загруженный контейнер по пути
     /// </summary> 
-    private DialogueContainer GetCurrentLoadedContainer()
+    public DialogueContainer GetCurrentLoadedContainer()
     {
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         return assetField?.value as DialogueContainer;
