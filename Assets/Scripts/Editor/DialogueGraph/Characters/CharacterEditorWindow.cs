@@ -122,6 +122,9 @@ public class CharacterEditorWindow : EditorWindow
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
         if (GUILayout.Button("Create New", EditorStyles.toolbarButton))
         {
+            // Сбрасываем фокус перед созданием нового персонажа
+            EditorGUI.FocusTextInControl(null);
+            EditorGUIUtility.editingTextField = false;
             CreateNewCharacter();
         }
         if (GUILayout.Button("Save", EditorStyles.toolbarButton) && selectedCharacter != null)
@@ -130,10 +133,35 @@ public class CharacterEditorWindow : EditorWindow
         }
         if (GUILayout.Button("Delete", EditorStyles.toolbarButton) && selectedCharacter != null)
         {
+            // Сбрасываем фокус перед удалением персонажа
+            EditorGUI.FocusTextInControl(null);
+            EditorGUIUtility.editingTextField = false;
             DeleteCharacter();
         }
         GUILayout.FlexibleSpace();
-        searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+
+        string newSearchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+        // Если строка поиска изменилась, сбрасываем фокус и обновляем выделение
+        if (newSearchString != searchString)
+        {
+            EditorGUI.FocusTextInControl(null);
+            EditorGUIUtility.editingTextField = false;
+            searchString = newSearchString;
+
+            // Если строка поиска очищена или изменена, сбрасываем выделение
+            if (string.IsNullOrEmpty(searchString) || selectedCharacter != null)
+            {
+                var filteredCharacters = string.IsNullOrEmpty(searchString)
+                    ? characters
+                    : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
+
+                // Если текущий выбранный персонаж не входит в отфильтрованный список, сбрасываем выделение
+                if (selectedCharacter != null && !filteredCharacters.Contains(selectedCharacter))
+                {
+                    selectedCharacter = null;
+                }
+            }
+        }
         EditorGUILayout.EndHorizontal();
     }
 
@@ -141,16 +169,35 @@ public class CharacterEditorWindow : EditorWindow
     {
         EditorGUILayout.BeginVertical(GUILayout.Width(250));
         EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
+
+        // Сбрасываем выделение, если список персонажей изменяется
+        if (characters.Count == 0 || (searchString != "" && !characters.Any(c => c.name.ToLower().Contains(searchString.ToLower()))))
+        {
+            // Сбрасываем выделение, если нет персонажей или нет совпадений с фильтром
+            if (selectedCharacter != null)
+            {
+                selectedCharacter = null;
+                // Явно сбрасываем фокус со всех текстовых полей
+                EditorGUIUtility.editingTextField = false;
+            }
+        }
+
         // Добавляем прокрутку для списка персонажей
         characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
         var filteredCharacters = string.IsNullOrEmpty(searchString)
             ? characters
             : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
+
         foreach (var character in filteredCharacters)
         {
             var isSelected = selectedCharacter == character;
+            // При клике на персонажа сбрасываем фокус с текстовых полей перед сменой выделения
             if (GUILayout.Toggle(isSelected, character.name, EditorStyles.toolbarButton) && !isSelected)
             {
+                // Явно сбрасываем фокус со всех текстовых полей
+                EditorGUI.FocusTextInControl(null);
+                EditorGUIUtility.editingTextField = false;
+
                 selectedCharacter = character;
                 // Создаем копию текущего состояния для последующего сравнения
                 if (selectedCharacter != null)
@@ -175,14 +222,40 @@ public class CharacterEditorWindow : EditorWindow
         }
 
         EditorGUI.BeginChangeCheck();
+
         // Basic Info
         EditorGUILayout.LabelField("Basic Information", EditorStyles.boldLabel);
+        // Явно указываем ID контролов для возможности сброса фокуса
+        string firstNameControlId = "FirstName_" + selectedCharacter.GetInstanceID();
+        string lastNameControlId = "LastName_" + selectedCharacter.GetInstanceID();
+        string descriptionControlId = "Description_" + selectedCharacter.GetInstanceID();
+
+        EditorGUI.BeginChangeCheck();
         selectedCharacter.FirstName = EditorGUILayout.TextField("First Name", selectedCharacter.FirstName);
+        if (EditorGUI.EndChangeCheck())
+        {
+            _lastChangeTime = Time.realtimeSinceStartup;
+        }
+
+        EditorGUI.BeginChangeCheck();
         selectedCharacter.LastName = EditorGUILayout.TextField("Last Name", selectedCharacter.LastName);
+        if (EditorGUI.EndChangeCheck())
+        {
+            _lastChangeTime = Time.realtimeSinceStartup;
+        }
+
         selectedCharacter.Icon = (Sprite)EditorGUILayout.ObjectField("Icon", selectedCharacter.Icon, typeof(Sprite), false);
+
+        EditorGUI.BeginChangeCheck();
         selectedCharacter.Description = EditorGUILayout.TextArea(selectedCharacter.Description, GUILayout.Height(60));
+        if (EditorGUI.EndChangeCheck())
+        {
+            _lastChangeTime = Time.realtimeSinceStartup;
+        }
+
         selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
         EditorGUILayout.Space();
+
         // Message Prefabs
         EditorGUILayout.LabelField("Message Prefabs", EditorStyles.boldLabel);
         DrawPrefabFieldWithValidation(
@@ -201,6 +274,7 @@ public class CharacterEditorWindow : EditorWindow
             typeof(SpeechAudioMessage)
         );
         EditorGUILayout.Space();
+
         // Variables
         EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
         variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
@@ -224,6 +298,7 @@ public class CharacterEditorWindow : EditorWindow
                 _lastChangeTime = Time.realtimeSinceStartup;
         }
         EditorGUILayout.EndScrollView();
+
         if (GUILayout.Button("Add Variable"))
         {
             selectedCharacter.AddVariable();
@@ -235,7 +310,6 @@ public class CharacterEditorWindow : EditorWindow
         {
             _lastChangeTime = Time.realtimeSinceStartup;
         }
-
         EditorGUILayout.EndVertical();
     }
 

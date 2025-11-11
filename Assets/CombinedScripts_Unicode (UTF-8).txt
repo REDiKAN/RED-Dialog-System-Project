@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 11.11.2025 17:36:47
+// Generation Time: 11.11.2025 18:13:39
 // Total Files: 93
 // =================================
 
@@ -4605,11 +4605,15 @@ public class CharacterEditorWindow : EditorWindow
     private CharacterData selectedCharacter;
     private Vector2 scrollPosition;
     private string searchString = "";
-
     // Добавляем переменные для прокрутки
     private Vector2 characterListScrollPosition;
     private Vector2 variablesScrollPosition;
     private int variableToRemove = -1;
+
+    // === ДОБАВЛЕННЫЕ ПОЛЯ ДЛЯ АВТОСОХРАНЕНИЯ ===
+    private float _lastChangeTime;
+    private const float DEBOUNCE_DELAY = 0.5f;
+    private CharacterData _lastSavedCharacterState; // Для отслеживания предыдущего состояния
 
     [MenuItem("Dialog System/Character Editor")]
     public static void ShowWindow()
@@ -4620,49 +4624,112 @@ public class CharacterEditorWindow : EditorWindow
     private void OnEnable()
     {
         RefreshCharacterList();
+        // Инициализация времени последнего изменения
+        _lastChangeTime = Time.realtimeSinceStartup;
+    }
+
+    // === МЕТОД UPDATE ДЛЯ ПРОВЕРКИ АВТОСОХРАНЕНИЯ ===
+    private void Update()
+    {
+        // Только если окно в фокусе
+        if (EditorWindow.focusedWindow == this)
+        {
+            AutoSaveCharacter();
+        }
     }
 
     private void OnGUI()
     {
         DrawToolbar();
-
         EditorGUILayout.BeginHorizontal();
         DrawCharacterList();
         DrawCharacterDetails();
         EditorGUILayout.EndHorizontal();
-
         // Обрабатываем удаление переменных после отрисовки GUI
         if (variableToRemove != -1)
         {
             selectedCharacter.RemoveVariable(variableToRemove);
+            _lastChangeTime = Time.realtimeSinceStartup; // Обновляем время изменения
             variableToRemove = -1;
             GUIUtility.ExitGUI(); // Выходим из текущего GUI цикла
         }
     }
 
+    // === МЕТОД АВТОСОХРАНЕНИЯ ===
+    private void AutoSaveCharacter()
+    {
+        if (selectedCharacter == null || _lastSavedCharacterState == null)
+            return;
+
+        // Проверяем, прошло ли достаточно времени с последнего изменения
+        if (Time.realtimeSinceStartup - _lastChangeTime < DEBOUNCE_DELAY)
+            return;
+
+        // Проверяем, есть ли реальные изменения
+        if (HasCharacterChanged(selectedCharacter))
+        {
+            EditorUtility.SetDirty(selectedCharacter);
+            AssetDatabase.SaveAssets();
+
+            // Создаем копию текущего состояния для последующего сравнения
+            _lastSavedCharacterState = Instantiate(selectedCharacter);
+            Debug.Log($"Character {selectedCharacter.name} auto-saved");
+        }
+    }
+
+    // === ПРОВЕРКА ИЗМЕНЕНИЙ ===
+    private bool HasCharacterChanged(CharacterData currentCharacter)
+    {
+        if (_lastSavedCharacterState == null)
+            return true;
+
+        // Сравниваем основные поля
+        if (_lastSavedCharacterState.FirstName != currentCharacter.FirstName ||
+            _lastSavedCharacterState.LastName != currentCharacter.LastName ||
+            _lastSavedCharacterState.Icon != currentCharacter.Icon ||
+            _lastSavedCharacterState.Description != currentCharacter.Description ||
+            _lastSavedCharacterState.NameColor != currentCharacter.NameColor ||
+            _lastSavedCharacterState.SpeechTextMessagePrefab != currentCharacter.SpeechTextMessagePrefab ||
+            _lastSavedCharacterState.SpeechImageMessagePrefab != currentCharacter.SpeechImageMessagePrefab ||
+            _lastSavedCharacterState.SpeechAudioMessagePrefab != currentCharacter.SpeechAudioMessagePrefab)
+        {
+            return true;
+        }
+
+        // Сравниваем переменные
+        if (_lastSavedCharacterState.Variables.Count != currentCharacter.Variables.Count)
+            return true;
+
+        for (int i = 0; i < _lastSavedCharacterState.Variables.Count; i++)
+        {
+            if (_lastSavedCharacterState.Variables[i].VariableName != currentCharacter.Variables[i].VariableName ||
+                _lastSavedCharacterState.Variables[i].Value != currentCharacter.Variables[i].Value)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // === ОБНОВЛЕННЫЙ МЕТОД ПАНЕЛИ ИНСТРУМЕНТОВ ===
     private void DrawToolbar()
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
         if (GUILayout.Button("Create New", EditorStyles.toolbarButton))
         {
             CreateNewCharacter();
         }
-
         if (GUILayout.Button("Save", EditorStyles.toolbarButton) && selectedCharacter != null)
         {
-            SaveCharacter();
+            SaveCharacter(); // Ручное сохранение по-прежнему работает
         }
-
         if (GUILayout.Button("Delete", EditorStyles.toolbarButton) && selectedCharacter != null)
         {
             DeleteCharacter();
         }
-
         GUILayout.FlexibleSpace();
-
         searchString = EditorGUILayout.TextField(searchString, EditorStyles.toolbarSearchField, GUILayout.Width(200));
-
         EditorGUILayout.EndHorizontal();
     }
 
@@ -4670,23 +4737,25 @@ public class CharacterEditorWindow : EditorWindow
     {
         EditorGUILayout.BeginVertical(GUILayout.Width(250));
         EditorGUILayout.LabelField("Characters", EditorStyles.boldLabel);
-
         // Добавляем прокрутку для списка персонажей
         characterListScrollPosition = EditorGUILayout.BeginScrollView(characterListScrollPosition, GUILayout.ExpandHeight(true));
-
         var filteredCharacters = string.IsNullOrEmpty(searchString)
             ? characters
             : characters.Where(c => c.name.ToLower().Contains(searchString.ToLower())).ToList();
-
         foreach (var character in filteredCharacters)
         {
             var isSelected = selectedCharacter == character;
             if (GUILayout.Toggle(isSelected, character.name, EditorStyles.toolbarButton) && !isSelected)
             {
                 selectedCharacter = character;
+                // Создаем копию текущего состояния для последующего сравнения
+                if (selectedCharacter != null)
+                {
+                    _lastSavedCharacterState = Instantiate(selectedCharacter);
+                }
+                _lastChangeTime = Time.realtimeSinceStartup; // Сбрасываем таймер при смене персонажа
             }
         }
-
         EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
     }
@@ -4702,7 +4771,6 @@ public class CharacterEditorWindow : EditorWindow
         }
 
         EditorGUI.BeginChangeCheck();
-
         // Basic Info
         EditorGUILayout.LabelField("Basic Information", EditorStyles.boldLabel);
         selectedCharacter.FirstName = EditorGUILayout.TextField("First Name", selectedCharacter.FirstName);
@@ -4710,32 +4778,25 @@ public class CharacterEditorWindow : EditorWindow
         selectedCharacter.Icon = (Sprite)EditorGUILayout.ObjectField("Icon", selectedCharacter.Icon, typeof(Sprite), false);
         selectedCharacter.Description = EditorGUILayout.TextArea(selectedCharacter.Description, GUILayout.Height(60));
         selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
-
         EditorGUILayout.Space();
-
         // Message Prefabs
         EditorGUILayout.LabelField("Message Prefabs", EditorStyles.boldLabel);
-
         DrawPrefabFieldWithValidation(
             "Speech Text Message",
             ref selectedCharacter.SpeechTextMessagePrefab,
             typeof(SpeechTextMessage)
         );
-
         DrawPrefabFieldWithValidation(
             "Speech Image Message",
             ref selectedCharacter.SpeechImageMessagePrefab,
             typeof(SpeechImageMessage)
         );
-
         DrawPrefabFieldWithValidation(
             "Speech Audio Message",
             ref selectedCharacter.SpeechAudioMessagePrefab,
             typeof(SpeechAudioMessage)
         );
-
         EditorGUILayout.Space();
-
         // Variables
         EditorGUILayout.LabelField("Variables", EditorStyles.boldLabel);
         variablesScrollPosition = EditorGUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Height(200));
@@ -4751,44 +4812,32 @@ public class CharacterEditorWindow : EditorWindow
             if (GUILayout.Button("X", GUILayout.Width(20)))
             {
                 variableToRemove = i;
+                _lastChangeTime = Time.realtimeSinceStartup; // Обновляем время при удалении переменной
             }
             EditorGUILayout.EndHorizontal();
+            // Обновляем время после изменения любой переменной
+            if (GUI.changed)
+                _lastChangeTime = Time.realtimeSinceStartup;
         }
         EditorGUILayout.EndScrollView();
-
         if (GUILayout.Button("Add Variable"))
         {
             selectedCharacter.AddVariable();
+            _lastChangeTime = Time.realtimeSinceStartup; // Обновляем время при добавлении переменной
         }
 
+        // Обработка изменений в любом поле
         if (EditorGUI.EndChangeCheck())
         {
-            EditorUtility.SetDirty(selectedCharacter);
+            _lastChangeTime = Time.realtimeSinceStartup;
         }
 
         EditorGUILayout.EndVertical();
     }
 
-    private void DrawValidationMessage(Object prefab, System.Type expectedType)
-    {
-        if (prefab == null)
-        {
-            EditorGUILayout.HelpBox("⚠️ Not assigned", MessageType.Warning);
-        }
-        else if (prefab is GameObject go && go.GetComponent(expectedType) != null)
-        {
-            EditorGUILayout.HelpBox("✅ Valid: implements IMessageObject", MessageType.Info);
-        }
-        else
-        {
-            EditorGUILayout.HelpBox("❌ Invalid: does not implement IMessageObject", MessageType.Error);
-        }
-    }
-
     private void DrawPrefabFieldWithValidation(string label, ref GameObject prefab, System.Type expectedComponentType)
     {
         prefab = (GameObject)EditorGUILayout.ObjectField(label, prefab, typeof(GameObject), false);
-
         if (prefab == null)
         {
             EditorGUILayout.HelpBox("⚠️ Not assigned", MessageType.Warning);
@@ -4806,32 +4855,41 @@ public class CharacterEditorWindow : EditorWindow
                 EditorGUILayout.HelpBox("❌ Invalid: missing required component or it doesn't implement IMessageObject", MessageType.Error);
             }
         }
+        // Обновляем время после изменения префаба
+        if (GUI.changed)
+            _lastChangeTime = Time.realtimeSinceStartup;
     }
 
     private void CreateNewCharacter()
     {
         var newCharacter = CreateInstance<CharacterData>();
         newCharacter.name = "NewCharacter";
-
         var path = EditorUtility.SaveFilePanelInProject(
             "Create Character",
             "NewCharacter",
             "asset",
             "Please enter a file name to save the character");
-
         if (!string.IsNullOrEmpty(path))
         {
             AssetDatabase.CreateAsset(newCharacter, path);
             AssetDatabase.SaveAssets();
             RefreshCharacterList();
             selectedCharacter = newCharacter;
+            // Инициализируем состояние для автосохранения
+            _lastSavedCharacterState = Instantiate(selectedCharacter);
+            _lastChangeTime = Time.realtimeSinceStartup;
         }
     }
 
     private void SaveCharacter()
     {
+        if (selectedCharacter == null) return;
+
         EditorUtility.SetDirty(selectedCharacter);
         AssetDatabase.SaveAssets();
+
+        // Обновляем состояние последнего сохраненного персонажа
+        _lastSavedCharacterState = Instantiate(selectedCharacter);
         Debug.Log($"Character {selectedCharacter.name} saved successfully");
     }
 
@@ -4847,6 +4905,7 @@ public class CharacterEditorWindow : EditorWindow
             AssetDatabase.DeleteAsset(path);
             RefreshCharacterList();
             selectedCharacter = null;
+            _lastSavedCharacterState = null; // Очищаем состояние
         }
     }
 
@@ -4854,7 +4913,6 @@ public class CharacterEditorWindow : EditorWindow
     {
         characters.Clear();
         var guids = AssetDatabase.FindAssets("t:CharacterData");
-
         foreach (var guid in guids)
         {
             var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -9458,9 +9516,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 93
-// Total Size: 333,46 KB
-// Total Lines: 9266
+// Total Size: 337,79 KB
+// Total Lines: 9324
 // Classes: 98
-// Methods: 552
-// Comments: 794
+// Methods: 555
+// Comments: 812
 // =====================================

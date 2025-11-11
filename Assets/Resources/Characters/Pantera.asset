@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b8807f077013447b3a6744d0fb19c4, type: 3}
   m_Name: Pantera
   m_EditorClassIdentifier: 
-  FirstName: "\u041F\u0430\u043D\u0442\u0435\u0440\u0430"
-  LastName: Character
+  FirstName: asdasdasd
+  LastName: asdasd
   Icon: {fileID: 0}
   Description: 
   NameColor: {r: 1, g: 1, b: 1, a: 1}
