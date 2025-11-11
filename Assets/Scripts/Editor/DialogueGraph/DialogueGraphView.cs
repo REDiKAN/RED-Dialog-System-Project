@@ -1032,13 +1032,17 @@ public class DialogueGraphView : GraphView
 
     private void OnPortPointerUp(PointerUpEvent evt)
     {
-        if (_draggedOutputPort == null) return;
+        if (_draggedOutputPort == null)
+        {
+            _draggedOutputPort = null;
+            return;
+        }
 
         // Фиксируем конечную позицию в локальных координатах contentViewContainer
         _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
         _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
 
-        // Проверка: уже есть соединение и Capacity == Single?
+        // Проверка: если порт уже имеет соединение и имеет ограничение на одно соединение
         if (_draggedOutputPort.capacity == Port.Capacity.Single && _draggedOutputPort.connections.Any())
         {
             _draggedOutputPort = null;
@@ -1047,40 +1051,23 @@ public class DialogueGraphView : GraphView
 
         // Проверка опции в настройках
         var settings = LoadDialogueSettings();
-        if (!settings || !settings.General.EnableQuickNodeCreationOnDragDrop)
+        if (settings == null || !settings.General.EnableQuickNodeCreationOnDragDrop)
         {
             _draggedOutputPort = null;
             return;
         }
 
-        Edge createdEdge = null;
-        BaseNode newNode = null;
-
         // Проверяем, было ли создано соединение
-        bool connectionWasMade = false;
+        bool connectionWasMade = edges.Any(edge =>
+            edge.output == _draggedOutputPort && edge.input != null);
 
-        // Проверяем все ребра в графе, чтобы определить, было ли создано новое соединение
-        foreach (var edge in edges.ToList())
-        {
-            if (edge.output == _draggedOutputPort && edge.input != null)
-            {
-                createdEdge = edge;
-                connectionWasMade = true;
-                break;
-            }
-        }
-
-        if (connectionWasMade && createdEdge != null)
-        {
-            // Создаем команду для отмены создания связи
-            var command = new CreateConnectionCommand(this, createdEdge);
-            undoManager.ExecuteCommand(command);
-        }
-        else
+        if (!connectionWasMade)
         {
             // Показываем фильтрованное окно поиска узлов для создания нового узла
-            ShowFilteredNodeSearchWindowForUndo();
+            ShowFilteredNodeSearchWindow();
         }
+
+        _draggedOutputPort = null;
     }
 
     private void ShowFilteredNodeSearchWindowForUndo()
@@ -1128,7 +1115,11 @@ public class DialogueGraphView : GraphView
     // Замените метод ShowFilteredNodeSearchWindow на этот:
     private void ShowFilteredNodeSearchWindow()
     {
-        if (_draggedOutputPort?.node is not BaseNode sourceNode) return;
+        if (_draggedOutputPort?.node is not BaseNode sourceNode)
+        {
+            _draggedOutputPort = null;
+            return;
+        }
 
         // Правильное получение экранных координат в UI Toolkit
         Vector2 screenPosition = _dragReleasePosition;
@@ -1136,7 +1127,6 @@ public class DialogueGraphView : GraphView
         {
             Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
             Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
-
             // Преобразуем в экранные координаты с учетом позиции окна редактора
             Rect windowRect = editorWindow.position;
             screenPosition = new Vector2(
@@ -1159,7 +1149,6 @@ public class DialogueGraphView : GraphView
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
-
                     // Подключение: находим единственный input-порт
                     if (newNode.inputContainer.childCount > 0)
                     {

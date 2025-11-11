@@ -15,7 +15,7 @@ MonoBehaviour:
   General:
     DefaultMessageDelay: 0.5
     AutoScrollEnabled: 1
-    EnableQuickNodeCreationOnDragDrop: 0
+    EnableQuickNodeCreationOnDragDrop: 1
     EnableHotkeyUndoRedo: 1
   UI:
     UseCustomBackgroundColor: 1
