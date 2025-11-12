@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FirstName: "\u0418\u0433\u0440\u043E\u043A"
   LastName: Character
-  Icon: {fileID: 0}
+  Icon: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
   Description: 
   NameColor: {r: 1, g: 1, b: 1, a: 1}
   Variables: []
