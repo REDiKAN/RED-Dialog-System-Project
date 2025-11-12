@@ -114,7 +114,6 @@ public class DialogueGraph : EditorWindow
     private void GenerateToolbar()
     {
         var toolbar = new Toolbar();
-
         // Поле выбора существующего файла диалога
         var dialogueAssetField = new ObjectField("Dialogue File")
         {
@@ -130,16 +129,10 @@ public class DialogueGraph : EditorWindow
             }
         });
         toolbar.Add(dialogueAssetField);
-
         // Кнопка создания нового диалога
         toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
-
-        // Кнопка загрузки через проводник
-        toolbar.Add(new Button(LoadDialogueFromFileBrowser) { text = "Load File..." });
-
         // Кнопка сохранения
         toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
-
         // Base Character field (в конце)
         var baseCharacterField = new ObjectField("Base Character")
         {
@@ -154,7 +147,6 @@ public class DialogueGraph : EditorWindow
             graphView.MarkUnsavedChangeWithoutFile(); // ← добавлено
         });
         toolbar.Add(baseCharacterField);
-
         rootVisualElement.Add(toolbar);
     }
 
@@ -232,32 +224,25 @@ public class DialogueGraph : EditorWindow
             Application.dataPath,
             "asset"
         );
-
         if (string.IsNullOrEmpty(path)) return;
-
         // Преобразуем абсолютный путь в относительный от Assets
         if (!path.StartsWith(Application.dataPath))
         {
             EditorUtility.DisplayDialog("Invalid Path", "Please select a file inside the Assets folder.", "OK");
             return;
         }
-
         string relativePath = "Assets" + path.Substring(Application.dataPath.Length);
         var container = AssetDatabase.LoadAssetAtPath<DialogueContainer>(relativePath);
-
         if (container == null)
         {
             EditorUtility.DisplayDialog("Invalid File", "Selected file is not a valid DialogueContainer.", "OK");
             return;
         }
-
         // Обновляем ObjectField
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         if (assetField != null)
             assetField.SetValueWithoutNotify(container);
-
         LoadDialogueFromFile(container);
-
         graphView._hasUnsavedChangesWithoutFile = false;
         graphView._unsavedChangesWarningShown = false;
     }
