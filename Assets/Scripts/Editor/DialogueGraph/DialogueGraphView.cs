@@ -1051,7 +1051,6 @@ public class DialogueGraphView : GraphView
     {
         if (_draggedOutputPort == null)
         {
-            _draggedOutputPort = null;
             return;
         }
 
@@ -1082,6 +1081,8 @@ public class DialogueGraphView : GraphView
         {
             // Показываем фильтрованное окно поиска узлов для создания нового узла
             ShowFilteredNodeSearchWindow();
+            // ВАЖНО: не сбрасываем _draggedOutputPort здесь, это будет сделано в callback
+            return;
         }
 
         _draggedOutputPort = null;
@@ -1132,7 +1133,9 @@ public class DialogueGraphView : GraphView
     // Замените метод ShowFilteredNodeSearchWindow на этот:
     private void ShowFilteredNodeSearchWindow()
     {
-        if (_draggedOutputPort?.node is not BaseNode sourceNode)
+        // Сохраняем локальную ссылку на порт
+        var draggedOutputPort = _draggedOutputPort;
+        if (draggedOutputPort?.node is not BaseNode sourceNode)
         {
             _draggedOutputPort = null;
             return;
@@ -1151,14 +1154,13 @@ public class DialogueGraphView : GraphView
                 Screen.height - (windowRect.y + rootPosition.y)  // Инвертируем Y для правильного позиционирования
             );
         }
-
         // Корректируем позицию, чтобы окно не перекрывало курсор полностью
         screenPosition += new Vector2(10, 10);
 
         var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
         searchWindow.Init(editorWindow, this, sourceNode, (nodeType) =>
         {
-            if (nodeType != null)
+            if (nodeType != null && draggedOutputPort != null)
             {
                 // Используем скорректированную позицию для создания узла
                 var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
@@ -1166,21 +1168,38 @@ public class DialogueGraphView : GraphView
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
-                    // Подключение: находим единственный input-порт
-                    if (newNode.inputContainer.childCount > 0)
+
+                    // === ИСПРАВЛЕННЫЙ КОД ===
+                    // Подключение: находим ВСЕ input-порты и берем первый подходящий
+                    var inputPorts = newNode.inputContainer.Children()
+                        .OfType<Port>()
+                        .Where(p => p.direction == Direction.Input)
+                        .ToList();
+
+                    if (inputPorts.Count > 0)
                     {
-                        var inputPort = newNode.inputContainer[0] as Port;
-                        if (inputPort != null && _draggedOutputPort != null)
-                        {
-                            var edge = new Edge { output = _draggedOutputPort, input = inputPort };
-                            _draggedOutputPort.Connect(edge);
-                            inputPort.Connect(edge);
-                            Add(edge);
-                        }
+                        var inputPort = inputPorts[0];
+                        var edge = new Edge { output = draggedOutputPort, input = inputPort };
+                        draggedOutputPort.Connect(edge);
+                        inputPort.Connect(edge);
+                        Add(edge);
+
+                        // Явно обновляем отображение графа
+                        this.MarkDirtyRepaint();
+                        Debug.Log($"Connection created: {sourceNode.title} -> {newNode.title}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Could not create connection for node {newNode.title}. " +
+                                        $"Input ports count: {inputPorts.Count}");
                     }
                 }
             }
-            _draggedOutputPort = null;
+            // Сбрасываем только если обрабатывали именно этот порт
+            if (_draggedOutputPort == draggedOutputPort)
+            {
+                _draggedOutputPort = null;
+            }
         });
 
         // Открываем окно поиска в позиции курсора
