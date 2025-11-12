@@ -629,8 +629,19 @@ public class DialogueGraphView : GraphView
     /// <summary>
     /// Полностью очищает все exposed properties из Blackboard
     /// </summary>
+    /// <summary>
+    /// Полностью очищает все exposed properties из Blackboard
+    /// </summary>
     private void ClearAllProperties()
     {
+        // Проверяем, есть ли свойства для очистки
+        bool hasProperties = IntExposedProperties.Count > 0 || StringExposedProperties.Count > 0;
+
+        if (!hasProperties)
+        {
+            return; // Нет свойств - ничего не делаем и не показываем никаких окон
+        }
+
         if (!EditorUtility.DisplayDialog("Clear All Properties",
             "Are you sure you want to remove all exposed properties?", "Yes", "No"))
         {
@@ -639,10 +650,8 @@ public class DialogueGraphView : GraphView
 
         IntExposedProperties.Clear();
         StringExposedProperties.Clear();
-
         IntSection?.Clear();
         StringSection?.Clear();
-
         RefreshAllPropertyNodes();
         UpdateSectionTitles();
         Debug.Log("All exposed properties cleared successfully");
