@@ -138,4 +138,31 @@ public class DebugLogNode : BaseNode
             _previewLabel.text = MessageText;
         });
     }
+
+    [System.Serializable]
+    private class DebugLogNodeSerializedData
+    {
+        public string MessageText;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new DebugLogNodeSerializedData
+        {
+            MessageText = MessageText
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<DebugLogNodeSerializedData>(jsonData);
+        MessageText = data.MessageText;
+
+        // Обновление UI
+        if (_previewLabel != null)
+        {
+            _previewLabel.text = MessageText;
+        }
+    }
 }

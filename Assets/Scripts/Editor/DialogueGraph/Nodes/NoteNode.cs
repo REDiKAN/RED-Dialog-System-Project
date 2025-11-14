@@ -175,4 +175,39 @@ public class NoteNode : BaseNode
     {
         ConnectedNodeGuids.Clear();
     }
+
+    [System.Serializable]
+    private class NoteNodeSerializedData
+    {
+        public string NoteText;
+        public Color BackgroundColor;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new NoteNodeSerializedData
+        {
+            NoteText = NoteText,
+            BackgroundColor = BackgroundColor
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<NoteNodeSerializedData>(jsonData);
+        NoteText = data.NoteText;
+        BackgroundColor = data.BackgroundColor;
+
+        // Обновление UI
+        if (_previewLabel != null)
+        {
+            _previewLabel.text = NoteText;
+        }
+        if (_colorField != null)
+        {
+            _colorField.SetValueWithoutNotify(BackgroundColor);
+        }
+        UpdateBackgroundColor();
+    }
 }

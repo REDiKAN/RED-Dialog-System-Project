@@ -26,4 +26,15 @@ public class WireNode : BaseNode
         RefreshExpandedState();
         RefreshPorts();
     }
+
+    public override string SerializeNodeData()
+    {
+        // WireNode не имеет дополнительных данных
+        return "{}";
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        // WireNode не имеет дополнительных данных для десериализации
+    }
 }

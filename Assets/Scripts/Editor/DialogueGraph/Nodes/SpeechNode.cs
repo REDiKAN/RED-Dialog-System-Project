@@ -17,7 +17,7 @@ public class SpeechNode : BaseNode
 
     protected TextField dialogueTextField;
     protected ObjectField audioField;
-    private ObjectField speakerField;
+    public ObjectField speakerField;
 
     public override void Initialize(Vector2 position)
     {
@@ -72,5 +72,15 @@ public class SpeechNode : BaseNode
         DialogueText = text;
         if (dialogueTextField != null)
             dialogueTextField.SetValueWithoutNotify(text);
+    }
+
+    public override string SerializeNodeData()
+    {
+        return null;
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        // десериализация данных из JSON в узел
     }
 }

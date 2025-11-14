@@ -4,6 +4,7 @@ using DialogueSystem;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public class ModifyIntNode : BaseNode, IPropertyNode
 {
@@ -121,5 +122,36 @@ public class ModifyIntNode : BaseNode, IPropertyNode
                 SelectedProperty = "";
             }
         }
+    }
+
+    [System.Serializable]
+    private class ModifyIntNodeSerializedData
+    {
+        public string SelectedProperty;
+        public string Operator;
+        public int Value;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new ModifyIntNodeSerializedData
+        {
+            SelectedProperty = SelectedProperty,
+            Operator = Operator.ToString(),
+            Value = Value
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<ModifyIntNodeSerializedData>(jsonData);
+        SelectedProperty = data.SelectedProperty;
+        Operator = (OperatorType)Enum.Parse(typeof(OperatorType), data.Operator);
+        Value = data.Value;
+
+        // Восстановление UI
+        RefreshPropertyDropdown();
+        UpdateUIFromData();
     }
 }

@@ -284,4 +284,51 @@ public class RandomBranchNode : BaseNode
         }
         UpdateTotalWeight();
     }
+
+    [System.Serializable]
+    private class RandomBranchNodeSerializedData
+    {
+        public List<BranchVariantSerialized> Variants = new List<BranchVariantSerialized>();
+    }
+
+    [System.Serializable]
+    private class BranchVariantSerialized
+    {
+        public string PortName;
+        public float WeightPercent;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new RandomBranchNodeSerializedData();
+
+        foreach (var element in variantElements)
+        {
+            data.Variants.Add(new BranchVariantSerialized
+            {
+                PortName = element.Data.PortName,
+                WeightPercent = element.Data.WeightPercent
+            });
+        }
+
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<RandomBranchNodeSerializedData>(jsonData);
+
+        // Преобразуем сериализованные данные в варианты
+        var variants = new List<RandomBranchVariant>();
+        foreach (var variantData in data.Variants)
+        {
+            variants.Add(new RandomBranchVariant
+            {
+                PortName = variantData.PortName,
+                WeightPercent = variantData.WeightPercent
+            });
+        }
+
+        LoadVariants(variants);
+    }
 }

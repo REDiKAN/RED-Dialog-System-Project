@@ -19,4 +19,15 @@ public abstract class BaseNode : Node
         GUID = Guid.NewGuid().ToString();
         SetPosition(new Rect(position, new Vector2(200, 150)));
     }
+
+    public virtual string SerializeNodeData()
+    {
+        // Базовая реализация по умолчанию
+        return "{}";
+    }
+
+    public virtual void DeserializeNodeData(string jsonData)
+    {
+        // Пустая реализация по умолчанию
+    }
 }

@@ -83,4 +83,14 @@ public class DebugErrorNode : BaseNode
             _previewLabel.text = MessageText;
         });
     }
+
+    public override string SerializeNodeData()
+    {
+        return null;
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        // десериализация данных из JSON в узел
+    }
 }

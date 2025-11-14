@@ -6,6 +6,7 @@ using DialogueSystem;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
+using System;
 
 public class CharacterModifyIntNode : BaseNode
 {
@@ -93,5 +94,50 @@ public class CharacterModifyIntNode : BaseNode
             variableDropdown.value = SelectedVariable;
         else if (choices.Count > 0)
             variableDropdown.value = choices[0];
+    }
+
+    [System.Serializable]
+    private class CharacterModifyIntNodeSerializedData
+    {
+        public string CharacterAssetGuid;
+        public string SelectedVariable;
+        public string Operator;
+        public int Value;
+    }
+
+    public override string SerializeNodeData()
+    {
+        string characterGuid = string.Empty;
+        if (CharacterAsset != null)
+        {
+            characterGuid = AssetDatabaseHelper.GetAssetGuid(CharacterAsset);
+        }
+
+        var data = new CharacterModifyIntNodeSerializedData
+        {
+            CharacterAssetGuid = characterGuid,
+            SelectedVariable = SelectedVariable,
+            Operator = Operator.ToString(),
+            Value = Value
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<CharacterModifyIntNodeSerializedData>(jsonData);
+
+        // Загрузка персонажа по GUID
+        if (!string.IsNullOrEmpty(data.CharacterAssetGuid))
+        {
+            CharacterAsset = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.CharacterAssetGuid);
+        }
+
+        SelectedVariable = data.SelectedVariable;
+        Operator = (OperatorType)Enum.Parse(typeof(OperatorType), data.Operator);
+        Value = data.Value;
+
+        // Восстановление UI
+        UpdateUIFromData();
     }
 }

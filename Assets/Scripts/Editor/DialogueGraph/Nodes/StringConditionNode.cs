@@ -3,6 +3,8 @@ using UnityEngine.UIElements;
 using System.Linq;
 using UnityEngine;
 using DialogueSystem;
+using System;
+
 public class StringConditionNode : BaseConditionNode, IPropertyNode
 {
     public string SelectedProperty;
@@ -113,5 +115,36 @@ public class StringConditionNode : BaseConditionNode, IPropertyNode
             valueField.value = CompareValue;
             valueField.SetEnabled(Comparison != StringComparisonType.IsNullOrEmpty);
         }
+    }
+
+    [System.Serializable]
+    private class StringConditionNodeSerializedData
+    {
+        public string SelectedProperty;
+        public string Comparison;
+        public string CompareValue;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new StringConditionNodeSerializedData
+        {
+            SelectedProperty = SelectedProperty,
+            Comparison = Comparison.ToString(),
+            CompareValue = CompareValue
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<StringConditionNodeSerializedData>(jsonData);
+        SelectedProperty = data.SelectedProperty;
+        Comparison = (StringComparisonType)Enum.Parse(typeof(StringComparisonType), data.Comparison);
+        CompareValue = data.CompareValue;
+
+        // Восстановление UI
+        RefreshPropertyDropdown();
+        UpdateUIFromData();
     }
 }

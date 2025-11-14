@@ -68,4 +68,14 @@ public class OptionNode : BaseNode
         if (responseTextField != null)
             responseTextField.SetValueWithoutNotify(text);
     }
+
+    public override string SerializeNodeData()
+    {
+        return null;
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        // десериализация данных из JSON в узел
+    }
 }

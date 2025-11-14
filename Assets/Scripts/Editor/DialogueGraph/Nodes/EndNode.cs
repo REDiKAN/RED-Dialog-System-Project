@@ -1,14 +1,13 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
-using UnityEditor.Search;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
+using UnityEditor.Search;
 
 public class EndNode : BaseNode
 {
-    // Временное поле для drag-and-drop в редакторе
+    // Ссылка на следующий диалог для drag-and-drop
     public DialogueContainer NextDialogueAsset { get; set; }
-
     private ObjectField nextDialogueField;
 
     public override void Initialize(Vector2 position)
@@ -21,11 +20,10 @@ public class EndNode : BaseNode
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
 
-        // ObjectField для drag-and-drop
+        // ObjectField для drag-and-drop следующего диалога
         nextDialogueField = new ObjectField("Next Dialogue")
         {
             objectType = typeof(DialogueContainer)
-            // allowSceneObjects недоступен в UI Toolkit — убираем
         };
         nextDialogueField.RegisterValueChangedCallback(evt =>
         {
@@ -39,7 +37,7 @@ public class EndNode : BaseNode
     }
 
     /// <summary>
-    /// Получает путь относительно папки Resources (без .asset), или пустую строку, если не в Resources.
+    /// Получает путь к следующему диалогу в Resources (для .asset), или возвращает пустую строку, если файл не в Resources.
     /// </summary>
     public string GetNextDialoguePath()
     {
@@ -50,22 +48,23 @@ public class EndNode : BaseNode
         if (string.IsNullOrEmpty(assetPath))
             return string.Empty;
 
-        // Проверяем, лежит ли файл внутри Assets/Resources/
+        // Проверяем, что файл находится в папке Assets/Resources/
         if (!assetPath.StartsWith("Assets/Resources/"))
         {
             Debug.LogWarning($"Dialogue asset '{NextDialogueAsset.name}' is not in Resources folder. It will not be loadable at runtime via Resources.Load.", NextDialogueAsset);
-            return string.Empty; // Возвращаем пустую строку, чтобы не ломать рантайм
+            return string.Empty;
         }
 
-        // Убираем "Assets/Resources/" и ".asset"
+        // Убираем "Assets/Resources/" и расширение ".asset"
         string relativePath = assetPath.Substring("Assets/Resources/".Length);
         if (relativePath.EndsWith(".asset"))
             relativePath = relativePath.Substring(0, relativePath.Length - 6);
+
         return relativePath;
     }
 
     /// <summary>
-    /// Устанавливает ссылку на диалог по пути (используется при загрузке)
+    /// Устанавливает следующий диалог по пути (восстанавливает ссылку при загрузке)
     /// </summary>
     public void SetNextDialogueFromPath(string path)
     {
@@ -76,7 +75,7 @@ public class EndNode : BaseNode
             return;
         }
 
-        // Ищем в Resources
+        // Пытаемся загрузить из Resources
         var asset = Resources.Load<DialogueContainer>(path);
         if (asset != null)
         {
@@ -85,7 +84,7 @@ public class EndNode : BaseNode
             return;
         }
 
-        // Если не найден — ищем через AssetDatabase (для редактора)
+        // Пытаемся загрузить через AssetDatabase (для редактора)
         string fullPath = $"Assets/Resources/{path}.asset";
         var assetAtPath = AssetDatabase.LoadAssetAtPath<DialogueContainer>(fullPath);
         if (assetAtPath != null)

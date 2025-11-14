@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using DialogueSystem;
 using UnityEditor;
+using System;
 
 public class CharacterIntConditionNode : BaseConditionNode
 {
@@ -88,5 +89,39 @@ public class CharacterIntConditionNode : BaseConditionNode
             variableDropdown.value = SelectedVariable;
         else if (choices.Count > 0)
             variableDropdown.value = choices[0];
+    }
+
+    [System.Serializable]
+    private class CharacterIntConditionNodeSerializedData
+    {
+        public string CharacterName;
+        public string SelectedVariable;
+        public string Comparison;
+        public int CompareValue;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new CharacterIntConditionNodeSerializedData
+        {
+            CharacterName = CharacterName,
+            SelectedVariable = SelectedVariable,
+            Comparison = Comparison.ToString(),
+            CompareValue = CompareValue
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<CharacterIntConditionNodeSerializedData>(jsonData);
+        CharacterName = data.CharacterName;
+        SelectedVariable = data.SelectedVariable;
+        Comparison = (ComparisonType)Enum.Parse(typeof(ComparisonType), data.Comparison);
+        CompareValue = data.CompareValue;
+
+        // Восстановление UI
+        RefreshVariableDropdown();
+        UpdateUIFromData();
     }
 }

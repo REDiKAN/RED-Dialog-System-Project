@@ -62,4 +62,25 @@ public class TimerNode : BaseNode
         _durationSlider.value = DurationSeconds;
         UpdateLabel();
     }
+
+    [System.Serializable]
+    private class TimerNodeSerializedData
+    {
+        public float DurationSeconds;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new TimerNodeSerializedData
+        {
+            DurationSeconds = DurationSeconds
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<TimerNodeSerializedData>(jsonData);
+        SetDuration(data.DurationSeconds);
+    }
 }

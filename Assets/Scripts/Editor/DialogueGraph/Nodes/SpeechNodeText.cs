@@ -141,4 +141,54 @@ public class SpeechNodeText : SpeechNode
         if (_previewLabel != null)
             _previewLabel.text = DialogueText;
     }
+
+    [System.Serializable]
+    private class SpeechNodeTextData
+    {
+        public string DialogueText;
+        public string SpeakerGuid;
+        // Другие необходимые поля
+    }
+
+    [System.Serializable]
+    private class SpeechNodeTextSerializedData
+    {
+        public string DialogueText;
+        public string SpeakerGuid;
+    }
+
+    public override string SerializeNodeData()
+    {
+        string speakerGuid = string.Empty;
+        if (Speaker != null)
+        {
+            speakerGuid = AssetDatabaseHelper.GetAssetGuid(Speaker);
+        }
+
+        var data = new SpeechNodeTextSerializedData
+        {
+            DialogueText = DialogueText,
+            SpeakerGuid = speakerGuid
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<SpeechNodeTextSerializedData>(jsonData);
+        DialogueText = data.DialogueText;
+
+        // Загрузка спикера по GUID
+        if (!string.IsNullOrEmpty(data.SpeakerGuid))
+        {
+            Speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.SpeakerGuid);
+        }
+
+        // Обновление UI
+        _previewLabel.text = DialogueText;
+        if (speakerField != null)
+        {
+            speakerField.SetValueWithoutNotify(Speaker);
+        }
+    }
 }

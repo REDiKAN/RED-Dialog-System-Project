@@ -33,4 +33,14 @@ public class EntryNode : BaseNode
         // Добавляем специальный стиль для стартового узла
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
     }
+
+    public override string SerializeNodeData()
+    {
+        return null;
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        // десериализация данных из JSON в узел
+    }
 }

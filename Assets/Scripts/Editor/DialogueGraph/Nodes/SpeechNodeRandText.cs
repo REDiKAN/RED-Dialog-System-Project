@@ -283,4 +283,72 @@ public class SpeechNodeRandText : BaseNode
         }
         UpdateTotalWeight();
     }
+
+    [System.Serializable]
+    private class SpeechNodeRandTextSerializedData
+    {
+        public string SpeakerGuid;
+        public List<SpeechVariantSerialized> Variants = new List<SpeechVariantSerialized>();
+    }
+
+    [System.Serializable]
+    private class SpeechVariantSerialized
+    {
+        public string Text;
+        public float WeightPercent;
+    }
+
+    public override string SerializeNodeData()
+    {
+        string speakerGuid = string.Empty;
+        if (Speaker != null)
+        {
+            speakerGuid = AssetDatabaseHelper.GetAssetGuid(Speaker);
+        }
+
+        var data = new SpeechNodeRandTextSerializedData
+        {
+            SpeakerGuid = speakerGuid
+        };
+
+        // Сериализация вариантов
+        foreach (var element in variantElements)
+        {
+            data.Variants.Add(new SpeechVariantSerialized
+            {
+                Text = element.Data.Text,
+                WeightPercent = element.Data.WeightPercent
+            });
+        }
+
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<SpeechNodeRandTextSerializedData>(jsonData);
+
+        // Загрузка спикера
+        if (!string.IsNullOrEmpty(data.SpeakerGuid))
+        {
+            Speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.SpeakerGuid);
+            if (speakerField != null)
+            {
+                speakerField.SetValueWithoutNotify(Speaker);
+            }
+        }
+
+        // Загрузка вариантов
+        var variants = new List<SpeechVariant>();
+        foreach (var variantData in data.Variants)
+        {
+            variants.Add(new SpeechVariant
+            {
+                Text = variantData.Text,
+                WeightPercent = variantData.WeightPercent
+            });
+        }
+
+        LoadVariants(variants);
+    }
 }

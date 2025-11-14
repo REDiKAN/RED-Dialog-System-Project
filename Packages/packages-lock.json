@@ -250,7 +250,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.9.5",
+      "version": "1.9.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {

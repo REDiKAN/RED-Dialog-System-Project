@@ -1,11 +1,12 @@
 ﻿using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 using UnityEngine;
 using System.Linq;
 using UnityEditor;
 using System;
-using UnityEditor.UIElements;
+using DialogueSystem;
 
 /// <summary>
 /// Граф для редактирования диалогов с ограничениями на соединения узлов
@@ -105,24 +106,38 @@ public class DialogueGraphView : GraphView
 
         // Получаем текущие настройки
         var settings = LoadDialogueSettings();
+        bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
 
-        // Проверяем, разрешены ли горячие клавиши
-        if (settings != null && !settings.General.EnableHotkeyUndoRedo)
+        if (evt.ctrlKey)
         {
-            // Если горячие клавиши отключены, не обрабатываем комбинации
-            return;
+            switch (evt.keyCode)
+            {
+                case KeyCode.Z when hotkeysEnabled && !isUndoRedoOperation:
+                    undoManager.Undo();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.Y when hotkeysEnabled && !isUndoRedoOperation:
+                    undoManager.Redo();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.C:
+                    CopySelectedNodes();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.V:
+                    Vector2 pastePosition = GetMousePositionInGraphSpace();
+                    PasteNodesAtPosition(pastePosition);
+                    evt.StopPropagation();
+                    break;
+            }
         }
+    }
 
-        if (evt.ctrlKey && evt.keyCode == KeyCode.Z && !isUndoRedoOperation)
-        {
-            undoManager.Undo();
-            evt.StopPropagation();
-        }
-        else if (evt.ctrlKey && evt.keyCode == KeyCode.Y && !isUndoRedoOperation)
-        {
-            undoManager.Redo();
-            evt.StopPropagation();
-        }
+    private Vector2 GetMousePositionInGraphSpace()
+    {
+        var mousePosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+        var worldMousePosition = contentViewContainer.WorldToLocal(new Vector2(mousePosition.x, mousePosition.y));
+        return worldMousePosition;
     }
 
 
@@ -626,9 +641,6 @@ public class DialogueGraphView : GraphView
         }
     }
 
-    /// <summary>
-    /// Полностью очищает все exposed properties из Blackboard
-    /// </summary>
     /// <summary>
     /// Полностью очищает все exposed properties из Blackboard
     /// </summary>
@@ -1215,4 +1227,122 @@ public class DialogueGraphView : GraphView
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
+
+    public void CopySelectedNodes()
+    {
+
+        // Игнорируем EntryNode и другие системные узлы
+        var selectedNodes = selection.OfType<BaseNode>()
+            .Where(node => !node.EntryPoint && !(node is WireNode))
+            .ToList();
+
+        if (selectedNodes.Count == 0) return;
+
+        var clipboardData = new ClipboardData();
+
+        // Сериализация узлов
+        foreach (var node in selectedNodes)
+        {
+            clipboardData.nodes.Add(new SerializedNode
+            {
+                type = node.GetType().Name,
+                guid = node.GUID,
+                position = node.GetPosition().position,
+                nodeData = node.SerializeNodeData()
+            });
+        }
+
+        // Сериализация связей между выбранными узлами
+        var edges = this.edges.ToList();
+        foreach (var edge in edges)
+        {
+            if (edge.output?.node is BaseNode outputNode &&
+                edge.input?.node is BaseNode inputNode &&
+                selectedNodes.Contains(outputNode) &&
+                selectedNodes.Contains(inputNode))
+            {
+                clipboardData.connections.Add(new SerializedConnection
+                {
+                    sourceGuid = outputNode.GUID,
+                    targetGuid = inputNode.GUID,
+                    portName = edge.output.portName
+                });
+            }
+        }
+
+        // Вычисление геометрии для позиционирования при вставке
+        Vector2 minPos = new Vector2(float.MaxValue, float.MaxValue);
+        Vector2 maxPos = new Vector2(float.MinValue, float.MinValue);
+
+        foreach (var node in selectedNodes)
+        {
+            var pos = node.GetPosition().position;
+            minPos = new Vector2(Mathf.Min(minPos.x, pos.x), Mathf.Min(minPos.y, pos.y));
+            maxPos = new Vector2(Mathf.Max(maxPos.x, pos.x), Mathf.Max(maxPos.y, pos.y));
+        }
+
+        clipboardData.center = (minPos + maxPos) / 2;
+        clipboardData.size = maxPos - minPos;
+
+        // Сериализация в JSON и сохранение в буфер
+        string json = JsonUtility.ToJson(clipboardData);
+        GUIUtility.systemCopyBuffer = json;
+
+        Debug.Log($"Copied {selectedNodes.Count} nodes to clipboard");
+    }
+
+    public void PasteNodesAtPosition(Vector2 position)
+    {
+        if (string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)) return;
+
+        try
+        {
+            // ИСПРАВЛЕНО: используем полное имя типа DialogueGraphView.ClipboardData
+            var clipboardData = JsonUtility.FromJson<DialogueGraphView.ClipboardData>(GUIUtility.systemCopyBuffer);
+            if (clipboardData.nodes.Count == 0) return;
+
+            // Команда для UndoManager
+            var command = new PasteNodesCommand(this, clipboardData, position);
+            undoManager.ExecuteCommand(command);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to paste nodes: {e.Message}");
+        }
+    }
+
+    [System.Serializable]
+    public class ClipboardData
+    {
+        public List<SerializedNode> nodes = new List<SerializedNode>();
+        public List<SerializedConnection> connections = new List<SerializedConnection>();
+        public Vector2 center;
+        public Vector2 size;
+    }
+
+    [System.Serializable]
+    public class SerializedNode
+    {
+        public string type;
+        public string guid;
+        public Vector2 position;
+        public string nodeData;
+    }
+
+    [System.Serializable]
+    public class SerializedConnection
+    {
+        public string sourceGuid;
+        public string targetGuid;
+        public string portName;
+    }
+
+    [System.Serializable]
+    private class IntConditionNodeData
+    {
+        public string SelectedProperty;
+        public ComparisonType Comparison;
+        public int CompareValue;
+    }
 }
+

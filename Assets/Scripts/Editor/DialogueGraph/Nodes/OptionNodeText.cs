@@ -139,4 +139,31 @@ public class OptionNodeText : OptionNode
         if (_previewLabel != null)
             _previewLabel.text = ResponseText;
     }
+
+    [System.Serializable]
+    private class OptionNodeTextSerializedData
+    {
+        public string ResponseText;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new OptionNodeTextSerializedData
+        {
+            ResponseText = ResponseText
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<OptionNodeTextSerializedData>(jsonData);
+        ResponseText = data.ResponseText;
+
+        // Обновление UI
+        if (_previewLabel != null)
+        {
+            _previewLabel.text = ResponseText;
+        }
+    }
 }

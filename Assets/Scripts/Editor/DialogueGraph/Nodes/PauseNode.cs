@@ -56,4 +56,25 @@ public class PauseNode : BaseNode
         _durationSlider.value = DurationSeconds;
         UpdateLabel();
     }
+
+    [System.Serializable]
+    private class PauseNodeSerializedData
+    {
+        public float DurationSeconds;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new PauseNodeSerializedData
+        {
+            DurationSeconds = DurationSeconds
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<PauseNodeSerializedData>(jsonData);
+        SetDuration(data.DurationSeconds);
+    }
 }
