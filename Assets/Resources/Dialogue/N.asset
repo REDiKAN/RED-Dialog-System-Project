@@ -25,20 +25,23 @@ MonoBehaviour:
   - BaseNodeGuid: 509facc7-46dc-4498-a5d8-df159f597dcb
     PortName: Output
     TargetNodeGuid: 9f91d62c-1e9d-43bb-a757-629ba94a4c1d
+  - BaseNodeGuid: 509facc7-46dc-4498-a5d8-df159f597dcb
+    PortName: Output
+    TargetNodeGuid: 9f91d62c-1e9d-43bb-a757-629ba94a4c1d
   SpeechNodeDatas:
   - Guid: d178011e-95ef-4f52-8c9e-c5a70ac2e526
     Position: {x: 206, y: 200}
     DialogueText: New Dialogue
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: 9f91d62c-1e9d-43bb-a757-629ba94a4c1d
     Position: {x: 744, y: 200}
     DialogueText: New Dialogue
     AudioClipGuid: 
-    SpeakerGuid: 7cc18e99728988b4ba1670b927c885a6
-    SpeakerName: Character
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   OptionNodeDatas: []
   ExposedProperties: []

@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.11.2025 2:10:59
+// Generation Time: 15.11.2025 2:26:40
 // Total Files: 95
 // =================================
 
@@ -3119,11 +3119,15 @@ public class TextEditorModalWindow : VisualElement
     public void Close()
     {
         _graphView?.ClearNodeHighlight();
-
         _undoStack.Clear();
         _redoStack.Clear();
-
         this.RemoveFromHierarchy();
+
+        if (_graphView != null)
+            _graphView._activeTextEditorWindow = null;
+
+        if (_graphView != null)
+            _graphView.Focus();
     }
     private void ConvertToTMP()
     {
@@ -3155,15 +3159,12 @@ public class TextEditorModalWindow : VisualElement
     private void PerformUndo()
     {
         if (_undoStack.Count == 0) return;
-
         _isUndoRedoOperation = true;
         _redoStack.Add(_text);
         _text = _undoStack[_undoStack.Count - 1];
         _undoStack.RemoveAt(_undoStack.Count - 1);
         _onTextChanged?.Invoke(_text);
-        _isUndoRedoOperation = false;
-
-        _imguiContainer.MarkDirtyRepaint();
+        _isUndoRedoOperation = false; // Сбрасываем флаг
 
         _imguiContainer.MarkDirtyRepaint();
         GUI.changed = true;
@@ -3172,15 +3173,12 @@ public class TextEditorModalWindow : VisualElement
     private void PerformRedo()
     {
         if (_redoStack.Count == 0) return;
-
         _isUndoRedoOperation = true;
         _undoStack.Add(_text);
         _text = _redoStack[_redoStack.Count - 1];
         _redoStack.RemoveAt(_redoStack.Count - 1);
         _onTextChanged?.Invoke(_text);
-        _isUndoRedoOperation = false;
-
-        _imguiContainer.MarkDirtyRepaint();
+        _isUndoRedoOperation = false; // Сбрасываем флаг
 
         _imguiContainer.MarkDirtyRepaint();
         GUI.changed = true;
@@ -3251,7 +3249,7 @@ public class DialogueGraphView : GraphView
     private VisualElement _customBackground;
     private GridBackground _gridBackground;
 
-    private TextEditorModalWindow _activeTextEditorWindow;
+    public TextEditorModalWindow _activeTextEditorWindow;
 
     private Port _draggedOutputPort;
     private Vector2 _dragReleasePosition;
@@ -4510,8 +4508,7 @@ public class DialogueGraphView : GraphView
 
         try
         {
-            // ИСПРАВЛЕНО: используем полное имя типа DialogueGraphView.ClipboardData
-            var clipboardData = JsonUtility.FromJson<DialogueGraphView.ClipboardData>(GUIUtility.systemCopyBuffer);
+            var clipboardData = JsonUtility.FromJson<ClipboardData>(GUIUtility.systemCopyBuffer);
             if (clipboardData.nodes.Count == 0) return;
 
             // Команда для UndoManager
@@ -10678,9 +10675,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 95
-// Total Size: 376,24 KB
-// Total Lines: 10482
+// Total Size: 376,23 KB
+// Total Lines: 10479
 // Classes: 123
-// Methods: 650
-// Comments: 891
+// Methods: 648
+// Comments: 890
 // =====================================

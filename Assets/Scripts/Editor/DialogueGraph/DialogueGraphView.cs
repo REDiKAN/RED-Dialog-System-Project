@@ -1142,7 +1142,7 @@ public class DialogueGraphView : GraphView
         SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
 
-    // Замените метод ShowFilteredNodeSearchWindow на этот:
+
     private void ShowFilteredNodeSearchWindow()
     {
         // Сохраняем локальную ссылку на порт
@@ -1152,7 +1152,6 @@ public class DialogueGraphView : GraphView
             _draggedOutputPort = null;
             return;
         }
-
         // Правильное получение экранных координат в UI Toolkit
         Vector2 screenPosition = _dragReleasePosition;
         if (editorWindow != null && editorWindow.rootVisualElement != null)
@@ -1163,7 +1162,7 @@ public class DialogueGraphView : GraphView
             Rect windowRect = editorWindow.position;
             screenPosition = new Vector2(
                 windowRect.x + rootPosition.x,
-                Screen.height - (windowRect.y + rootPosition.y)  // Инвертируем Y для правильного позиционирования
+                windowRect.y + rootPosition.y // УБРАНА ИНВЕРСИЯ Y
             );
         }
         // Корректируем позицию, чтобы окно не перекрывало курсор полностью
@@ -1180,14 +1179,12 @@ public class DialogueGraphView : GraphView
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
-
                     // === ИСПРАВЛЕННЫЙ КОД ===
                     // Подключение: находим ВСЕ input-порты и берем первый подходящий
                     var inputPorts = newNode.inputContainer.Children()
                         .OfType<Port>()
                         .Where(p => p.direction == Direction.Input)
                         .ToList();
-
                     if (inputPorts.Count > 0)
                     {
                         var inputPort = inputPorts[0];
@@ -1195,7 +1192,6 @@ public class DialogueGraphView : GraphView
                         draggedOutputPort.Connect(edge);
                         inputPort.Connect(edge);
                         Add(edge);
-
                         // Явно обновляем отображение графа
                         this.MarkDirtyRepaint();
                         Debug.Log($"Connection created: {sourceNode.title} -> {newNode.title}");
@@ -1213,10 +1209,10 @@ public class DialogueGraphView : GraphView
                 _draggedOutputPort = null;
             }
         });
-
         // Открываем окно поиска в позиции курсора
         SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
+
     private DialogueSettingsData LoadDialogueSettings()
     {
         string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");

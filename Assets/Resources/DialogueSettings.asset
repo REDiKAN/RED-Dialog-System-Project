@@ -17,6 +17,7 @@ MonoBehaviour:
     AutoScrollEnabled: 1
     EnableQuickNodeCreationOnDragDrop: 1
     EnableHotkeyUndoRedo: 1
+    AutoSaveOnUnityClose: 1
   UI:
     UseCustomBackgroundColor: 1
     CustomBackgroundColor: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}
