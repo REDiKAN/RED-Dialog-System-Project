@@ -38,7 +38,7 @@ public class DialogueGraphView : GraphView
     private VisualElement _customBackground;
     private GridBackground _gridBackground;
 
-    private TextEditorModalWindow _activeTextEditorWindow;
+    public TextEditorModalWindow _activeTextEditorWindow;
 
     private Port _draggedOutputPort;
     private Vector2 _dragReleasePosition;
@@ -1297,8 +1297,7 @@ public class DialogueGraphView : GraphView
 
         try
         {
-            // ИСПРАВЛЕНО: используем полное имя типа DialogueGraphView.ClipboardData
-            var clipboardData = JsonUtility.FromJson<DialogueGraphView.ClipboardData>(GUIUtility.systemCopyBuffer);
+            var clipboardData = JsonUtility.FromJson<ClipboardData>(GUIUtility.systemCopyBuffer);
             if (clipboardData.nodes.Count == 0) return;
 
             // Команда для UndoManager

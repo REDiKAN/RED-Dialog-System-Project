@@ -408,11 +408,15 @@ public class TextEditorModalWindow : VisualElement
     public void Close()
     {
         _graphView?.ClearNodeHighlight();
-
         _undoStack.Clear();
         _redoStack.Clear();
-
         this.RemoveFromHierarchy();
+
+        if (_graphView != null)
+            _graphView._activeTextEditorWindow = null;
+
+        if (_graphView != null)
+            _graphView.Focus();
     }
     private void ConvertToTMP()
     {
@@ -444,15 +448,12 @@ public class TextEditorModalWindow : VisualElement
     private void PerformUndo()
     {
         if (_undoStack.Count == 0) return;
-
         _isUndoRedoOperation = true;
         _redoStack.Add(_text);
         _text = _undoStack[_undoStack.Count - 1];
         _undoStack.RemoveAt(_undoStack.Count - 1);
         _onTextChanged?.Invoke(_text);
-        _isUndoRedoOperation = false;
-
-        _imguiContainer.MarkDirtyRepaint();
+        _isUndoRedoOperation = false; // Сбрасываем флаг
 
         _imguiContainer.MarkDirtyRepaint();
         GUI.changed = true;
@@ -461,15 +462,12 @@ public class TextEditorModalWindow : VisualElement
     private void PerformRedo()
     {
         if (_redoStack.Count == 0) return;
-
         _isUndoRedoOperation = true;
         _undoStack.Add(_text);
         _text = _redoStack[_redoStack.Count - 1];
         _redoStack.RemoveAt(_redoStack.Count - 1);
         _onTextChanged?.Invoke(_text);
-        _isUndoRedoOperation = false;
-
-        _imguiContainer.MarkDirtyRepaint();
+        _isUndoRedoOperation = false; // Сбрасываем флаг
 
         _imguiContainer.MarkDirtyRepaint();
         GUI.changed = true;
