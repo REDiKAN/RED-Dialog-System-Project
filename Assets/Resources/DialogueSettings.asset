@@ -19,5 +19,5 @@ MonoBehaviour:
     EnableHotkeyUndoRedo: 1
     AutoSaveOnUnityClose: 1
   UI:
-    UseCustomBackgroundColor: 1
+    UseCustomBackgroundColor: 0
     CustomBackgroundColor: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}

@@ -31,8 +31,10 @@ public class DialogueGraph : EditorWindow
     {
         ConstructGraphView();
         GenerateToolbar();
-
         rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+
+        if (graphView != null)
+            graphView.UpdateGraphBackgroundInternal();
     }
 
     private void OnKeyDownEvent(KeyDownEvent evt)
