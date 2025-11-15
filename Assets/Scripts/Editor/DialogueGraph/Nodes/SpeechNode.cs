@@ -31,7 +31,7 @@ public class SpeechNode : BaseNode
         inputContainer.Add(inputPort);
 
         // Output port
-        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float));
+        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 

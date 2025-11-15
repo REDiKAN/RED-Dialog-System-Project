@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.11.2025 19:52:46
+// Generation Time: 15.11.2025 21:46:47
 // Total Files: 96
 // =================================
 
@@ -3550,6 +3550,22 @@ public class DialogueGraphView : GraphView
 
         if (evt.ctrlKey)
         {
+            // Обработка горячих клавиш при перетаскивании порта
+            if (_draggedOutputPort != null)
+            {
+                switch (evt.keyCode)
+                {
+                    case KeyCode.T when hotkeysEnabled && !isUndoRedoOperation:
+                        CreateNodeWithConnection(typeof(SpeechNodeText));
+                        evt.StopPropagation();
+                        return;
+                    case KeyCode.B when hotkeysEnabled && !isUndoRedoOperation:
+                        CreateNodeWithConnection(typeof(OptionNodeText));
+                        evt.StopPropagation();
+                        return;
+                }
+            }
+
             switch (evt.keyCode)
             {
                 case KeyCode.Z when hotkeysEnabled && !isUndoRedoOperation:
@@ -3569,8 +3585,16 @@ public class DialogueGraphView : GraphView
                     PasteNodesAtPosition(pastePosition);
                     evt.StopPropagation();
                     break;
-                case KeyCode.D: // Новая комбинация для дублирования
+                case KeyCode.D:
                     DuplicateSelectedNodes();
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.T when hotkeysEnabled && !isUndoRedoOperation:
+                    CreateNodeAtCursorPosition(typeof(SpeechNodeText));
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.B when hotkeysEnabled && !isUndoRedoOperation:
+                    CreateNodeAtCursorPosition(typeof(OptionNodeText));
                     evt.StopPropagation();
                     break;
             }
@@ -3960,6 +3984,7 @@ public class DialogueGraphView : GraphView
                     "Delete", "Cancel"))
                 {
                     RemoveIntProperty(intProperty, container);
+
                 }
             });
         }));
@@ -4595,7 +4620,7 @@ public class DialogueGraphView : GraphView
                 if (newNode != null)
                 {
                     // Создаем команду для создания узла и соединения
-                    var command = new CreateNodeAndConnectionCommand(this, newNode, _draggedOutputPort);
+                    var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
                     undoManager.ExecuteCommand(command);
                 }
             }
@@ -4767,6 +4792,63 @@ public class DialogueGraphView : GraphView
         {
             Debug.LogError($"Failed to paste nodes: {e.Message}");
         }
+    }
+
+    private void CreateNodeAtCursorPosition(Type nodeType)
+    {
+        // Проверка настроек и состояния окна
+        var settings = LoadDialogueSettings();
+        if (settings == null || !settings.General.EnableHotkeyUndoRedo || _activeTextEditorWindow != null)
+            return;
+
+        // Получение позиции курсора
+        Vector2 position = GetMousePositionInGraphSpace();
+
+        // Если курсор вне видимой области графа - создавать узел по центру экрана
+        if (float.IsNaN(position.x) || float.IsNaN(position.y) ||
+            position.x < -10000 || position.x > 10000 ||
+            position.y < -10000 || position.y > 10000)
+        {
+            position = Vector2.zero;
+        }
+
+        // Создание команды через undoManager
+        var command = new CreateNodeCommand(this, nodeType, position);
+        undoManager.ExecuteCommand(command);
+    }
+
+    private void CreateNodeWithConnection(Type nodeType)
+    {
+        // Проверяем, перетаскивается ли output port
+        if (_draggedOutputPort == null || _draggedOutputPort.node == null)
+            return;
+
+        // Получаем текущие настройки
+        var settings = LoadDialogueSettings();
+        if (settings == null || !settings.General.EnableHotkeyUndoRedo)
+            return;
+
+        // Проверяем, разрешено ли соединение с этим типом узла
+        var sourceNode = _draggedOutputPort.node as BaseNode;
+        var newNode = NodeFactory.CreateNode(nodeType, Vector2.zero); // Временный узел для проверки
+
+        if (newNode == null || !IsConnectionAllowed(_draggedOutputPort, newNode.inputContainer[0] as Port))
+        {
+            // Если соединение не разрешено, удаляем временный узел и выходим
+            if (newNode != null && newNode.parent != null)
+                this.RemoveElement(newNode);
+            return;
+        }
+
+        if (newNode != null && newNode.parent != null)
+            this.RemoveElement(newNode); // Удаляем временный узел
+
+        // Создаем команду для создания узла и соединения
+        var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
+        undoManager.ExecuteCommand(command);
+
+        // Сбрасываем состояние перетаскивания
+        _draggedOutputPort = null;
     }
 
     [System.Serializable]
@@ -8868,33 +8950,52 @@ public class CreateConnectionCommand : GraphCommand
 }
 
 //==== File 59 of 96: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeAndConnectionCommand.cs ====
+using System;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class CreateNodeAndConnectionCommand : GraphCommand
 {
-    private BaseNode newNode;
-    private Port draggedOutputPort;
-    private Edge createdEdge;
+    private Type _nodeType;
+    private Vector2 _position;
+    private Port _outputPort;
+    private BaseNode _createdNode;
+    private Edge _createdEdge;
+    private string _newGuid;
 
-    public CreateNodeAndConnectionCommand(DialogueGraphView graphView, BaseNode newNode, Port draggedOutputPort)
+    public CreateNodeAndConnectionCommand(DialogueGraphView graphView, Type nodeType, Vector2 position, Port outputPort)
         : base(graphView)
     {
-        this.newNode = newNode;
-        this.draggedOutputPort = draggedOutputPort;
+        _nodeType = nodeType;
+        _position = position;
+        _outputPort = outputPort;
+        _newGuid = System.Guid.NewGuid().ToString();
     }
 
     public override void Execute()
     {
-        // ������� ���� � �����
-        if (createdEdge != null && createdEdge.parent != null)
+        // ������� ����� ����
+        _createdNode = NodeFactory.CreateNode(_nodeType, _position);
+        if (_createdNode == null) return;
+
+        _createdNode.GUID = _newGuid;
+        graphView.AddElement(_createdNode);
+
+        // ������� ���������� input port � ������ ����
+        Port inputPort = null;
+        if (_createdNode.inputContainer.childCount > 0)
         {
-            graphView.RemoveElement(createdEdge);
+            inputPort = _createdNode.inputContainer[0] as Port;
         }
 
-        if (newNode != null && newNode.parent != null)
+        // ������� ����������, ���� ������ input port
+        if (inputPort != null)
         {
-            graphView.RemoveElement(newNode);
+            _createdEdge = new Edge { output = _outputPort, input = inputPort };
+            _outputPort.Connect(_createdEdge);
+            inputPort.Connect(_createdEdge);
+            graphView.Add(_createdEdge);
         }
 
         graphView.MarkUnsavedChangeWithoutFile();
@@ -8902,20 +9003,26 @@ public class CreateNodeAndConnectionCommand : GraphCommand
 
     public override void Undo()
     {
-        // ��������������� ����
-        graphView.AddElement(newNode);
-
-        // ��������������� �����
-        if (draggedOutputPort != null && newNode.inputContainer.childCount > 0)
+        // ������� ����������
+        if (_createdEdge != null && _createdEdge.parent != null)
         {
-            Port inputPort = newNode.inputContainer[0] as Port;
-            if (inputPort != null)
+            graphView.RemoveElement(_createdEdge);
+        }
+
+        // ������� ����
+        if (_createdNode != null && _createdNode.parent != null)
+        {
+            // ������� ��� ��������� ����������
+            var edgesToRemove = graphView.edges
+                .Where(e => e.input.node == _createdNode || e.output.node == _createdNode)
+                .ToList();
+
+            foreach (var edge in edgesToRemove)
             {
-                createdEdge = new Edge { output = draggedOutputPort, input = inputPort };
-                draggedOutputPort.Connect(createdEdge);
-                inputPort.Connect(createdEdge);
-                graphView.Add(createdEdge);
+                graphView.RemoveElement(edge);
             }
+
+            graphView.RemoveElement(_createdNode);
         }
 
         graphView.MarkUnsavedChangeWithoutFile();
@@ -11025,9 +11132,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 96
-// Total Size: 386,40 KB
-// Total Lines: 10827
+// Total Size: 390,89 KB
+// Total Lines: 10934
 // Classes: 124
-// Methods: 671
-// Comments: 929
+// Methods: 674
+// Comments: 943
 // =====================================
