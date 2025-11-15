@@ -95,7 +95,8 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
             }
 
             // Add separator between favorites and other nodes
-            entries.Add(new SearchTreeGroupEntry(new GUIContent("────────────────────"), 1));
+            entries.Add(new SearchTreeEntry(new GUIContent("────────────────────")) { level = 1, userData = null });
+
         }
 
         // Group remaining nodes by category

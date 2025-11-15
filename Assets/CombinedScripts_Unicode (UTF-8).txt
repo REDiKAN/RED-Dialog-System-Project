@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.11.2025 19:02:47
+// Generation Time: 15.11.2025 19:44:31
 // Total Files: 96
 // =================================
 
@@ -1975,6 +1975,7 @@ public static class AutoSaveHandler
 //==== File 16 of 96: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph.cs ====
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -2297,9 +2298,9 @@ public class DialogueGraph : EditorWindow
             }
         }
     }
-
-
 }
+
+
 
 //==== File 17 of 96: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueSettingsData.cs ====
 using System.Collections.Generic;
@@ -5133,6 +5134,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
 
             // Add separator between favorites and other nodes
             entries.Add(new SearchTreeGroupEntry(new GUIContent("────────────────────"), 1));
+
         }
 
         // Group remaining nodes by category
@@ -11023,8 +11025,8 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 96
-// Total Size: 386,34 KB
-// Total Lines: 10825
+// Total Size: 386,38 KB
+// Total Lines: 10827
 // Classes: 124
 // Methods: 671
 // Comments: 929
