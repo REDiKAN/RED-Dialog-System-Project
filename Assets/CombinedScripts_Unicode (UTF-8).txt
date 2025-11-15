@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.11.2025 19:44:31
+// Generation Time: 15.11.2025 19:52:46
 // Total Files: 96
 // =================================
 
@@ -5133,7 +5133,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
             }
 
             // Add separator between favorites and other nodes
-            entries.Add(new SearchTreeGroupEntry(new GUIContent("────────────────────"), 1));
+            entries.Add(new SearchTreeEntry(new GUIContent("────────────────────")) { level = 1, userData = null });
 
         }
 
@@ -11025,7 +11025,7 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 96
-// Total Size: 386,38 KB
+// Total Size: 386,40 KB
 // Total Lines: 10827
 // Classes: 124
 // Methods: 671

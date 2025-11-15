@@ -106,6 +106,10 @@ public class DialogueGraphView : GraphView
         if (_activeTextEditorWindow != null)
             return;
 
+        // Проверяем, активно ли окно редактора
+        if (EditorWindow.focusedWindow != editorWindow)
+            return;
+
         // Получаем текущие настройки
         var settings = LoadDialogueSettings();
         bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
@@ -131,8 +135,17 @@ public class DialogueGraphView : GraphView
                     PasteNodesAtPosition(pastePosition);
                     evt.StopPropagation();
                     break;
-                case KeyCode.D: // Новая комбинация для дублирования
+                case KeyCode.D: // Дублирование
                     DuplicateSelectedNodes();
+                    evt.StopPropagation();
+                    break;
+                // Новые горячие клавиши
+                case KeyCode.T when hotkeysEnabled && !isUndoRedoOperation:
+                    CreateNodeAtCursorPosition(typeof(SpeechNodeText));
+                    evt.StopPropagation();
+                    break;
+                case KeyCode.B when hotkeysEnabled && !isUndoRedoOperation:
+                    CreateNodeAtCursorPosition(typeof(OptionNodeText));
                     evt.StopPropagation();
                     break;
             }
@@ -1329,6 +1342,29 @@ public class DialogueGraphView : GraphView
         {
             Debug.LogError($"Failed to paste nodes: {e.Message}");
         }
+    }
+
+    private void CreateNodeAtCursorPosition(Type nodeType)
+    {
+        // Проверка настроек и состояния окна
+        var settings = LoadDialogueSettings();
+        if (settings == null || !settings.General.EnableHotkeyUndoRedo || _activeTextEditorWindow != null)
+            return;
+
+        // Получение позиции курсора
+        Vector2 position = GetMousePositionInGraphSpace();
+
+        // Если курсор вне видимой области графа - создавать узел по центру экрана
+        if (float.IsNaN(position.x) || float.IsNaN(position.y) ||
+            position.x < -10000 || position.x > 10000 ||
+            position.y < -10000 || position.y > 10000)
+        {
+            position = Vector2.zero;
+        }
+
+        // Создание команды через undoManager
+        var command = new CreateNodeCommand(this, nodeType, position);
+        undoManager.ExecuteCommand(command);
     }
 
     [System.Serializable]
