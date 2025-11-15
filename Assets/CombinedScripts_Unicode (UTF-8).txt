@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 15.11.2025 2:26:40
+// Generation Time: 15.11.2025 2:49:16
 // Total Files: 95
 // =================================
 
@@ -2006,8 +2006,10 @@ public class DialogueGraph : EditorWindow
     {
         ConstructGraphView();
         GenerateToolbar();
-
         rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+
+        if (graphView != null)
+            graphView.UpdateGraphBackgroundInternal();
     }
 
     private void OnKeyDownEvent(KeyDownEvent evt)
@@ -4353,7 +4355,7 @@ public class DialogueGraphView : GraphView
         SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
 
-    // Замените метод ShowFilteredNodeSearchWindow на этот:
+
     private void ShowFilteredNodeSearchWindow()
     {
         // Сохраняем локальную ссылку на порт
@@ -4363,7 +4365,6 @@ public class DialogueGraphView : GraphView
             _draggedOutputPort = null;
             return;
         }
-
         // Правильное получение экранных координат в UI Toolkit
         Vector2 screenPosition = _dragReleasePosition;
         if (editorWindow != null && editorWindow.rootVisualElement != null)
@@ -4374,7 +4375,7 @@ public class DialogueGraphView : GraphView
             Rect windowRect = editorWindow.position;
             screenPosition = new Vector2(
                 windowRect.x + rootPosition.x,
-                Screen.height - (windowRect.y + rootPosition.y)  // Инвертируем Y для правильного позиционирования
+                windowRect.y + rootPosition.y // УБРАНА ИНВЕРСИЯ Y
             );
         }
         // Корректируем позицию, чтобы окно не перекрывало курсор полностью
@@ -4391,14 +4392,12 @@ public class DialogueGraphView : GraphView
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
-
                     // === ИСПРАВЛЕННЫЙ КОД ===
                     // Подключение: находим ВСЕ input-порты и берем первый подходящий
                     var inputPorts = newNode.inputContainer.Children()
                         .OfType<Port>()
                         .Where(p => p.direction == Direction.Input)
                         .ToList();
-
                     if (inputPorts.Count > 0)
                     {
                         var inputPort = inputPorts[0];
@@ -4406,7 +4405,6 @@ public class DialogueGraphView : GraphView
                         draggedOutputPort.Connect(edge);
                         inputPort.Connect(edge);
                         Add(edge);
-
                         // Явно обновляем отображение графа
                         this.MarkDirtyRepaint();
                         Debug.Log($"Connection created: {sourceNode.title} -> {newNode.title}");
@@ -4424,10 +4422,10 @@ public class DialogueGraphView : GraphView
                 _draggedOutputPort = null;
             }
         });
-
         // Открываем окно поиска в позиции курсора
         SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
+
     private DialogueSettingsData LoadDialogueSettings()
     {
         string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
@@ -10675,9 +10673,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 95
-// Total Size: 376,23 KB
-// Total Lines: 10479
+// Total Size: 376,16 KB
+// Total Lines: 10477
 // Classes: 123
 // Methods: 648
-// Comments: 890
+// Comments: 889
 // =====================================

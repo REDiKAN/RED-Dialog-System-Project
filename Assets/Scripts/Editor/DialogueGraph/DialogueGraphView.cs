@@ -88,6 +88,8 @@ public class DialogueGraphView : GraphView
         GenerateBlackBoard();
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
         RegisterCallback<KeyDownEvent>(OnGlobalKeyDown);
+
+        //this.RegisterCallback<ContextualMenuPopulateEvent>(OnContextualMenuPopulate);
     }
     private bool CanEditNodeWithDoubleClick(BaseNode node)
     {
@@ -129,8 +131,31 @@ public class DialogueGraphView : GraphView
                     PasteNodesAtPosition(pastePosition);
                     evt.StopPropagation();
                     break;
+                case KeyCode.D: // Новая комбинация для дублирования
+                    DuplicateSelectedNodes();
+                    evt.StopPropagation();
+                    break;
             }
         }
+    }
+
+    // Новый метод для дублирования выделенных узлов
+    public void DuplicateSelectedNodes()
+    {
+        // Отфильтровываем EntryPoint узлы и другие системные узлы
+        var selectedNodes = selection.OfType<BaseNode>()
+            .Where(node => !node.EntryPoint)
+            .ToList();
+
+        if (selectedNodes.Count == 0)
+            return;
+
+        // Получаем позицию курсора
+        Vector2 pastePosition = GetMousePositionInGraphSpace();
+
+        // Создаем и выполняем команду дублирования
+        var command = new DuplicateNodesCommand(this, selectedNodes, pastePosition);
+        undoManager.ExecuteCommand(command);
     }
 
     private Vector2 GetMousePositionInGraphSpace()

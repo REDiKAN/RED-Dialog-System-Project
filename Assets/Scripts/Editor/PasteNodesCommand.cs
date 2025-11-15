@@ -23,14 +23,6 @@ public class SerializedNode
     public string nodeData;
 }
 
-[System.Serializable]
-public class SerializedConnection
-{
-    public string sourceGuid;
-    public string targetGuid;
-    public string portName;
-}
-
 public class PasteNodesCommand : GraphCommand
 {
     private List<BaseNode> pastedNodes = new List<BaseNode>();
