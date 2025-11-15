@@ -1,30 +1,49 @@
+using System;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class CreateNodeAndConnectionCommand : GraphCommand
 {
-    private BaseNode newNode;
-    private Port draggedOutputPort;
-    private Edge createdEdge;
+    private Type _nodeType;
+    private Vector2 _position;
+    private Port _outputPort;
+    private BaseNode _createdNode;
+    private Edge _createdEdge;
+    private string _newGuid;
 
-    public CreateNodeAndConnectionCommand(DialogueGraphView graphView, BaseNode newNode, Port draggedOutputPort)
+    public CreateNodeAndConnectionCommand(DialogueGraphView graphView, Type nodeType, Vector2 position, Port outputPort)
         : base(graphView)
     {
-        this.newNode = newNode;
-        this.draggedOutputPort = draggedOutputPort;
+        _nodeType = nodeType;
+        _position = position;
+        _outputPort = outputPort;
+        _newGuid = System.Guid.NewGuid().ToString();
     }
 
     public override void Execute()
     {
-        // Удаляем узел и связь
-        if (createdEdge != null && createdEdge.parent != null)
+        // Создаем новый узел
+        _createdNode = NodeFactory.CreateNode(_nodeType, _position);
+        if (_createdNode == null) return;
+
+        _createdNode.GUID = _newGuid;
+        graphView.AddElement(_createdNode);
+
+        // Находим подходящий input port у нового узла
+        Port inputPort = null;
+        if (_createdNode.inputContainer.childCount > 0)
         {
-            graphView.RemoveElement(createdEdge);
+            inputPort = _createdNode.inputContainer[0] as Port;
         }
 
-        if (newNode != null && newNode.parent != null)
+        // Создаем соединение, если найден input port
+        if (inputPort != null)
         {
-            graphView.RemoveElement(newNode);
+            _createdEdge = new Edge { output = _outputPort, input = inputPort };
+            _outputPort.Connect(_createdEdge);
+            inputPort.Connect(_createdEdge);
+            graphView.Add(_createdEdge);
         }
 
         graphView.MarkUnsavedChangeWithoutFile();
@@ -32,20 +51,26 @@ public class CreateNodeAndConnectionCommand : GraphCommand
 
     public override void Undo()
     {
-        // Восстанавливаем узел
-        graphView.AddElement(newNode);
-
-        // Восстанавливаем связь
-        if (draggedOutputPort != null && newNode.inputContainer.childCount > 0)
+        // Удаляем соединение
+        if (_createdEdge != null && _createdEdge.parent != null)
         {
-            Port inputPort = newNode.inputContainer[0] as Port;
-            if (inputPort != null)
+            graphView.RemoveElement(_createdEdge);
+        }
+
+        // Удаляем узел
+        if (_createdNode != null && _createdNode.parent != null)
+        {
+            // Удаляем все связанные соединения
+            var edgesToRemove = graphView.edges
+                .Where(e => e.input.node == _createdNode || e.output.node == _createdNode)
+                .ToList();
+
+            foreach (var edge in edgesToRemove)
             {
-                createdEdge = new Edge { output = draggedOutputPort, input = inputPort };
-                draggedOutputPort.Connect(createdEdge);
-                inputPort.Connect(createdEdge);
-                graphView.Add(createdEdge);
+                graphView.RemoveElement(edge);
             }
+
+            graphView.RemoveElement(_createdNode);
         }
 
         graphView.MarkUnsavedChangeWithoutFile();

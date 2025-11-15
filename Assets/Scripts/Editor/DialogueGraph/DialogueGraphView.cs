@@ -106,16 +106,28 @@ public class DialogueGraphView : GraphView
         if (_activeTextEditorWindow != null)
             return;
 
-        // Проверяем, активно ли окно редактора
-        if (EditorWindow.focusedWindow != editorWindow)
-            return;
-
         // Получаем текущие настройки
         var settings = LoadDialogueSettings();
         bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
 
         if (evt.ctrlKey)
         {
+            // Обработка горячих клавиш при перетаскивании порта
+            if (_draggedOutputPort != null)
+            {
+                switch (evt.keyCode)
+                {
+                    case KeyCode.T when hotkeysEnabled && !isUndoRedoOperation:
+                        CreateNodeWithConnection(typeof(SpeechNodeText));
+                        evt.StopPropagation();
+                        return;
+                    case KeyCode.B when hotkeysEnabled && !isUndoRedoOperation:
+                        CreateNodeWithConnection(typeof(OptionNodeText));
+                        evt.StopPropagation();
+                        return;
+                }
+            }
+
             switch (evt.keyCode)
             {
                 case KeyCode.Z when hotkeysEnabled && !isUndoRedoOperation:
@@ -135,11 +147,10 @@ public class DialogueGraphView : GraphView
                     PasteNodesAtPosition(pastePosition);
                     evt.StopPropagation();
                     break;
-                case KeyCode.D: // Дублирование
+                case KeyCode.D:
                     DuplicateSelectedNodes();
                     evt.StopPropagation();
                     break;
-                // Новые горячие клавиши
                 case KeyCode.T when hotkeysEnabled && !isUndoRedoOperation:
                     CreateNodeAtCursorPosition(typeof(SpeechNodeText));
                     evt.StopPropagation();
@@ -535,6 +546,7 @@ public class DialogueGraphView : GraphView
                     "Delete", "Cancel"))
                 {
                     RemoveIntProperty(intProperty, container);
+
                 }
             });
         }));
@@ -1170,7 +1182,7 @@ public class DialogueGraphView : GraphView
                 if (newNode != null)
                 {
                     // Создаем команду для создания узла и соединения
-                    var command = new CreateNodeAndConnectionCommand(this, newNode, _draggedOutputPort);
+                    var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
                     undoManager.ExecuteCommand(command);
                 }
             }
@@ -1365,6 +1377,40 @@ public class DialogueGraphView : GraphView
         // Создание команды через undoManager
         var command = new CreateNodeCommand(this, nodeType, position);
         undoManager.ExecuteCommand(command);
+    }
+
+    private void CreateNodeWithConnection(Type nodeType)
+    {
+        // Проверяем, перетаскивается ли output port
+        if (_draggedOutputPort == null || _draggedOutputPort.node == null)
+            return;
+
+        // Получаем текущие настройки
+        var settings = LoadDialogueSettings();
+        if (settings == null || !settings.General.EnableHotkeyUndoRedo)
+            return;
+
+        // Проверяем, разрешено ли соединение с этим типом узла
+        var sourceNode = _draggedOutputPort.node as BaseNode;
+        var newNode = NodeFactory.CreateNode(nodeType, Vector2.zero); // Временный узел для проверки
+
+        if (newNode == null || !IsConnectionAllowed(_draggedOutputPort, newNode.inputContainer[0] as Port))
+        {
+            // Если соединение не разрешено, удаляем временный узел и выходим
+            if (newNode != null && newNode.parent != null)
+                this.RemoveElement(newNode);
+            return;
+        }
+
+        if (newNode != null && newNode.parent != null)
+            this.RemoveElement(newNode); // Удаляем временный узел
+
+        // Создаем команду для создания узла и соединения
+        var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
+        undoManager.ExecuteCommand(command);
+
+        // Сбрасываем состояние перетаскивания
+        _draggedOutputPort = null;
     }
 
     [System.Serializable]
