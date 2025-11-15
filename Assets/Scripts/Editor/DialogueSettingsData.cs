@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "DialogueSettings", menuName = "Dialogue System/Settings Data")]
@@ -12,8 +13,7 @@ public class DialogueSettingsData : ScriptableObject
         public bool AutoScrollEnabled = true;
         public bool EnableQuickNodeCreationOnDragDrop = true;
         public bool EnableHotkeyUndoRedo = true; //    
-
-        // AUTO-SAVE: ƒобавл€ем новую настройку дл€ автоматического сохранени€ при закрытии Unity
+        // AUTO-SAVE:         Unity
         public bool AutoSaveOnUnityClose = true;
     }
     [System.Serializable]
@@ -28,5 +28,45 @@ public class DialogueSettingsData : ScriptableObject
         public float MasterVolume = 1f;
         public bool MuteOnPause = true;
         public string AudioMixerPath = "Audio/Mixer";
+    }
+
+    // New field for favorite node types
+    [SerializeField] private List<string> _favoriteNodeTypes = new List<string>();
+    public List<string> FavoriteNodeTypes
+    {
+        get
+        {
+            // Initialize with defaults if empty
+            if (_favoriteNodeTypes == null || _favoriteNodeTypes.Count == 0)
+            {
+                _favoriteNodeTypes = new List<string> {
+                    "SpeechNodeText",
+                    "OptionNodeText",
+                    "IntConditionNode",
+                    "EndNode"
+                };
+            }
+            return _favoriteNodeTypes;
+        }
+        set { _favoriteNodeTypes = value; }
+    }
+
+    private void OnEnable()
+    {
+        // Ensure default values are set when the object is enabled
+        if (_favoriteNodeTypes == null)
+        {
+            _favoriteNodeTypes = new List<string>();
+        }
+
+        if (_favoriteNodeTypes.Count == 0)
+        {
+            _favoriteNodeTypes.AddRange(new List<string> {
+                "SpeechNodeText",
+                "OptionNodeText",
+                "IntConditionNode",
+                "EndNode"
+            });
+        }
     }
 }
