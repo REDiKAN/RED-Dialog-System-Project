@@ -113,16 +113,17 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         var allowed = new HashSet<Type>();
 
-        // Speech → Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
+        // Speech → Speech, Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
         if (source is SpeechNodeText or SpeechNodeAudio or SpeechNodeImage or SpeechNodeRandText)
         {
             allowed.UnionWith(new[]
             {
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode)
+        typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText), // Добавлено
+        typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+        typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
+        typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
+        typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+        typeof(WireNode), typeof(RandomBranchNode)
             });
         }
         // Option → Speech, Condition, End, Modify, RandomBranch
