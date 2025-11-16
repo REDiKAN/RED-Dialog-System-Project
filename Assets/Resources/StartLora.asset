@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: StartLora
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: 677238c3-f6a3-4a54-8f7e-a9cdb35f5b15
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: 677238c3-f6a3-4a54-8f7e-a9cdb35f5b15
+    PortName: Next
+    TargetNodeGuid: 1bba3a91-a0bf-47b0-9b7b-8ab4529798a7
+  - BaseNodeGuid: 1bba3a91-a0bf-47b0-9b7b-8ab4529798a7
+    PortName: Next
+    TargetNodeGuid: 95f93de1-bbb5-4853-b506-4081bacd2aa7
+  - BaseNodeGuid: 95f93de1-bbb5-4853-b506-4081bacd2aa7
+    PortName: Next
+    TargetNodeGuid: cfa4e186-f411-4935-851c-3793d61d68c5
+  - BaseNodeGuid: 95f93de1-bbb5-4853-b506-4081bacd2aa7
+    PortName: Next
+    TargetNodeGuid: 97517f71-b70f-4846-87e3-8443b7ed9cca
+  - BaseNodeGuid: b8f0e536-fc56-476d-84fd-f34d1916b305
+    PortName: Next
+    TargetNodeGuid: 65be966a-231b-4990-a0ac-31f872cbb97f
+  - BaseNodeGuid: cd5b1785-2480-463e-a4df-b06fe4097911
+    PortName: Next
+    TargetNodeGuid: faa64d71-e2ba-45a1-b8c9-4cf52b9694ea
+  - BaseNodeGuid: faa64d71-e2ba-45a1-b8c9-4cf52b9694ea
+    PortName: Next
+    TargetNodeGuid: 340b10c8-e77d-48a1-97f8-c1a8e16c8470
+  - BaseNodeGuid: dfd6e2fc-9ed7-457f-bb98-2b2153502f8f
+    PortName: Next
+    TargetNodeGuid: ccc1b6cd-82ec-4e41-98ae-a92c3eba4065
+  - BaseNodeGuid: cfa4e186-f411-4935-851c-3793d61d68c5
+    PortName: Next
+    TargetNodeGuid: cd5b1785-2480-463e-a4df-b06fe4097911
+  - BaseNodeGuid: 97517f71-b70f-4846-87e3-8443b7ed9cca
+    PortName: Next
+    TargetNodeGuid: b8f0e536-fc56-476d-84fd-f34d1916b305
+  - BaseNodeGuid: 340b10c8-e77d-48a1-97f8-c1a8e16c8470
+    PortName: Next
+    TargetNodeGuid: dfd6e2fc-9ed7-457f-bb98-2b2153502f8f
+  SpeechNodeDatas:
+  - Guid: 1bba3a91-a0bf-47b0-9b7b-8ab4529798a7
+    Position: {x: 237, y: 200}
+    DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: 95f93de1-bbb5-4853-b506-4081bacd2aa7
+    Position: {x: 592, y: 200}
+    DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442, \u043C\u044B \u0437\u043D\u0430\u043A\u043E\u043C\u044B
+      ?"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: b8f0e536-fc56-476d-84fd-f34d1916b305
+    Position: {x: 1248, y: 277}
+    DialogueText: "\u041A\u0430\u043A \u0434\u0435\u043B\u0430 ?"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: cd5b1785-2480-463e-a4df-b06fe4097911
+    Position: {x: 1248, y: 149}
+    DialogueText: "\u0414\u0430\u0432\u0430\u0439 \u043F\u043E\u0437\u043D\u043E\u043A\u043E\u043C\u0438\u043C\u0441\u044F
+      ?"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: faa64d71-e2ba-45a1-b8c9-4cf52b9694ea
+    Position: {x: 1568, y: 149}
+    DialogueText: "\u0414\u0430\u0432\u0430\u0439"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: 65be966a-231b-4990-a0ac-31f872cbb97f
+    Position: {x: 1568, y: 277}
+    DialogueText: "\u041D\u043E\u0440\u043C\u0430\u043B\u044C\u043D\u043E, \u0432\u043E
+      \u0441\u043E\u0431\u0438\u0440\u0430\u044E \u0433\u0440\u0438\u0431\u044B"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: dfd6e2fc-9ed7-457f-bb98-2b2153502f8f
+    Position: {x: 2224, y: 149}
+    DialogueText: "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u0435\u0448\u0441\u044F
+      ?"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: ccc1b6cd-82ec-4e41-98ae-a92c3eba4065
+    Position: {x: 2564, y: 149}
+    DialogueText: "\u0414\u0430 \u0442\u0430\u043A, \u0441\u043E\u0431\u0438\u0440\u0430\u044E
+      \u0433\u0440\u0438\u0431\u044B"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  OptionNodeDatas:
+  - Guid: cfa4e186-f411-4935-851c-3793d61d68c5
+    Position: {x: 927, y: 149}
+    ResponseText: "\u0414\u0430\u0432\u0430\u0439 \u043F\u043E\u0437\u043D\u043E\u043A\u043E\u043C\u0438\u043C\u0441\u044F
+      ?"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 97517f71-b70f-4846-87e3-8443b7ed9cca
+    Position: {x: 927, y: 277}
+    ResponseText: "\u041A\u0430\u043A \u0434\u0435\u043B\u0430 ?"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 340b10c8-e77d-48a1-97f8-c1a8e16c8470
+    Position: {x: 1906, y: 149}
+    ResponseText: "\u0427\u0435\u043C \u0437\u0430\u043D\u0438\u043C\u0430\u0435\u0448\u0441\u044F
+      ?"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 3a1ec005e0d02b64894bcc932a4e8333
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas: []
+  PauseNodeDatas: []
+  WireNodeDatas: []

@@ -1038,6 +1038,15 @@ public class GraphSaveUtility
         existingContainer.WireNodeDatas.Clear();
         existingContainer.IntExposedProperties.Clear();
         existingContainer.StringExposedProperties.Clear();
+        existingContainer.SpeechRandNodeDatas.Clear();
+        existingContainer.NoteNodeDatas.Clear();
+        existingContainer.CharacterIntConditionNodeDatas.Clear();
+        existingContainer.RandomBranchNodeDatas.Clear();
+        existingContainer.CharacterModifyIntNodeDatas.Clear();
+        existingContainer.EventNodeDatas.Clear();
+        existingContainer.DebugLogNodeDatas.Clear();
+        existingContainer.DebugWarningNodeDatas.Clear();
+        existingContainer.DebugErrorNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
 

@@ -278,23 +278,24 @@ public class DialogueGraphView : GraphView
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
         var compatiblePorts = new List<Port>();
-
-        // Перебираем все порты в графе
         ports.ForEach(port =>
         {
             // Пропускаем тот же порт, порт того же узла и порты с тем же направлением
-            if (startPort != port &&
-                startPort.node != port.node &&
-                startPort.direction != port.direction)
+            if (startPort == port ||
+                startPort.node == port.node ||
+                startPort.direction == port.direction)
+                return;
+
+            // Проверка ёмкости целевого порта
+            if (port.capacity == Port.Capacity.Single && port.connections.Count() >= 1)
+                return;
+
+            // Проверка ограничений на соединения узлов
+            if (IsConnectionAllowed(startPort, port))
             {
-                // Проверяем ограничения на соединения узлов
-                if (IsConnectionAllowed(startPort, port))
-                {
-                    compatiblePorts.Add(port);
-                }
+                compatiblePorts.Add(port);
             }
         });
-
         return compatiblePorts;
     }
 
@@ -1111,6 +1112,7 @@ public class DialogueGraphView : GraphView
 
     private void OnPortPointerUp(PointerUpEvent evt)
     {
+
         if (_draggedOutputPort == null)
         {
             return;
