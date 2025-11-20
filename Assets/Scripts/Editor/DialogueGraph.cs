@@ -158,21 +158,25 @@ public class DialogueGraph : EditorWindow
     /// </summary>
     private void CreateNewDialogue()
     {
-        string path = EditorUtility.SaveFilePanelInProject(
-            "Create New Dialogue",
-            "NewDialogue",
-            "asset",
-            "Choose location and name for the new dialogue file"
-        );
-        if (string.IsNullOrEmpty(path))
-            return;
+        // Определяем директорию по умолчанию
+        string defaultDirectory = "Assets/Resources/DialogueFiles";
+
+        // Создаем директории если они не существуют
+        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        if (!AssetDatabase.IsValidFolder(defaultDirectory))
+            AssetDatabase.CreateFolder("Assets/Resources", "DialogueFiles");
+
+        // Генерируем уникальное имя файла с временной меткой
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string fileName = $"Dialogue_{timestamp}.asset";
+        string path = System.IO.Path.Combine(defaultDirectory, fileName);
 
         // Создаём контейнер
         var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
 
         // Сохраняем текущее состояние графа в контейнер
         var saveUtility = GraphSaveUtility.GetInstance(graphView);
-        // Временно сохраняем в контейнер без записи в AssetDatabase
         saveUtility.SaveGraphToExistingContainer(newContainer);
 
         // Сохраняем файл
@@ -184,14 +188,26 @@ public class DialogueGraph : EditorWindow
         if (assetField != null)
             assetField.SetValueWithoutNotify(newContainer);
 
-        // Загружаем (это сбросит флаги)
+        // Загружаем диалог (это сбросит флаги)
         LoadDialogueFromFile(newContainer);
 
         // Сбрасываем состояние "без файла"
         graphView._hasUnsavedChangesWithoutFile = false;
         graphView._unsavedChangesWarningShown = false;
 
-        Debug.Log($"Created new dialogue: {path}");
+        Debug.Log($"Создан новый диалог: {path}");
+        EditorUtility.DisplayDialog("Success", $"Диалог создан и открыт: {fileName}", "OK");
+    }
+
+    private DialogueSettingsData LoadDialogueSettings()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length > 0)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
+        }
+        return null;
     }
 
     /// <summary>

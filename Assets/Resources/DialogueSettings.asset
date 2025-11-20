@@ -18,9 +18,11 @@ MonoBehaviour:
     EnableQuickNodeCreationOnDragDrop: 1
     EnableHotkeyUndoRedo: 1
     AutoSaveOnUnityClose: 1
+    enableAutoSaveLocation: 1
+    autoSaveFolderPath: Resources/Dialogue
   UI:
     UseCustomBackgroundColor: 0
-    CustomBackgroundColor: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}
+    CustomBackgroundColor: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
   _favoriteNodeTypes:
   - SpeechNodeText
   - OptionNodeText

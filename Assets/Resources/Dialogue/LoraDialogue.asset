@@ -19,9 +19,6 @@ MonoBehaviour:
   - BaseNodeGuid: 677238c3-f6a3-4a54-8f7e-a9cdb35f5b15
     PortName: Next
     TargetNodeGuid: 503d9ece-0bcd-4e0b-bb87-14f2b7ef5c34
-  - BaseNodeGuid: b91b7308-cf5b-4c88-81ed-d87f9ef51cef
-    PortName: Next
-    TargetNodeGuid: 1adc34fe-00e6-4dc9-940b-c688ce70c236
   - BaseNodeGuid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
     PortName: Next
     TargetNodeGuid: 2593abb1-ea77-44d0-b792-251e0d137600
@@ -37,58 +34,33 @@ MonoBehaviour:
   - BaseNodeGuid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
     PortName: Next
     TargetNodeGuid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
-  - BaseNodeGuid: c3081c52-a74a-4359-a211-56262707f0ea
-    PortName: Next
-    TargetNodeGuid: b91b7308-cf5b-4c88-81ed-d87f9ef51cef
   - BaseNodeGuid: 2593abb1-ea77-44d0-b792-251e0d137600
     PortName: Next
     TargetNodeGuid: 26d33410-1fff-4008-8f23-2a1c53e18fcb
   - BaseNodeGuid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
     PortName: Next
     TargetNodeGuid: 26d33410-1fff-4008-8f23-2a1c53e18fcb
-  - BaseNodeGuid: 1adc34fe-00e6-4dc9-940b-c688ce70c236
+  - BaseNodeGuid: c3081c52-a74a-4359-a211-56262707f0ea
     PortName: Next
-    TargetNodeGuid: 4acbdd3c-35bb-481f-99a5-3e229475b7aa
-  - BaseNodeGuid: 1adc34fe-00e6-4dc9-940b-c688ce70c236
+    TargetNodeGuid: df78eb21-9f1c-4377-9e2b-16922371c4e3
+  - BaseNodeGuid: 5226d4e8-5587-47f3-a766-339384f8cfd2
     PortName: Next
-    TargetNodeGuid: 9ad2d03e-9ed4-48a1-98a4-c3e49df25a2a
-  - BaseNodeGuid: 9ad2d03e-9ed4-48a1-98a4-c3e49df25a2a
+    TargetNodeGuid: f8326547-c35f-4d00-a23b-16e6b336f0cf
+  - BaseNodeGuid: aecefe31-05dd-40bf-8a4c-3b8ac1fbbee0
     PortName: Next
-    TargetNodeGuid: 6e7db856-6a3b-4bc5-b346-c36efbbded3b
-  - BaseNodeGuid: 6e7db856-6a3b-4bc5-b346-c36efbbded3b
-    PortName: Output
-    TargetNodeGuid: 9157a53a-7441-4893-ba17-dc650d1a28f1
-  - BaseNodeGuid: 9157a53a-7441-4893-ba17-dc650d1a28f1
-    PortName: Output
-    TargetNodeGuid: 93eba014-7b30-4dda-8be6-c6b250e71e93
-  - BaseNodeGuid: 93eba014-7b30-4dda-8be6-c6b250e71e93
-    PortName: Output
-    TargetNodeGuid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
+    TargetNodeGuid: c732952a-d8c7-4857-9095-30a26d1bf8ff
+  - BaseNodeGuid: df78eb21-9f1c-4377-9e2b-16922371c4e3
+    PortName: Options
+    TargetNodeGuid: 5226d4e8-5587-47f3-a766-339384f8cfd2
+  - BaseNodeGuid: df78eb21-9f1c-4377-9e2b-16922371c4e3
+    PortName: Options
+    TargetNodeGuid: aecefe31-05dd-40bf-8a4c-3b8ac1fbbee0
+  - BaseNodeGuid: df78eb21-9f1c-4377-9e2b-16922371c4e3
+    PortName: Timeout
+    TargetNodeGuid: aee3b2aa-66af-4dd2-aae6-6b6b3d6b0b53
   SpeechNodeDatas:
-  - Guid: b91b7308-cf5b-4c88-81ed-d87f9ef51cef
-    Position: {x: 832, y: 149}
-    DialogueText: "\u041F\u0440\u0438\u0432\u0435\u0442 <b>Lora</b>"
-    AudioClipGuid: 
-    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
-    SpeakerName: Player
-    NodeType: SpeechNodeText
-  - Guid: 1adc34fe-00e6-4dc9-940b-c688ce70c236
-    Position: {x: 1156, y: 149}
-    DialogueText: "\u0423\u0440\u0430, \u043D\u0430\u043A\u043E\u043D\u0435\u0446
-      \u043E\u0442\u0432\u0435\u0442\u0438"
-    AudioClipGuid: 
-    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
-    SpeakerName: Lora
-    NodeType: SpeechNodeText
-  - Guid: 99dbe395-420c-49c5-b446-07cecdd08771
-    Position: {x: 1195, y: -62}
-    DialogueText: 
-    AudioClipGuid: 
-    SpeakerGuid: 
-    SpeakerName: 
-    NodeType: SpeechNodeAudio
   - Guid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
-    Position: {x: 1230, y: 404}
+    Position: {x: 2266, y: 492}
     DialogueText: "\u0422\u044B \u043F\u0440\u0430\u0432\u0434\u0430 \u0434\u0443\u043C\u0430\u0435\u0448\u044C
       \u0447\u0442\u043E \u044F \u043D\u0435 \u0432\u0438\u0436\u0443 \u0447\u0442\u043E
       \u0442\u044B \u0447\u0438\u0442\u0430\u0435\u0448\u044C <u>\u043C\u043E\u0438
@@ -98,42 +70,62 @@ MonoBehaviour:
     SpeakerName: Lora
     NodeType: SpeechNodeText
   - Guid: 26d33410-1fff-4008-8f23-2a1c53e18fcb
-    Position: {x: 1888, y: 449}
+    Position: {x: 2924, y: 537}
     DialogueText: New Dialogue
     AudioClipGuid: 
     SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
     SpeakerName: Lora
     NodeType: SpeechNodeText
+  - Guid: aee3b2aa-66af-4dd2-aae6-6b6b3d6b0b53
+    Position: {x: 1011, y: 200}
+    DialogueText: "\u0418\u0433\u043D\u043E\u0440"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: f8326547-c35f-4d00-a23b-16e6b336f0cf
+    Position: {x: 1301, y: -40}
+    DialogueText: 1
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: c732952a-d8c7-4857-9095-30a26d1bf8ff
+    Position: {x: 1301, y: 84}
+    DialogueText: 2
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
   OptionNodeDatas:
+  - Guid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
+    Position: {x: 542, y: 492}
+    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 2593abb1-ea77-44d0-b792-251e0d137600
+    Position: {x: 2590, y: 492}
+    ResponseText: "\u0418\u0437\u0432\u0438\u043D\u0438\u0442\u0441\u044F"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
+    Position: {x: 2590, y: 598}
+    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
   - Guid: c3081c52-a74a-4359-a211-56262707f0ea
     Position: {x: 542, y: 149}
     ResponseText: "\u041F\u0440\u0438\u0432\u0435\u0442, \u043B\u043E\u0440\u0430"
     AudioClipGuid: 
     NodeType: OptionNodeText
-  - Guid: 9ad2d03e-9ed4-48a1-98a4-c3e49df25a2a
-    Position: {x: 1520, y: 214}
-    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0442\u044C"
+  - Guid: 5226d4e8-5587-47f3-a766-339384f8cfd2
+    Position: {x: 1007, y: -40}
+    ResponseText: "\u0412\u0440 1"
     AudioClipGuid: 
     NodeType: OptionNodeText
-  - Guid: 4acbdd3c-35bb-481f-99a5-3e229475b7aa
-    Position: {x: 1520, y: 80}
-    ResponseText: "\u0427\u0451, \u043A\u0430\u043A \u0436\u0438\u0442\u0443\u0445\u0430
-      ?"
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: 2593abb1-ea77-44d0-b792-251e0d137600
-    Position: {x: 1554, y: 404}
-    ResponseText: "\u0418\u0437\u0432\u0438\u043D\u0438\u0442\u0441\u044F"
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
-    Position: {x: 1554, y: 510}
-    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
-    Position: {x: 542, y: 404}
-    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
+  - Guid: aecefe31-05dd-40bf-8a4c-3b8ac1fbbee0
+    Position: {x: 1018, y: 84}
+    ResponseText: "\u0412\u0440 2"
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
@@ -159,51 +151,19 @@ MonoBehaviour:
   BaseCharacterGuid: 3a1ec005e0d02b64894bcc932a4e8333
   EventNodeDatas: []
   CharacterIntConditionNodeDatas: []
-  CharacterModifyIntNodeDatas:
-  - Guid: e1762567-7dae-46ac-a572-93d24a5ff01c
-    Position: {x: 417, y: -157}
-    CharacterName: 
-    SelectedVariable: 
-    Operator: 0
-    Value: 0
-  - Guid: e1762567-7dae-46ac-a572-93d24a5ff01c
-    Position: {x: 417, y: -157}
-    CharacterName: 
-    SelectedVariable: 
-    Operator: 0
-    Value: 0
+  CharacterModifyIntNodeDatas: []
   DebugLogNodeDatas: []
   DebugWarningNodeDatas: []
   DebugErrorNodeDatas: []
   SpeechRandNodeDatas: []
-  RandomBranchNodeDatas:
-  - Guid: 616f3a6d-7356-469a-b807-611997d5fba3
-    Position: {x: 832, y: -128}
-    Variants:
-    - PortName: Variant 1
-      WeightPercent: 10
-  - Guid: 616f3a6d-7356-469a-b807-611997d5fba3
-    Position: {x: 832, y: -128}
-    Variants:
-    - PortName: Variant 1
-      WeightPercent: 10
-  noteNodeDatas:
-  - Guid: c26e0aae-3ded-455d-a6d6-5b008fcf941b
-    Position: {x: 1273, y: -216}
-    NoteText: 
-    BackgroundColor: {r: 1, g: 0.98, b: 0.77, a: 1}
-    ConnectedNodeGuids: []
-  - Guid: c26e0aae-3ded-455d-a6d6-5b008fcf941b
-    Position: {x: 1273, y: -216}
-    NoteText: 
-    BackgroundColor: {r: 1, g: 0.98, b: 0.77, a: 1}
-    ConnectedNodeGuids: []
-  TimerNodeDatas: []
-  PauseNodeDatas: []
-  WireNodeDatas:
-  - Guid: 6e7db856-6a3b-4bc5-b346-c36efbbded3b
-    Position: {x: 1904, y: 214}
-  - Guid: 9157a53a-7441-4893-ba17-dc650d1a28f1
-    Position: {x: 1904, y: 291}
-  - Guid: 93eba014-7b30-4dda-8be6-c6b250e71e93
-    Position: {x: 1074, y: 304}
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas:
+  - Guid: df78eb21-9f1c-4377-9e2b-16922371c4e3
+    Position: {x: 839, y: 149}
+    DurationSeconds: 10
+  PauseNodeDatas:
+  - Guid: 32df084d-16c1-4e2c-a4f3-77b2198e2bed
+    Position: {x: 1000, y: 392}
+    DurationSeconds: 1
+  WireNodeDatas: []

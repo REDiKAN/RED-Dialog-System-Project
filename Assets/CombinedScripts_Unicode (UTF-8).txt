@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 16.11.2025 16:52:39
+// Generation Time: 20.11.2025 19:09:01
 // Total Files: 96
 // =================================
 
@@ -5049,16 +5049,17 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         var allowed = new HashSet<Type>();
 
-        // Speech → Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
+        // Speech → Speech, Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
         if (source is SpeechNodeText or SpeechNodeAudio or SpeechNodeImage or SpeechNodeRandText)
         {
             allowed.UnionWith(new[]
             {
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode)
+        typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText), // Добавлено
+        typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+        typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
+        typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
+        typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+        typeof(WireNode), typeof(RandomBranchNode)
             });
         }
         // Option → Speech, Condition, End, Modify, RandomBranch
@@ -10390,6 +10391,15 @@ public class GraphSaveUtility
         existingContainer.WireNodeDatas.Clear();
         existingContainer.IntExposedProperties.Clear();
         existingContainer.StringExposedProperties.Clear();
+        existingContainer.SpeechRandNodeDatas.Clear();
+        existingContainer.NoteNodeDatas.Clear();
+        existingContainer.CharacterIntConditionNodeDatas.Clear();
+        existingContainer.RandomBranchNodeDatas.Clear();
+        existingContainer.CharacterModifyIntNodeDatas.Clear();
+        existingContainer.EventNodeDatas.Clear();
+        existingContainer.DebugLogNodeDatas.Clear();
+        existingContainer.DebugWarningNodeDatas.Clear();
+        existingContainer.DebugErrorNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
 
@@ -11134,8 +11144,8 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 96
-// Total Size: 391,11 KB
-// Total Lines: 10936
+// Total Size: 391,77 KB
+// Total Lines: 10946
 // Classes: 124
 // Methods: 674
 // Comments: 943

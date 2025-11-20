@@ -32,23 +32,43 @@ public class GraphSaveUtility
     /// </summary>
     public void SaveGraph(string fileName)
     {
+        DialogueSettingsData settings = LoadDialogueSettings();
+        string savePath = null;
+
+        // Если включена автосохранение и папка валидна - используем ее
+        if (settings != null && settings.General.enableAutoSaveLocation &&
+            !string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
+            settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+        {
+            // Формируем путь: [выбранная_папка]/[имя_диалога].asset
+            string folderPath = settings.GetFullPath();
+            savePath = System.IO.Path.Combine(folderPath, $"{fileName}.asset");
+            savePath = savePath.Replace("\\", "/");
+        }
+        else
+        {
+            // Стандартное поведение с диалогом выбора пути
+            savePath = EditorUtility.SaveFilePanelInProject(
+                "Save Dialogue",
+                fileName,
+                "asset",
+                "Save dialogue asset"
+            );
+        }
+
+        if (string.IsNullOrEmpty(savePath))
+            return;
+
         // Создаем контейнер для данных диалога
         var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
-
         // Сохраняем узлы и связи
         SaveNodes(dialogueContainer);
-
         // Сохраняем свойства черной доски
         SaveExposedProperties(dialogueContainer);
 
-        // Создаем папку Resources если не существует
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-
         // Сохраняем ассет
-        AssetDatabase.CreateAsset(dialogueContainer, $"Assets/Resources/{fileName}.asset");
+        AssetDatabase.CreateAsset(dialogueContainer, savePath);
         AssetDatabase.SaveAssets();
-
         EditorUtility.DisplayDialog("Success", $"Graph saved as {fileName}", "OK");
     }
 
@@ -1010,6 +1030,17 @@ public class GraphSaveUtility
         CreateNodes();
         ConnectNodes();
         CreateExposedProperties();
+    }
+
+    private DialogueSettingsData LoadDialogueSettings()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length > 0)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
+        }
+        return null;
     }
 
     /// <summary>
