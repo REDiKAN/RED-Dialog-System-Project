@@ -5,6 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "DialogueSettings", menuName = "Dialogue System/Settings Data")]
 public class DialogueSettingsData : ScriptableObject
 {
+
+    public bool EnableHotkeyUndoRedo = false; // Отключаем по умолчанию
     public GeneralSettings General = new GeneralSettings();
     public UISettings UI = new UISettings();
     [System.Serializable]
