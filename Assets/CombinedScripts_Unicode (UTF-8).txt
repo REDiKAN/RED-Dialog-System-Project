@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.11.2025 12:18:13
+// Generation Time: 28.11.2025 14:18:58
 // Total Files: 97
 // =================================
 
@@ -3732,14 +3732,87 @@ public class DialogueGraphView : GraphView
         // Обработка добавленных элементов
         if (change.edgesToCreate != null)
         {
+            var edgesToRemove = new List<Edge>();
+            var edgesToAdd = new List<Edge>();
+
             foreach (var edge in change.edgesToCreate)
             {
-                // Обрабатываем конфликты при добавлении нового соединения
+                if (edge.input == null || edge.output == null)
+                    continue;
+
+                // Определяем правильное направление соединения
+                Port trueOutput = null;
+                Port trueInput = null;
+
+                // Если соединение уже идет в правильном направлении (output -> input)
+                if (edge.output.direction == Direction.Output && edge.input.direction == Direction.Input)
+                {
+                    trueOutput = edge.output;
+                    trueInput = edge.input;
+                }
+                // Если соединение идет в обратном направлении (input -> output)
+                else if (edge.output.direction == Direction.Input && edge.input.direction == Direction.Output)
+                {
+                    trueOutput = edge.input;
+                    trueInput = edge.output;
+                }
+                // Если оба порта одного типа - не создаем соединение
+                else
+                {
+                    edgesToRemove.Add(edge);
+                    continue;
+                }
+
+                // Если направление изменилось, создаем новое соединение с правильными портами
+                if (trueOutput != edge.output || trueInput != edge.input)
+                {
+                    edgesToRemove.Add(edge);
+
+                    // Проверка на возможность соединения
+                    if (IsConnectionAllowed(trueOutput, trueInput))
+                    {
+                        var newEdge = new Edge
+                        {
+                            output = trueOutput,
+                            input = trueInput
+                        };
+                        trueOutput.Connect(newEdge);
+                        trueInput.Connect(newEdge);
+                        edgesToAdd.Add(newEdge);
+                    }
+                }
+                else
+                {
+                    // Проверка на возможность соединения для исходного соединения
+                    if (!IsConnectionAllowed(trueOutput, trueInput))
+                    {
+                        edgesToRemove.Add(edge);
+                    }
+                }
+            }
+
+            // Удаляем некорректные соединения
+            foreach (var edge in edgesToRemove)
+            {
+                change.edgesToCreate.Remove(edge);
+            }
+
+            // Добавляем исправленные соединения
+            if (edgesToAdd.Count > 0)
+            {
+                if (change.edgesToCreate == null)
+                    change.edgesToCreate = new List<Edge>();
+
+                change.edgesToCreate.AddRange(edgesToAdd);
+            }
+
+            // Обрабатываем конфликты для всех новых соединений
+            foreach (var edge in change.edgesToCreate.ToList())
+            {
                 if (edge.output != null && edge.input != null)
                 {
                     var startNode = edge.output.node as BaseNode;
                     var targetNode = edge.input.node as BaseNode;
-
                     if (startNode != null && targetNode != null)
                     {
                         HandleConflictingConnections(edge, startNode);
@@ -3748,17 +3821,36 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Обработка удаленных элементов - ИСПРАВЛЕНО: edgesToDelete -> edgesToRemove
+        // Обработка удаленных элементов (оставляем без изменений)
         if (change.elementsToRemove != null)
         {
-            foreach (var edge in change.elementsToRemove)
+            foreach (var element in change.elementsToRemove.ToList())
             {
-                MarkUnsavedChangeWithoutFile();
+                if (element is Edge edge)
+                {
+                    MarkUnsavedChangeWithoutFile();
+                }
+                // Также обрабатываем удаление узлов и очистку их соединений
+                else if (element is BaseNode node)
+                {
+                    // Автоматически удаляем все соединения, связанные с удаляемым узлом
+                    var edgesToRemove = edges.ToList()
+                        .Where(e => e.output?.node == node || e.input?.node == node)
+                        .ToList();
+
+                    foreach (var edgeA in edgesToRemove)
+                    {
+                        edgeA.output?.Disconnect(edgeA);
+                        edgeA.input?.Disconnect(edgeA);
+                        RemoveElement(edgeA);
+                    }
+                }
             }
         }
 
         return change;
     }
+
     private bool CanEditNodeWithDoubleClick(BaseNode node)
     {
         return node is SpeechNodeText ||
@@ -3766,6 +3858,37 @@ public class DialogueGraphView : GraphView
                node is DebugLogNode ||
                node is DebugWarningNode ||
                node is DebugErrorNode;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли узел Speech Node
+    /// </summary>
+    private bool IsSpeechNode(BaseNode node)
+    {
+        return node is SpeechNode ||
+               node is SpeechNodeText ||
+               node is SpeechNodeAudio ||
+               node is SpeechNodeImage ||
+               node is SpeechNodeRandText;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли узел Option Node
+    /// </summary>
+    private bool IsOptionNode(BaseNode node)
+    {
+        return node is OptionNode ||
+               node is OptionNodeText ||
+               node is OptionNodeAudio ||
+               node is OptionNodeImage;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли узел обычным узлом (не Option)
+    /// </summary>
+    private bool IsRegularNode(BaseNode node)
+    {
+        return !IsOptionNode(node);
     }
 
     private void OnGlobalKeyDown(KeyDownEvent evt)
@@ -3868,26 +3991,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, является ли узел Option Node
-    /// </summary>
-    private bool IsOptionNode(BaseNode node)
-    {
-        return node is OptionNode ||
-               node is OptionNodeText ||
-               node is OptionNodeAudio ||
-               node is OptionNodeImage;
-    }
-
-    /// <summary>
-    /// Проверяет, является ли узел обычным узлом (не Option и не Wire)
-    /// </summary>
-    private bool IsRegularNode(BaseNode node)
-    {
-        return !IsOptionNode(node) && !(node is WireNode);
-    }
-
-    /// <summary>
-    /// Определяет поведение Wire Node на основе подключенных узлов
+    /// Определяет поведение WireNode на основе подключенных узлов
     /// </summary>
     private bool IsWireNodeBehavingAsOptionNode(WireNode wireNode)
     {
@@ -3935,7 +4039,7 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>
-    /// Проверяет, разрешено ли соединение между портами с учетом новой логики
+    /// Проверяет, разрешено ли соединение между портами
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
@@ -3952,87 +4056,89 @@ public class DialogueGraphView : GraphView
         if (startNode == targetNode)
             return false;
 
-        // Правило 2: Option Node может иметь несколько входных соединений
-        if (IsOptionNode(targetNode) && targetPort.direction == Direction.Input)
-            return true;
-
-        // Правило 3: Проверяем логику соединений для выходного порта
-        var existingConnections = startPort.connections.ToList();
-
-        // Если это WireNode, определяем его поведение
-        bool isWireNode = startNode is WireNode;
-        bool wireBehavesAsOption = false;
-
-        if (isWireNode)
-        {
-            wireBehavesAsOption = IsWireNodeBehavingAsOptionNode(startNode as WireNode);
-        }
-
-        // Если мы создаем новое соединение и у выходного порта уже есть соединения
-        if (existingConnections.Count > 0)
-        {
-            // Если новый узел - Option Node, а существующие соединения ведут к обычным узлам
-            if (IsOptionNode(targetNode) && existingConnections.Any(e =>
-                e.input != null && e.input.node != null && IsRegularNode(e.input.node as BaseNode)))
-            {
-                return true; // Разрешаем, конфликт будет разрешен при создании соединения
-            }
-
-            // Если новый узел - обычный узел, а существующие соединения ведут к Option Nodes
-            if (IsRegularNode(targetNode) && existingConnections.Any(e =>
-                e.input != null && e.input.node != null && IsOptionNode(e.input.node as BaseNode)))
-            {
-                return true; // Разрешаем, конфликт будет разрешен при создании соединения
-            }
-
-            // Если это WireNode с обычным поведением, можно иметь только одно соединение
-            if (isWireNode && !wireBehavesAsOption && existingConnections.Count >= 1)
-            {
-                return false; // Разрешено только одно соединение
-            }
-        }
-
+        // Все остальные соединения разрешены - конфликты будут обработаны в HandleConflictingConnections
         return true;
     }
 
     /// <summary>
-    /// Определяет совместимые порты для соединения с учетом новой логики
+    /// Определяет совместимые порты для соединения
     /// </summary>
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
         var compatiblePorts = new List<Port>();
+
+        // Определяем тип стартового порта
+        var startNode = startPort.node as BaseNode;
+        if (startNode == null)
+            return compatiblePorts;
+
         ports.ForEach(port =>
         {
-            // Пропускаем тот же порт, порт того же узла и порты с тем же направлением
-            if (startPort == port ||
-                startPort.node == port.node ||
-                startPort.direction == port.direction)
+            if (port == null || startPort == null)
                 return;
 
-            var startNode = startPort.node as BaseNode;
             var targetNode = port.node as BaseNode;
-            if (startNode == null || targetNode == null)
+            if (targetNode == null)
+                return;
+
+            // Пропускаем порт того же узла
+            if (startPort.node == port.node)
+                return;
+
+            // Определяем правильное направление для проверки
+            Port checkOutput;
+            Port checkInput;
+
+            // Если стартовый порт - output, ищем совместимые input порты
+            if (startPort.direction == Direction.Output)
+            {
+                checkOutput = startPort;
+                checkInput = port;
+            }
+            // Если стартовый порт - input, ищем совместимые output порты
+            else if (startPort.direction == Direction.Input)
+            {
+                checkOutput = port;
+                checkInput = startPort;
+            }
+            // Если оба порта одного типа - несовместимы
+            else
+            {
+                return;
+            }
+
+            // Проверяем направление целевого порта
+            if (checkOutput.direction != Direction.Output || checkInput.direction != Direction.Input)
+                return;
+
+            // Проверяем, не является ли один из узлов EntryPoint (EntryNode)
+            if (startNode.EntryPoint && targetNode.EntryPoint)
                 return;
 
             // Для входных портов Option Nodes разрешаем множественные соединения
-            if (port.direction == Direction.Input && IsOptionNode(targetNode))
+            if (checkInput.direction == Direction.Input && IsOptionNode(targetNode))
             {
                 compatiblePorts.Add(port);
                 return;
             }
 
-            // Проверка ёмкости целевого порта (кроме входных портов Option Nodes)
-            if (port.direction == Direction.Input &&
-                port.capacity == Port.Capacity.Single &&
-                port.connections.Count() >= 1)
-                return;
+            // Проверка ёмкости целевого порта
+            if (checkInput.direction == Direction.Input &&
+                checkInput.capacity == Port.Capacity.Single &&
+                checkInput.connections.Count() >= 1)
+            {
+                // Разрешаем замену существующих соединений для Option Nodes
+                if (!IsOptionNode(targetNode))
+                    return;
+            }
 
             // Проверка ограничений на соединения узлов
-            if (IsConnectionAllowed(startPort, port))
+            if (IsConnectionAllowed(checkOutput, checkInput))
             {
                 compatiblePorts.Add(port);
             }
         });
+
         return compatiblePorts;
     }
 
@@ -4043,57 +4149,54 @@ public class DialogueGraphView : GraphView
     {
         var outputPort = newEdge.output;
         var targetNode = newEdge.input.node as BaseNode;
-
         if (outputPort == null || targetNode == null)
             return;
 
         // Определяем тип нового соединения
-        bool isNewConnectionOptionType = IsOptionNode(targetNode);
-        bool isNewConnectionRegularType = IsRegularNode(targetNode);
+        bool isNewConnectionOptionNode = IsOptionNode(targetNode);
+        bool isNewConnectionRegularNode = !isNewConnectionOptionNode; // Любая нода, не являющаяся option
 
         // Получаем все существующие соединения от этого порта (кроме нового)
         var existingConnections = outputPort.connections
             .Where(e => e != newEdge)
             .ToList();
 
-        // Случай 1: Новое соединение - обычный узел, а существующие соединения ведут к Option Nodes
-        if (isNewConnectionRegularType && existingConnections.Any(e =>
-            e.input != null && e.input.node != null && IsOptionNode(e.input.node as BaseNode)))
+        // Случай 1: Новое соединение - обычный узел (любой, не option)
+        if (isNewConnectionRegularNode)
         {
-            // Удаляем все существующие соединения с Option Nodes
+            // Удаляем все существующие соединения (включая Option)
             foreach (var edge in existingConnections.ToList())
             {
-                var inputNode = edge.input?.node as BaseNode;
-                if (inputNode != null && IsOptionNode(inputNode))
-                {
-                    DeleteConnection(edge);
-                }
+                DeleteConnection(edge);
             }
         }
-        // Случай 2: Новое соединение - Option Node, а существующие соединения ведут к обычным узлам
-        else if (isNewConnectionOptionType && existingConnections.Any(e =>
-            e.input != null && e.input.node != null && IsRegularNode(e.input.node as BaseNode)))
+
+        // Случай 2: Новое соединение - Option Node
+        else if (isNewConnectionOptionNode)
         {
-            // Удаляем все существующие соединения с обычными узлами
-            foreach (var edge in existingConnections.ToList())
+            // Проверяем, есть ли среди существующих соединений соединения с обычными узлами (не Option)
+            var regularNodeConnections = existingConnections
+                .Where(e => e.input != null &&
+                           e.input.node != null &&
+                           !IsOptionNode(e.input.node as BaseNode))
+                .ToList();
+
+            // Если есть соединения с обычными узлами, удаляем их все
+            foreach (var edge in regularNodeConnections)
             {
-                var inputNode = edge.input?.node as BaseNode;
-                if (inputNode != null && IsRegularNode(inputNode))
-                {
-                    DeleteConnection(edge);
-                }
+                DeleteConnection(edge);
             }
         }
+
         // Случай 3: Wire Node меняет свое поведение
         else if (startNode is WireNode wireNode)
         {
             bool behavesAsOption = IsWireNodeBehavingAsOptionNode(wireNode);
-            bool newConnectionIsOption = IsOptionNode(targetNode);
 
             // Если Wire Node должен вести себя как обычный узел (только одно соединение)
-            if (!behavesAsOption && existingConnections.Count > 0)
+            if (!behavesAsOption)
             {
-                // Удаляем все существующие соединения
+                // Удаляем все существующие соединения кроме нового
                 foreach (var edge in existingConnections.ToList())
                 {
                     DeleteConnection(edge);
@@ -4114,10 +4217,8 @@ public class DialogueGraphView : GraphView
         edge.input?.Disconnect(edge);
         edge.output?.Disconnect(edge);
         RemoveElement(edge);
-
         MarkUnsavedChangeWithoutFile();
     }
-
     private void GenerateBlackBoard()
     {
         Blackboard = new Blackboard(this);
@@ -7839,29 +7940,24 @@ public class SpeechNode : BaseNode
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
-
         // Input port
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
-
-        // Output port
-        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        // Output port - ИЗМЕНЕНО: capacity с Single на Multi
+        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
-
         // Dialogue text
         dialogueTextField = new TextField("Dialogue Text:");
         dialogueTextField.multiline = true;
         dialogueTextField.RegisterValueChangedCallback(evt => DialogueText = evt.newValue);
         dialogueTextField.SetValueWithoutNotify(DialogueText);
         mainContainer.Add(dialogueTextField);
-
         // Audio clip
         audioField = new ObjectField("Audio Clip") { objectType = typeof(AudioClip) };
         audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
-
         // Speaker drag-and-drop field
         speakerField = new ObjectField("Speaker") { objectType = typeof(CharacterData) };
         speakerField.RegisterValueChangedCallback(evt =>
@@ -7869,7 +7965,6 @@ public class SpeechNode : BaseNode
             Speaker = evt.newValue as CharacterData;
         });
         mainContainer.Add(speakerField);
-
         RefreshExpandedState();
         RefreshPorts();
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
@@ -11050,9 +11145,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 97
-// Total Size: 382,67 KB
-// Total Lines: 10850
+// Total Size: 386,88 KB
+// Total Lines: 10945
 // Classes: 124
-// Methods: 675
-// Comments: 859
+// Methods: 676
+// Comments: 876
 // =====================================

@@ -113,71 +113,179 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         var allowed = new HashSet<Type>();
 
-        // Speech → Speech, Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
-        if (source is SpeechNodeText or SpeechNodeAudio or SpeechNodeImage or SpeechNodeRandText)
+        // Определяем тип исходного узла
+        Type sourceType = source.GetType();
+
+        // Speech Node может соединяться со следующими типами
+        if (sourceType == typeof(SpeechNodeText) ||
+            sourceType == typeof(SpeechNodeAudio) ||
+            sourceType == typeof(SpeechNodeImage) ||
+            sourceType == typeof(SpeechNodeRandText))
         {
-            allowed.UnionWith(new[]
-            {
-        typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText), // Добавлено
-        typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-        typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-        typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-        typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-        typeof(WireNode), typeof(RandomBranchNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Option → Speech, Condition, End, Modify, RandomBranch
-        else if (source is OptionNodeText or OptionNodeAudio or OptionNodeImage)
+        // Option Node может соединяться со следующими типами
+        else if (sourceType == typeof(OptionNodeText) ||
+                 sourceType == typeof(OptionNodeAudio) ||
+                 sourceType == typeof(OptionNodeImage))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Condition/Modify/Event/Timer/Pause/Wire/RandomBranch → почти всё (кроме Entry)
-        else if (source is BaseConditionNode or
-                 ModifyIntNode or CharacterModifyIntNode or
-                 EventNode or TimerNode or PauseNode or
-                 WireNode or RandomBranchNode)
+        // Condition Node может соединяться со следующими типами
+        else if (sourceType == typeof(IntConditionNode) ||
+                 sourceType == typeof(StringConditionNode) ||
+                 sourceType == typeof(CharacterIntConditionNode))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode),
-                typeof(DebugLogNode), typeof(DebugWarningNode), typeof(DebugErrorNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Entry → только Speech
-        else if (source is EntryNode)
+        // Modify Node может соединяться со следующими типами
+        else if (sourceType == typeof(ModifyIntNode) ||
+                 sourceType == typeof(CharacterModifyIntNode))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Note — не ограничиваем (но на практике редко используется как источник)
-        else if (source is NoteNode)
+        // Timer Node может соединяться со следующими типами
+        else if (sourceType == typeof(TimerNode))
         {
-            // Разрешаем всё, кроме EntryNode
-            var allTypes = new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode),
-                typeof(DebugLogNode), typeof(DebugWarningNode), typeof(DebugErrorNode)
-            };
-            allowed.UnionWith(allTypes);
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Pause Node может соединяться со следующими типами
+        else if (sourceType == typeof(PauseNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // RandomBranch Node может соединяться со следующими типами
+        else if (sourceType == typeof(RandomBranchNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(WireNode)
+        });
+        }
+        // Wire Node может соединяться со следующими типами
+        else if (sourceType == typeof(WireNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode)
+        });
+        }
+        // Entry Node может соединяться только с Speech Node
+        else if (sourceType == typeof(EntryNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText)
+        });
+        }
+        // End Node не может соединяться ни с чем
+        else if (sourceType == typeof(EndNode))
+        {
+            // Ничего не добавляем
+        }
+        // Event Node может соединяться со следующими типами
+        else if (sourceType == typeof(EventNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Note Node может соединяться со всеми типами
+        else if (sourceType == typeof(NoteNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Debug Nodes могут соединяться со всеми типами
+        else if (sourceType == typeof(DebugLogNode) ||
+                 sourceType == typeof(DebugWarningNode) ||
+                 sourceType == typeof(DebugErrorNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
 
         return allowed;

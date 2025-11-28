@@ -85,7 +85,7 @@ public class DialogueGraphView : GraphView
             var edgesToRemove = new List<Edge>();
             var edgesToAdd = new List<Edge>();
 
-            foreach (var edge in change.edgesToCreate)
+            foreach (var edge in change.edgesToCreate.ToList())
             {
                 if (edge.input == null || edge.output == null)
                     continue;
@@ -117,7 +117,6 @@ public class DialogueGraphView : GraphView
                 if (trueOutput != edge.output || trueInput != edge.input)
                 {
                     edgesToRemove.Add(edge);
-
                     // Проверка на возможность соединения
                     if (IsConnectionAllowed(trueOutput, trueInput))
                     {
@@ -152,7 +151,6 @@ public class DialogueGraphView : GraphView
             {
                 if (change.edgesToCreate == null)
                     change.edgesToCreate = new List<Edge>();
-
                 change.edgesToCreate.AddRange(edgesToAdd);
             }
 
@@ -171,16 +169,21 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Обработка удаленных элементов (оставляем без изменений)
+        // Обработка удаленных элементов
         if (change.elementsToRemove != null)
         {
             foreach (var element in change.elementsToRemove.ToList())
             {
                 if (element is Edge edge)
                 {
-                    MarkUnsavedChangeWithoutFile();
+                    // Удаляем соединение и помечаем изменения
+                    if (edge.output != null && edge.input != null)
+                    {
+                        edge.output.Disconnect(edge);
+                        edge.input.Disconnect(edge);
+                        MarkUnsavedChangeWithoutFile();
+                    }
                 }
-                // Также обрабатываем удаление узлов и очистку их соединений
                 else if (element is BaseNode node)
                 {
                     // Автоматически удаляем все соединения, связанные с удаляемым узлом
@@ -190,10 +193,35 @@ public class DialogueGraphView : GraphView
 
                     foreach (var edgeA in edgesToRemove)
                     {
-                        edgeA.output?.Disconnect(edgeA);
-                        edgeA.input?.Disconnect(edgeA);
+                        if (edgeA.output != null)
+                            edgeA.output.Disconnect(edgeA);
+                        if (edgeA.input != null)
+                            edgeA.input.Disconnect(edgeA);
                         RemoveElement(edgeA);
                     }
+
+                    // Защита от удаления EntryNode
+                    if (node.EntryPoint)
+                    {
+                        change.elementsToRemove.Remove(element);
+                        EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
+                    }
+                    else
+                    {
+                        MarkUnsavedChangeWithoutFile();
+                    }
+                }
+            }
+        }
+
+        // Обработка перемещенных элементов
+        if (change.movedElements != null)
+        {
+            foreach (var element in change.movedElements)
+            {
+                if (element is BaseNode node)
+                {
+                    MarkUnsavedChangeWithoutFile();
                 }
             }
         }
@@ -1015,10 +1043,10 @@ public class DialogueGraphView : GraphView
         if (evt.target is Port port && port.direction == Direction.Output)
         {
             _draggedOutputPort = port;
-            _dragReleasePosition = evt.position;
             port.RegisterCallback<PointerUpEvent>(OnPortPointerUp, TrickleDown.TrickleDown);
         }
     }
+
 
     private void OnPortPointerUp(PointerUpEvent evt)
     {
@@ -1027,14 +1055,11 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
-        _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
+        Vector2 worldPosition = evt.position;
+        Vector2 localPosition = contentViewContainer.WorldToLocal(worldPosition);
+        _dragReleasePosition = localPosition;
 
-        if (_draggedOutputPort.capacity == Port.Capacity.Single && _draggedOutputPort.connections.Any())
-        {
-            _draggedOutputPort = null;
-            return;
-        }
+        _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
 
         var settings = LoadDialogueSettings();
         if (settings == null || !settings.General.EnableQuickNodeCreationOnDragDrop)
@@ -1043,13 +1068,32 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        bool connectionWasMade = edges.Any(edge =>
-            edge.output == _draggedOutputPort && edge.input != null);
+        // Проверяем, был ли порт отпущен на другом порту
+        bool releasedOnPort = false;
+        foreach (var element in graphElements)
+        {
+            if (element is Port port && port.direction == Direction.Input && element.worldBound.Contains(worldPosition))
+            {
+                releasedOnPort = true;
+                break;
+            }
+        }
 
-        if (!connectionWasMade)
+        // Проверяем, находится ли точка отпускания на другом узле
+        bool releasedOnNode = false;
+        foreach (var element in graphElements)
+        {
+            if (element is Node node && node != _draggedOutputPort.node && element.worldBound.Contains(worldPosition))
+            {
+                releasedOnNode = true;
+                break;
+            }
+        }
+
+        // Если порт не был отпущен на другом порту и не на другом узле - показываем окно создания
+        if (!releasedOnPort && !releasedOnNode)
         {
             ShowFilteredNodeSearchWindow();
-            return;
         }
 
         _draggedOutputPort = null;
@@ -1075,7 +1119,6 @@ public class DialogueGraphView : GraphView
                 windowRect.y + rootPosition.y
             );
         }
-
         screenPosition += new Vector2(10, 10);
 
         var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
@@ -1083,27 +1126,25 @@ public class DialogueGraphView : GraphView
         {
             if (nodeType != null && draggedOutputPort != null)
             {
-                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
-                if (newNode != null)
+                // Если у порта уже есть соединения и его capacity = Single, удаляем существующие соединения
+                if (draggedOutputPort.capacity == Port.Capacity.Single)
                 {
-                    AddElement(newNode);
-                    MarkUnsavedChangeWithoutFile();
-
-                    var inputPorts = newNode.inputContainer.Children()
-                        .OfType<Port>()
-                        .Where(p => p.direction == Direction.Input)
-                        .ToList();
-
-                    if (inputPorts.Count > 0)
+                    foreach (var edge in draggedOutputPort.connections.ToList())
                     {
-                        var inputPort = inputPorts[0];
-                        var edge = new Edge { output = draggedOutputPort, input = inputPort };
-                        draggedOutputPort.Connect(edge);
-                        inputPort.Connect(edge);
-                        Add(edge);
-                        this.MarkDirtyRepaint();
+                        draggedOutputPort.Disconnect(edge);
+                        edge.input?.Disconnect(edge);
+                        RemoveElement(edge);
                     }
                 }
+
+                // Создаем команду для создания узла и соединения
+                var command = new CreateNodeAndConnectionCommand(
+                    this,
+                    nodeType,
+                    _dragReleasePosition,
+                    draggedOutputPort
+                );
+                undoManager.ExecuteCommand(command);
             }
 
             if (_draggedOutputPort == draggedOutputPort)
