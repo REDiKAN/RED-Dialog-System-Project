@@ -393,72 +393,20 @@ public class DialogueGraphView : GraphView
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
-        // Стандартные проверки
-        if (startPort == targetPort ||
-            startPort.node == targetPort.node ||
-            startPort.direction != Direction.Output ||
-            targetPort.direction != Direction.Input)
-            return false;
-
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
         if (startNode == null || targetNode == null)
+            return false;
+
+        // Проверяем направление портов
+        if (startPort.direction != Direction.Output || targetPort.direction != Direction.Input)
             return false;
 
         // Правило 1: Нельзя соединять узел сам с собой
         if (startNode == targetNode)
             return false;
 
-        // Правило 2: Если новый узел - Speech Node
-        if (IsSpeechNode(targetNode))
-        {
-            // Проверяем, есть ли уже соединения с Speech Node
-            var existingSpeechConnections = startPort.connections
-                .Where(e => e.input?.node is BaseNode inputNode && IsSpeechNode(inputNode))
-                .ToList();
-
-            // Если уже есть соединения с Speech Node, новое соединение не разрешено
-            // (конфликт будет разрешен в HandleConflictingConnections)
-            return true;
-        }
-
-        // Правило 3: Если новый узел - Option Node
-        if (IsOptionNode(targetNode) && targetPort.direction == Direction.Input)
-            return true;
-
-        // Правило 4: Для всех остальных случаев проверяем существующие соединения
-        var existingConnections = startPort.connections.ToList();
-
-        // Если это WireNode, определяем его поведение
-        bool isWireNode = startNode is WireNode;
-        bool wireBehavesAsOption = false;
-        if (isWireNode)
-        {
-            wireBehavesAsOption = IsWireNodeBehavingAsOptionNode(startNode as WireNode);
-        }
-
-        // Если у порта уже есть соединения
-        if (existingConnections.Count > 0)
-        {
-            // Проверяем типы существующих соединений
-            bool hasOptionConnections = existingConnections.Any(e =>
-                e.input?.node is BaseNode inputNode && IsOptionNode(inputNode));
-
-            bool hasSpeechConnections = existingConnections.Any(e =>
-                e.input?.node is BaseNode inputNode && IsSpeechNode(inputNode));
-
-            bool hasRegularConnections = existingConnections.Any(e =>
-                e.input?.node is BaseNode inputNode && IsRegularNode(inputNode));
-
-            // Если новый узел - обычный узел
-            if (IsRegularNode(targetNode))
-            {
-                // Если есть соединения с Speech Node или Option Nodes, новое соединение не разрешено
-                // (конфликт будет разрешен в HandleConflictingConnections)
-                return true;
-            }
-        }
-
+        // Все остальные соединения разрешены - конфликты будут обработаны в HandleConflictingConnections
         return true;
     }
 
@@ -555,47 +503,32 @@ public class DialogueGraphView : GraphView
             return;
 
         // Определяем тип нового соединения
-        bool isNewConnectionSpeechNode = IsSpeechNode(targetNode);
         bool isNewConnectionOptionNode = IsOptionNode(targetNode);
-        bool isNewConnectionRegularNode = IsRegularNode(targetNode);
+        bool isNewConnectionRegularNode = !isNewConnectionOptionNode; // Любая нода, не являющаяся option
 
         // Получаем все существующие соединения от этого порта (кроме нового)
         var existingConnections = outputPort.connections
             .Where(e => e != newEdge)
             .ToList();
 
-        // Случай 1: Новое соединение - Speech Node
-        if (isNewConnectionSpeechNode)
+        // Случай 1: Новое соединение - обычный узел (любой, не option)
+        if (isNewConnectionRegularNode)
         {
-            // Удаляем все существующие соединения с другими Speech Node
-            foreach (var edge in existingConnections.ToList())
-            {
-                var inputNode = edge.input?.node as BaseNode;
-                if (inputNode != null && IsSpeechNode(inputNode))
-                {
-                    DeleteConnection(edge);
-                }
-            }
-        }
-
-        // Случай 2: Новое соединение - обычный узел (не Speech и не Option)
-        else if (isNewConnectionRegularNode)
-        {
-            // Удаляем все существующие соединения (включая Speech и Option)
+            // Удаляем все существующие соединения (включая Option)
             foreach (var edge in existingConnections.ToList())
             {
                 DeleteConnection(edge);
             }
         }
 
-        // Случай 3: Новое соединение - Option Node (оставляем текущую логику)
+        // Случай 2: Новое соединение - Option Node
         else if (isNewConnectionOptionNode)
         {
-            // Проверяем, есть ли среди существующих соединений соединения с обычными узлами
+            // Проверяем, есть ли среди существующих соединений соединения с обычными узлами (не Option)
             var regularNodeConnections = existingConnections
                 .Where(e => e.input != null &&
                            e.input.node != null &&
-                           IsRegularNode(e.input.node as BaseNode))
+                           !IsOptionNode(e.input.node as BaseNode))
                 .ToList();
 
             // Если есть соединения с обычными узлами, удаляем их все
@@ -605,11 +538,10 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Случай 4: Wire Node меняет свое поведение
+        // Случай 3: Wire Node меняет свое поведение
         else if (startNode is WireNode wireNode)
         {
             bool behavesAsOption = IsWireNodeBehavingAsOptionNode(wireNode);
-            bool newConnectionIsOption = IsOptionNode(targetNode);
 
             // Если Wire Node должен вести себя как обычный узел (только одно соединение)
             if (!behavesAsOption)
