@@ -7,7 +7,6 @@ public class ChatPanel : MonoBehaviour
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Transform contentContainer;
 
-    // Кэш валидности префабов: (character, messageType) → isValid
     private Dictionary<(CharacterData, MessageTypeDialogue), bool> _prefabValidationCache = new();
 
     public void AddMessage(Message message, MessageTypeDialogue messageType)
@@ -22,7 +21,6 @@ public class ChatPanel : MonoBehaviour
             Debug.LogError("ScrollRect not assigned in ChatPanel");
             return;
         }
-
         // Определяем нужный префаб по типу сообщения и отправителю
         GameObject prefabToInstantiate = GetPrefabForMessage(message, messageType);
         if (prefabToInstantiate == null)
@@ -39,9 +37,18 @@ public class ChatPanel : MonoBehaviour
             messageObject.SetCharacterName(message.Sender);
         }
 
-        // Прокрутка вниз
+        // Прокрутка вниз с принудительным обновлением UI
+        ScrollToBottom();
+    }
+
+    private void ScrollToBottom()
+    {
+        // Принудительно обновляем холст, чтобы убедиться, что размеры контента актуальны
+        Canvas.ForceUpdateCanvases();
+
+        // Устанавливаем позицию прокрутки в самый низ
         if (scrollRect.content != null)
-            scrollRect.verticalNormalizedPosition = 1;
+            scrollRect.verticalNormalizedPosition = 0f; // Unity использует 0 для "самого низа"
     }
 
     private GameObject GetPrefabForMessage(Message message, MessageTypeDialogue messageType)

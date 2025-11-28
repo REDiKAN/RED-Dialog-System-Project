@@ -451,6 +451,7 @@ GameObject:
   m_Component:
   - component: {fileID: 216657488}
   - component: {fileID: 216657489}
+  - component: {fileID: 216657490}
   m_Layer: 0
   m_Name: Content
   m_TagString: Untagged
@@ -472,11 +473,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 195916358}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00008068597}
-  m_SizeDelta: {x: 0, y: 1370}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &216657489
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -493,16 +494,30 @@ MonoBehaviour:
     m_Left: 0
     m_Right: 0
     m_Top: 0
-    m_Bottom: 200
+    m_Bottom: 0
   m_ChildAlignment: 6
-  m_Spacing: 200
+  m_Spacing: 50
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
+  m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
+--- !u!114 &216657490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216657487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &245914488
 GameObject:
   m_ObjectHideFlags: 0
@@ -711,7 +726,7 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: 5420b52e447b8eb4eaf274fe27ae5e60, type: 2}
+  currentDialogue: {fileID: 11400000, guid: e4bfcb4ebcb74a241841e8b323409001, type: 2}
   _timerDisplayController: {fileID: 1859932804}
 --- !u!4 &541927738
 Transform:
