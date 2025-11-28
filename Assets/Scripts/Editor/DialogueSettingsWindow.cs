@@ -217,6 +217,10 @@ public class DialogueSettingsWindow : EditorWindow
         var autoSaveToggle = new Toggle("Auto-save on Unity close") { value = _settings.General.AutoSaveOnUnityClose };
         autoSaveToggle.RegisterValueChangedCallback(evt => _settings.General.AutoSaveOnUnityClose = evt.newValue);
         _rightPanel.Add(autoSaveToggle);
+
+        var entryNodeMovementToggle = new Toggle("Enable Entry Node Movement") { value = _settings.General.EnableEntryNodeMovement };
+        entryNodeMovementToggle.RegisterValueChangedCallback(evt => _settings.General.EnableEntryNodeMovement = evt.newValue);
+        _rightPanel.Add(entryNodeMovementToggle);
     }
     private void DrawUISettings()
     {

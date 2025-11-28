@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c1b7d161973994bb4a4c82890c04da, type: 3}
   m_Name: DialogueSettings
   m_EditorClassIdentifier: 
+  EnableHotkeyUndoRedo: 0
   General:
     DefaultMessageDelay: 0.5
     AutoScrollEnabled: 1
@@ -20,6 +21,7 @@ MonoBehaviour:
     AutoSaveOnUnityClose: 1
     enableAutoSaveLocation: 1
     autoSaveFolderPath: Resources/Dialogue
+    EnableEntryNodeMovement: 0
   UI:
     UseCustomBackgroundColor: 0
     CustomBackgroundColor: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}

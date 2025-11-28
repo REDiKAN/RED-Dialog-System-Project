@@ -22,15 +22,35 @@ public class EntryNode : BaseNode
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 
-        // Запрещаем удаление и перемещение
-        capabilities &= ~Capabilities.Movable;
-        capabilities &= ~Capabilities.Deletable;
+        // Получаем настройки
+        DialogueSettingsData settings = null;
+        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length > 0)
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+            settings = UnityEditor.AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
+        }
 
-        // Обновляем визуальное состояние узла
+        bool canMove = settings != null && settings.General.EnableEntryNodeMovement;
+
+        // Настраиваем возможности узла в зависимости от настройки
+        capabilities = Capabilities.Selectable | Capabilities.Collapsible;
+        if (canMove)
+        {
+            capabilities |= Capabilities.Movable;
+        }
+        else
+        {
+            capabilities &= ~Capabilities.Movable;
+        }
+
+        capabilities &= ~Capabilities.Deletable; // Запрещаем удаление всегда
+
+        // Обновляем состояние узла
         RefreshExpandedState();
         RefreshPorts();
 
-        // Добавляем специальный стиль для стартового узла
+        // Применяем стили
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
     }
 

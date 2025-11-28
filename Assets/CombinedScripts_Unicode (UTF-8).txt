@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.11.2025 14:18:58
+// Generation Time: 28.11.2025 16:05:30
 // Total Files: 97
 // =================================
 
@@ -3735,7 +3735,7 @@ public class DialogueGraphView : GraphView
             var edgesToRemove = new List<Edge>();
             var edgesToAdd = new List<Edge>();
 
-            foreach (var edge in change.edgesToCreate)
+            foreach (var edge in change.edgesToCreate.ToList())
             {
                 if (edge.input == null || edge.output == null)
                     continue;
@@ -3767,7 +3767,6 @@ public class DialogueGraphView : GraphView
                 if (trueOutput != edge.output || trueInput != edge.input)
                 {
                     edgesToRemove.Add(edge);
-
                     // Проверка на возможность соединения
                     if (IsConnectionAllowed(trueOutput, trueInput))
                     {
@@ -3802,7 +3801,6 @@ public class DialogueGraphView : GraphView
             {
                 if (change.edgesToCreate == null)
                     change.edgesToCreate = new List<Edge>();
-
                 change.edgesToCreate.AddRange(edgesToAdd);
             }
 
@@ -3821,16 +3819,21 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Обработка удаленных элементов (оставляем без изменений)
+        // Обработка удаленных элементов
         if (change.elementsToRemove != null)
         {
             foreach (var element in change.elementsToRemove.ToList())
             {
                 if (element is Edge edge)
                 {
-                    MarkUnsavedChangeWithoutFile();
+                    // Удаляем соединение и помечаем изменения
+                    if (edge.output != null && edge.input != null)
+                    {
+                        edge.output.Disconnect(edge);
+                        edge.input.Disconnect(edge);
+                        MarkUnsavedChangeWithoutFile();
+                    }
                 }
-                // Также обрабатываем удаление узлов и очистку их соединений
                 else if (element is BaseNode node)
                 {
                     // Автоматически удаляем все соединения, связанные с удаляемым узлом
@@ -3840,10 +3843,35 @@ public class DialogueGraphView : GraphView
 
                     foreach (var edgeA in edgesToRemove)
                     {
-                        edgeA.output?.Disconnect(edgeA);
-                        edgeA.input?.Disconnect(edgeA);
+                        if (edgeA.output != null)
+                            edgeA.output.Disconnect(edgeA);
+                        if (edgeA.input != null)
+                            edgeA.input.Disconnect(edgeA);
                         RemoveElement(edgeA);
                     }
+
+                    // Защита от удаления EntryNode
+                    if (node.EntryPoint)
+                    {
+                        change.elementsToRemove.Remove(element);
+                        EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
+                    }
+                    else
+                    {
+                        MarkUnsavedChangeWithoutFile();
+                    }
+                }
+            }
+        }
+
+        // Обработка перемещенных элементов
+        if (change.movedElements != null)
+        {
+            foreach (var element in change.movedElements)
+            {
+                if (element is BaseNode node)
+                {
+                    MarkUnsavedChangeWithoutFile();
                 }
             }
         }
@@ -4665,10 +4693,10 @@ public class DialogueGraphView : GraphView
         if (evt.target is Port port && port.direction == Direction.Output)
         {
             _draggedOutputPort = port;
-            _dragReleasePosition = evt.position;
             port.RegisterCallback<PointerUpEvent>(OnPortPointerUp, TrickleDown.TrickleDown);
         }
     }
+
 
     private void OnPortPointerUp(PointerUpEvent evt)
     {
@@ -4677,14 +4705,11 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
-        _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
+        Vector2 worldPosition = evt.position;
+        Vector2 localPosition = contentViewContainer.WorldToLocal(worldPosition);
+        _dragReleasePosition = localPosition;
 
-        if (_draggedOutputPort.capacity == Port.Capacity.Single && _draggedOutputPort.connections.Any())
-        {
-            _draggedOutputPort = null;
-            return;
-        }
+        _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
 
         var settings = LoadDialogueSettings();
         if (settings == null || !settings.General.EnableQuickNodeCreationOnDragDrop)
@@ -4693,13 +4718,32 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        bool connectionWasMade = edges.Any(edge =>
-            edge.output == _draggedOutputPort && edge.input != null);
+        // Проверяем, был ли порт отпущен на другом порту
+        bool releasedOnPort = false;
+        foreach (var element in graphElements)
+        {
+            if (element is Port port && port.direction == Direction.Input && element.worldBound.Contains(worldPosition))
+            {
+                releasedOnPort = true;
+                break;
+            }
+        }
 
-        if (!connectionWasMade)
+        // Проверяем, находится ли точка отпускания на другом узле
+        bool releasedOnNode = false;
+        foreach (var element in graphElements)
+        {
+            if (element is Node node && node != _draggedOutputPort.node && element.worldBound.Contains(worldPosition))
+            {
+                releasedOnNode = true;
+                break;
+            }
+        }
+
+        // Если порт не был отпущен на другом порту и не на другом узле - показываем окно создания
+        if (!releasedOnPort && !releasedOnNode)
         {
             ShowFilteredNodeSearchWindow();
-            return;
         }
 
         _draggedOutputPort = null;
@@ -4725,7 +4769,6 @@ public class DialogueGraphView : GraphView
                 windowRect.y + rootPosition.y
             );
         }
-
         screenPosition += new Vector2(10, 10);
 
         var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
@@ -4733,27 +4776,25 @@ public class DialogueGraphView : GraphView
         {
             if (nodeType != null && draggedOutputPort != null)
             {
-                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
-                if (newNode != null)
+                // Если у порта уже есть соединения и его capacity = Single, удаляем существующие соединения
+                if (draggedOutputPort.capacity == Port.Capacity.Single)
                 {
-                    AddElement(newNode);
-                    MarkUnsavedChangeWithoutFile();
-
-                    var inputPorts = newNode.inputContainer.Children()
-                        .OfType<Port>()
-                        .Where(p => p.direction == Direction.Input)
-                        .ToList();
-
-                    if (inputPorts.Count > 0)
+                    foreach (var edge in draggedOutputPort.connections.ToList())
                     {
-                        var inputPort = inputPorts[0];
-                        var edge = new Edge { output = draggedOutputPort, input = inputPort };
-                        draggedOutputPort.Connect(edge);
-                        inputPort.Connect(edge);
-                        Add(edge);
-                        this.MarkDirtyRepaint();
+                        draggedOutputPort.Disconnect(edge);
+                        edge.input?.Disconnect(edge);
+                        RemoveElement(edge);
                     }
                 }
+
+                // Создаем команду для создания узла и соединения
+                var command = new CreateNodeAndConnectionCommand(
+                    this,
+                    nodeType,
+                    _dragReleasePosition,
+                    draggedOutputPort
+                );
+                undoManager.ExecuteCommand(command);
             }
 
             if (_draggedOutputPort == draggedOutputPort)
@@ -5040,71 +5081,179 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         var allowed = new HashSet<Type>();
 
-        // Speech → Speech, Option, Condition, End, Modify, Event, Timer, Pause, RandomBranch
-        if (source is SpeechNodeText or SpeechNodeAudio or SpeechNodeImage or SpeechNodeRandText)
+        // Определяем тип исходного узла
+        Type sourceType = source.GetType();
+
+        // Speech Node может соединяться со следующими типами
+        if (sourceType == typeof(SpeechNodeText) ||
+            sourceType == typeof(SpeechNodeAudio) ||
+            sourceType == typeof(SpeechNodeImage) ||
+            sourceType == typeof(SpeechNodeRandText))
         {
-            allowed.UnionWith(new[]
-            {
-        typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText), // Добавлено
-        typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-        typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-        typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-        typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-        typeof(WireNode), typeof(RandomBranchNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Option → Speech, Condition, End, Modify, RandomBranch
-        else if (source is OptionNodeText or OptionNodeAudio or OptionNodeImage)
+        // Option Node может соединяться со следующими типами
+        else if (sourceType == typeof(OptionNodeText) ||
+                 sourceType == typeof(OptionNodeAudio) ||
+                 sourceType == typeof(OptionNodeImage))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Condition/Modify/Event/Timer/Pause/Wire/RandomBranch → почти всё (кроме Entry)
-        else if (source is BaseConditionNode or
-                 ModifyIntNode or CharacterModifyIntNode or
-                 EventNode or TimerNode or PauseNode or
-                 WireNode or RandomBranchNode)
+        // Condition Node может соединяться со следующими типами
+        else if (sourceType == typeof(IntConditionNode) ||
+                 sourceType == typeof(StringConditionNode) ||
+                 sourceType == typeof(CharacterIntConditionNode))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode),
-                typeof(DebugLogNode), typeof(DebugWarningNode), typeof(DebugErrorNode)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Entry → только Speech
-        else if (source is EntryNode)
+        // Modify Node может соединяться со следующими типами
+        else if (sourceType == typeof(ModifyIntNode) ||
+                 sourceType == typeof(CharacterModifyIntNode))
         {
-            allowed.UnionWith(new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText)
-            });
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
-        // Note — не ограничиваем (но на практике редко используется как источник)
-        else if (source is NoteNode)
+        // Timer Node может соединяться со следующими типами
+        else if (sourceType == typeof(TimerNode))
         {
-            // Разрешаем всё, кроме EntryNode
-            var allTypes = new[]
-            {
-                typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
-                typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
-                typeof(IntConditionNode), typeof(StringConditionNode), typeof(CharacterIntConditionNode),
-                typeof(EndNode), typeof(EventNode), typeof(TimerNode), typeof(PauseNode),
-                typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
-                typeof(WireNode), typeof(RandomBranchNode),
-                typeof(DebugLogNode), typeof(DebugWarningNode), typeof(DebugErrorNode)
-            };
-            allowed.UnionWith(allTypes);
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Pause Node может соединяться со следующими типами
+        else if (sourceType == typeof(PauseNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // RandomBranch Node может соединяться со следующими типами
+        else if (sourceType == typeof(RandomBranchNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(WireNode)
+        });
+        }
+        // Wire Node может соединяться со следующими типами
+        else if (sourceType == typeof(WireNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode)
+        });
+        }
+        // Entry Node может соединяться только с Speech Node
+        else if (sourceType == typeof(EntryNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText)
+        });
+        }
+        // End Node не может соединяться ни с чем
+        else if (sourceType == typeof(EndNode))
+        {
+            // Ничего не добавляем
+        }
+        // Event Node может соединяться со следующими типами
+        else if (sourceType == typeof(EventNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Note Node может соединяться со всеми типами
+        else if (sourceType == typeof(NoteNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
+        }
+        // Debug Nodes могут соединяться со всеми типами
+        else if (sourceType == typeof(DebugLogNode) ||
+                 sourceType == typeof(DebugWarningNode) ||
+                 sourceType == typeof(DebugErrorNode))
+        {
+            allowed.UnionWith(new Type[] {
+            typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+            typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+            typeof(IntConditionNode), typeof(StringConditionNode),
+            typeof(CharacterIntConditionNode),
+            typeof(EndNode), typeof(EventNode),
+            typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+            typeof(TimerNode), typeof(PauseNode),
+            typeof(RandomBranchNode), typeof(WireNode)
+        });
         }
 
         return allowed;
@@ -8939,6 +9088,7 @@ public class CreateConnectionCommand : GraphCommand
 
 //==== File 59 of 97: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeAndConnectionCommand.cs ====
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -8951,6 +9101,7 @@ public class CreateNodeAndConnectionCommand : GraphCommand
     private BaseNode _createdNode;
     private Edge _createdEdge;
     private string _newGuid;
+    private List<Edge> _edgesToRemove = new List<Edge>();
 
     public CreateNodeAndConnectionCommand(DialogueGraphView graphView, Type nodeType, Vector2 position, Port outputPort)
         : base(graphView)
@@ -8958,32 +9109,82 @@ public class CreateNodeAndConnectionCommand : GraphCommand
         _nodeType = nodeType;
         _position = position;
         _outputPort = outputPort;
-        _newGuid = System.Guid.NewGuid().ToString();
+        _newGuid = Guid.NewGuid().ToString();
     }
 
     public override void Execute()
     {
+        // ���������� ��� ������������ ����
+        bool isCreatingOptionNode = IsOptionNodeType(_nodeType);
+        bool isCreatingSpeechNode = IsSpeechNodeType(_nodeType);
+
+        // �������� ��� ������������ ���������� �����
+        var existingConnections = _outputPort.connections.ToList();
+
+        // ��� ������ � Single capacity ������� ��� ����������
+        if (_outputPort.capacity == Port.Capacity.Single)
+        {
+            _edgesToRemove.AddRange(existingConnections);
+        }
+        else // ��� Multi capacity ������������ ��������� �� ����� �����
+        {
+            foreach (var edge in existingConnections)
+            {
+                var targetNode = edge.input?.node as BaseNode;
+                if (targetNode == null) continue;
+
+                bool isExistingOptionNode = IsOptionNode(targetNode);
+                bool isExistingSpeechNode = IsSpeechNode(targetNode);
+
+                // ���� ������� Speech node, � ������������ ���������� � Option node - �������
+                if (isCreatingSpeechNode && isExistingOptionNode)
+                {
+                    _edgesToRemove.Add(edge);
+                }
+                // ���� ������� Option node, � ������������ ���������� � Speech node - �������
+                else if (isCreatingOptionNode && isExistingSpeechNode)
+                {
+                    _edgesToRemove.Add(edge);
+                }
+                // ���� ������� Speech node, � ������������ ���������� ��� � ������ Speech - �������
+                else if (isCreatingSpeechNode && isExistingSpeechNode)
+                {
+                    _edgesToRemove.Add(edge);
+                }
+            }
+        }
+
+        // ������� ��� ������������� ����������
+        foreach (var edge in _edgesToRemove.Distinct().ToList())
+        {
+            if (edge != null)
+            {
+                _outputPort.Disconnect(edge);
+                edge.input?.Disconnect(edge);
+                if (edge.parent != null)
+                {
+                    graphView.RemoveElement(edge);
+                }
+            }
+        }
+
         // ������� ����� ����
         _createdNode = NodeFactory.CreateNode(_nodeType, _position);
         if (_createdNode == null) return;
-
         _createdNode.GUID = _newGuid;
         graphView.AddElement(_createdNode);
 
-        // ������� ���������� input port � ������ ����
-        Port inputPort = null;
+        // ������� ����������
         if (_createdNode.inputContainer.childCount > 0)
         {
-            inputPort = _createdNode.inputContainer[0] as Port;
-        }
-
-        // ������� ����������, ���� ������ input port
-        if (inputPort != null)
-        {
-            _createdEdge = new Edge { output = _outputPort, input = inputPort };
-            _outputPort.Connect(_createdEdge);
-            inputPort.Connect(_createdEdge);
-            graphView.Add(_createdEdge);
+            Port inputPort = _createdNode.inputContainer[0] as Port;
+            if (inputPort != null)
+            {
+                _createdEdge = new Edge { output = _outputPort, input = inputPort };
+                _outputPort.Connect(_createdEdge);
+                inputPort.Connect(_createdEdge);
+                graphView.Add(_createdEdge);
+            }
         }
 
         graphView.MarkUnsavedChangeWithoutFile();
@@ -8994,26 +9195,75 @@ public class CreateNodeAndConnectionCommand : GraphCommand
         // ������� ����������
         if (_createdEdge != null && _createdEdge.parent != null)
         {
+            _createdEdge.output?.Disconnect(_createdEdge);
+            _createdEdge.input?.Disconnect(_createdEdge);
             graphView.RemoveElement(_createdEdge);
         }
 
         // ������� ����
         if (_createdNode != null && _createdNode.parent != null)
         {
-            // ������� ��� ��������� ����������
+            // ������� ��� ���������� ����
             var edgesToRemove = graphView.edges
                 .Where(e => e.input.node == _createdNode || e.output.node == _createdNode)
                 .ToList();
-
             foreach (var edge in edgesToRemove)
             {
                 graphView.RemoveElement(edge);
             }
-
             graphView.RemoveElement(_createdNode);
         }
 
+        // ��������������� ��������� ����������
+        foreach (var edge in _edgesToRemove)
+        {
+            if (edge != null && edge.output != null && edge.input != null)
+            {
+                edge.output.Connect(edge);
+                edge.input.Connect(edge);
+                if (edge.parent == null)
+                {
+                    graphView.Add(edge);
+                }
+            }
+        }
+
         graphView.MarkUnsavedChangeWithoutFile();
+    }
+
+    // ��������������� ������ ��� ����������� ����� �����
+    private static bool IsSpeechNodeType(Type nodeType)
+    {
+        return nodeType == typeof(SpeechNode) ||
+               nodeType == typeof(SpeechNodeText) ||
+               nodeType == typeof(SpeechNodeAudio) ||
+               nodeType == typeof(SpeechNodeImage) ||
+               nodeType == typeof(SpeechNodeRandText);
+    }
+
+    private static bool IsOptionNodeType(Type nodeType)
+    {
+        return nodeType == typeof(OptionNode) ||
+               nodeType == typeof(OptionNodeText) ||
+               nodeType == typeof(OptionNodeAudio) ||
+               nodeType == typeof(OptionNodeImage);
+    }
+
+    private static bool IsSpeechNode(BaseNode node)
+    {
+        return node is SpeechNode ||
+               node is SpeechNodeText ||
+               node is SpeechNodeAudio ||
+               node is SpeechNodeImage ||
+               node is SpeechNodeRandText;
+    }
+
+    private static bool IsOptionNode(BaseNode node)
+    {
+        return node is OptionNode ||
+               node is OptionNodeText ||
+               node is OptionNodeAudio ||
+               node is OptionNodeImage;
     }
 }
 
@@ -11145,9 +11395,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 97
-// Total Size: 386,88 KB
-// Total Lines: 10945
+// Total Size: 397,78 KB
+// Total Lines: 11195
 // Classes: 124
-// Methods: 676
-// Comments: 876
+// Methods: 685
+// Comments: 900
 // =====================================

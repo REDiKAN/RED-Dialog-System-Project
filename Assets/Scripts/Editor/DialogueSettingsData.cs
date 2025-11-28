@@ -17,9 +17,9 @@ public class DialogueSettingsData : ScriptableObject
         public bool EnableQuickNodeCreationOnDragDrop = true;
         public bool EnableHotkeyUndoRedo = true;
         public bool AutoSaveOnUnityClose = true;
-
         public bool enableAutoSaveLocation = true;
         public string autoSaveFolderPath = "";
+        public bool EnableEntryNodeMovement = false;
     }
     [System.Serializable]
     public class UISettings
