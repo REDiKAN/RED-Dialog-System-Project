@@ -24,29 +24,24 @@ public class SpeechNode : BaseNode
         base.Initialize(position);
         title = "Speech Node";
         DialogueText = "New Dialogue";
-
         // Input port
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
-
-        // Output port
-        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        // Output port - ИЗМЕНЕНО: capacity с Single на Multi
+        var outputPort = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float));
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
-
         // Dialogue text
         dialogueTextField = new TextField("Dialogue Text:");
         dialogueTextField.multiline = true;
         dialogueTextField.RegisterValueChangedCallback(evt => DialogueText = evt.newValue);
         dialogueTextField.SetValueWithoutNotify(DialogueText);
         mainContainer.Add(dialogueTextField);
-
         // Audio clip
         audioField = new ObjectField("Audio Clip") { objectType = typeof(AudioClip) };
         audioField.RegisterValueChangedCallback(evt => AudioClip = evt.newValue as AudioClip);
         mainContainer.Add(audioField);
-
         // Speaker drag-and-drop field
         speakerField = new ObjectField("Speaker") { objectType = typeof(CharacterData) };
         speakerField.RegisterValueChangedCallback(evt =>
@@ -54,7 +49,6 @@ public class SpeechNode : BaseNode
             Speaker = evt.newValue as CharacterData;
         });
         mainContainer.Add(speakerField);
-
         RefreshExpandedState();
         RefreshPorts();
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));

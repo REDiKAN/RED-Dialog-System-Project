@@ -9,42 +9,29 @@ using System;
 using DialogueSystem;
 
 /// <summary>
-/// Граф для редактирования диалогов с ограничениями на соединения узлов
-/// Обеспечивает правильное подключение SpeechNode и OptionNode
+/// Граф для редактирования диалогов с новой логикой соединений
 /// </summary>
 public class DialogueGraphView : GraphView
 {
     public readonly Vector2 DefaultNodeSize = new Vector2(250, 300);
     public Blackboard Blackboard;
-
     public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
-
     public List<IntExposedProperty> IntExposedProperties = new List<IntExposedProperty>();
     public List<StringExposedProperty> StringExposedProperties = new List<StringExposedProperty>();
-
     private VisualElement[] BlackboardSections;
-
     private EditorWindow editorWindow;
     private NodeSearchWindow searchWindow;
-
     public bool _hasUnsavedChangesWithoutFile = false;
     public bool _unsavedChangesWarningShown = false;
-
     private VisualElement _highlightedNode;
     private StyleColor _originalNodeBgColor;
-
     private string _baseCharacterGuid;
-
     private VisualElement _customBackground;
     private GridBackground _gridBackground;
-
     public TextEditorModalWindow _activeTextEditorWindow;
-
     private Port _draggedOutputPort;
     private Vector2 _dragReleasePosition;
-
     public DialogueContainer containerCache { get; set; }
-
     public UndoManager undoManager;
     private bool isUndoRedoOperation = false;
     public string BaseCharacterGuid
@@ -68,29 +55,152 @@ public class DialogueGraphView : GraphView
         this.AddManipulator(new ContentDragger());
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
-
         undoManager = new UndoManager(this);
 
-        // === ЗАМЕНА: инициализируем оба фона, но показываем только один ===
+        // Инициализация фонов
         _gridBackground = new GridBackground();
         _customBackground = new VisualElement();
         _customBackground.StretchToParentSize();
 
-        // Пока не знаем настройки — показываем сетку по умолчанию
+        // Показываем сетку по умолчанию
         Insert(0, _gridBackground);
         _gridBackground.StretchToParentSize();
 
         AddElement(NodeFactory.CreateEntryNode(new Vector2(100, 200)));
         AddSearchWindow();
-
         this.RegisterCallback<PointerDownEvent>(OnPortPointerDown, TrickleDown.TrickleDown);
-
         GenerateBlackBoard();
         this.RegisterCallback<KeyDownEvent>(OnKeyDown);
         RegisterCallback<KeyDownEvent>(OnGlobalKeyDown);
 
-        //this.RegisterCallback<ContextualMenuPopulateEvent>(OnContextualMenuPopulate);
+        // Добавляем обработчик изменения графа
+        this.graphViewChanged += OnGraphViewChanged;
     }
+
+    private GraphViewChange OnGraphViewChanged(GraphViewChange change)
+    {
+        // Обработка добавленных элементов
+        if (change.edgesToCreate != null)
+        {
+            var edgesToRemove = new List<Edge>();
+            var edgesToAdd = new List<Edge>();
+
+            foreach (var edge in change.edgesToCreate)
+            {
+                if (edge.input == null || edge.output == null)
+                    continue;
+
+                // Определяем правильное направление соединения
+                Port trueOutput = null;
+                Port trueInput = null;
+
+                // Если соединение уже идет в правильном направлении (output -> input)
+                if (edge.output.direction == Direction.Output && edge.input.direction == Direction.Input)
+                {
+                    trueOutput = edge.output;
+                    trueInput = edge.input;
+                }
+                // Если соединение идет в обратном направлении (input -> output)
+                else if (edge.output.direction == Direction.Input && edge.input.direction == Direction.Output)
+                {
+                    trueOutput = edge.input;
+                    trueInput = edge.output;
+                }
+                // Если оба порта одного типа - не создаем соединение
+                else
+                {
+                    edgesToRemove.Add(edge);
+                    continue;
+                }
+
+                // Если направление изменилось, создаем новое соединение с правильными портами
+                if (trueOutput != edge.output || trueInput != edge.input)
+                {
+                    edgesToRemove.Add(edge);
+
+                    // Проверка на возможность соединения
+                    if (IsConnectionAllowed(trueOutput, trueInput))
+                    {
+                        var newEdge = new Edge
+                        {
+                            output = trueOutput,
+                            input = trueInput
+                        };
+                        trueOutput.Connect(newEdge);
+                        trueInput.Connect(newEdge);
+                        edgesToAdd.Add(newEdge);
+                    }
+                }
+                else
+                {
+                    // Проверка на возможность соединения для исходного соединения
+                    if (!IsConnectionAllowed(trueOutput, trueInput))
+                    {
+                        edgesToRemove.Add(edge);
+                    }
+                }
+            }
+
+            // Удаляем некорректные соединения
+            foreach (var edge in edgesToRemove)
+            {
+                change.edgesToCreate.Remove(edge);
+            }
+
+            // Добавляем исправленные соединения
+            if (edgesToAdd.Count > 0)
+            {
+                if (change.edgesToCreate == null)
+                    change.edgesToCreate = new List<Edge>();
+
+                change.edgesToCreate.AddRange(edgesToAdd);
+            }
+
+            // Обрабатываем конфликты для всех новых соединений
+            foreach (var edge in change.edgesToCreate.ToList())
+            {
+                if (edge.output != null && edge.input != null)
+                {
+                    var startNode = edge.output.node as BaseNode;
+                    var targetNode = edge.input.node as BaseNode;
+                    if (startNode != null && targetNode != null)
+                    {
+                        HandleConflictingConnections(edge, startNode);
+                    }
+                }
+            }
+        }
+
+        // Обработка удаленных элементов (оставляем без изменений)
+        if (change.elementsToRemove != null)
+        {
+            foreach (var element in change.elementsToRemove.ToList())
+            {
+                if (element is Edge edge)
+                {
+                    MarkUnsavedChangeWithoutFile();
+                }
+                // Также обрабатываем удаление узлов и очистку их соединений
+                else if (element is BaseNode node)
+                {
+                    // Автоматически удаляем все соединения, связанные с удаляемым узлом
+                    var edgesToRemove = edges.ToList()
+                        .Where(e => e.output?.node == node || e.input?.node == node)
+                        .ToList();
+
+                    foreach (var edgeA in edgesToRemove)
+                    {
+                        edgeA.output?.Disconnect(edgeA);
+                        edgeA.input?.Disconnect(edgeA);
+                        RemoveElement(edgeA);
+                    }
+                }
+            }
+        }
+
+        return change;
+    }
+
     private bool CanEditNodeWithDoubleClick(BaseNode node)
     {
         return node is SpeechNodeText ||
@@ -100,46 +210,49 @@ public class DialogueGraphView : GraphView
                node is DebugErrorNode;
     }
 
+    /// <summary>
+    /// Проверяет, является ли узел Speech Node
+    /// </summary>
+    private bool IsSpeechNode(BaseNode node)
+    {
+        return node is SpeechNode ||
+               node is SpeechNodeText ||
+               node is SpeechNodeAudio ||
+               node is SpeechNodeImage ||
+               node is SpeechNodeRandText;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли узел Option Node
+    /// </summary>
+    private bool IsOptionNode(BaseNode node)
+    {
+        return node is OptionNode ||
+               node is OptionNodeText ||
+               node is OptionNodeAudio ||
+               node is OptionNodeImage;
+    }
+
+    /// <summary>
+    /// Проверяет, является ли узел обычным узлом (не Option)
+    /// </summary>
+    private bool IsRegularNode(BaseNode node)
+    {
+        return !IsOptionNode(node);
+    }
+
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {
         // Игнорируем горячие клавиши, когда открыто окно текстового редактора
         if (_activeTextEditorWindow != null)
             return;
 
-        // Получаем текущие настройки
         var settings = LoadDialogueSettings();
         bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
-
-        // УДАЛИТЬ СЛЕДУЮЩИЙ БЛОК КОДА:
-        /*
-        if (evt.ctrlKey)
-        {
-            switch (evt.keyCode)
-            {
-                case KeyCode.Z when hotkeysEnabled && !isUndoRedoOperation:
-                    undoManager.Undo();
-                    evt.StopPropagation();
-                    break;
-                case KeyCode.Y when hotkeysEnabled && !isUndoRedoOperation:
-                    undoManager.Redo();
-                    evt.StopPropagation();
-                    break;
-            }
-        }
-        */
-
-        // Оставляем только остальную обработку горячих клавиш...
-        if (evt.ctrlKey)
-        {
-            // Остальные горячие клавиши (C, V, D, T, B) оставляем без изменений
-            // ...
-        }
     }
 
-    // Новый метод для дублирования выделенных узлов
     public void DuplicateSelectedNodes()
     {
-        // Отфильтровываем EntryPoint узлы и другие системные узлы
         var selectedNodes = selection.OfType<BaseNode>()
             .Where(node => !node.EntryPoint)
             .ToList();
@@ -147,10 +260,7 @@ public class DialogueGraphView : GraphView
         if (selectedNodes.Count == 0)
             return;
 
-        // Получаем позицию курсора
         Vector2 pastePosition = GetMousePositionInGraphSpace();
-
-        // Создаем и выполняем команду дублирования
         var command = new DuplicateNodesCommand(this, selectedNodes, pastePosition);
         undoManager.ExecuteCommand(command);
     }
@@ -162,10 +272,8 @@ public class DialogueGraphView : GraphView
         return worldMousePosition;
     }
 
-
     public void UpdateGraphBackgroundInternal()
     {
-        // Загружаем актуальные настройки
         string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
         DialogueSettingsData settings = null;
         if (guids.Length > 0)
@@ -173,7 +281,6 @@ public class DialogueGraphView : GraphView
             string path = AssetDatabase.GUIDToAssetPath(guids[0]);
             settings = AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
         }
-
         if (settings == null)
             return;
 
@@ -201,7 +308,6 @@ public class DialogueGraphView : GraphView
 
     public static void UpdateGraphBackgroundForAllInstances()
     {
-        // Находим все открытые окна DialogueGraph
         var graphWindows = Resources.FindObjectsOfTypeAll<DialogueGraph>();
         foreach (var window in graphWindows)
         {
@@ -210,22 +316,14 @@ public class DialogueGraphView : GraphView
         }
     }
 
-    /// <summary>
-    /// Добавляет окно поиска узлов в граф
-    /// </summary>
     private void AddSearchWindow()
     {
         searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
         searchWindow.Init(editorWindow, this);
-
-        // Настраиваем создание узлов через окно поиска
         nodeCreationRequest = context =>
             SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
     }
 
-    /// <summary>
-    /// Обработчик нажатия клавиш для удаления узлов
-    /// </summary>
     private void OnKeyDown(KeyDownEvent evt)
     {
         if (evt.keyCode == KeyCode.Delete)
@@ -237,134 +335,333 @@ public class DialogueGraphView : GraphView
                 evt.StopPropagation();
                 return;
             }
-
-            // Удаляем выбранные элементы
             DeleteSelection();
             evt.StopPropagation();
         }
     }
 
     /// <summary>
-    /// Определяет совместимые порты для соединения с учетом ограничений
-    /// SpeechNode можно соединять только с OptionNode, OptionNode можно соединять только с SpeechNode
+    /// Определяет поведение WireNode на основе подключенных узлов
     /// </summary>
-    public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
+    private bool IsWireNodeBehavingAsOptionNode(WireNode wireNode)
     {
-        var compatiblePorts = new List<Port>();
-        ports.ForEach(port =>
+        // Проверяем исходящие соединения
+        foreach (var edge in wireNode.outputContainer[0].Query<Edge>().ToList())
         {
-            // Пропускаем тот же порт, порт того же узла и порты с тем же направлением
-            if (startPort == port ||
-                startPort.node == port.node ||
-                startPort.direction == port.direction)
-                return;
+            var targetNode = edge.input?.node as BaseNode;
+            if (targetNode != null && IsOptionNode(targetNode))
+                return true;
+        }
 
-            // Проверка ёмкости целевого порта
-            if (port.capacity == Port.Capacity.Single && port.connections.Count() >= 1)
-                return;
+        // Проверяем входящие соединения
+        foreach (var edge in wireNode.inputContainer[0].Query<Edge>().ToList())
+        {
+            var sourceNode = edge.output?.node as BaseNode;
+            if (sourceNode != null && IsOptionNode(sourceNode))
+                return true;
+        }
 
-            // Проверка ограничений на соединения узлов
-            if (IsConnectionAllowed(startPort, port))
-            {
-                compatiblePorts.Add(port);
-            }
-        });
-        return compatiblePorts;
+        return false;
     }
 
     /// <summary>
-    /// Проверяет, разрешено ли соединение между портами.
-    /// Запрещает любые соединения между OptionNode и его подтипами.
-    /// Все остальные соединения разрешены без ограничений.
+    /// Определяет, является ли узел "обычным" с точки зрения соединений
+    /// (включая WireNode с обычным поведением)
+    /// </summary>
+    private bool IsRegularConnectionType(BaseNode node)
+    {
+        if (node is WireNode wireNode)
+            return !IsWireNodeBehavingAsOptionNode(wireNode);
+
+        return IsRegularNode(node);
+    }
+
+    /// <summary>
+    /// Определяет, является ли узел "опциональным" с точки зрения соединений
+    /// (включая WireNode с опциональным поведением)
+    /// </summary>
+    private bool IsOptionConnectionType(BaseNode node)
+    {
+        if (node is WireNode wireNode)
+            return IsWireNodeBehavingAsOptionNode(wireNode);
+
+        return IsOptionNode(node);
+    }
+
+    /// <summary>
+    /// Проверяет, разрешено ли соединение между портами
     /// </summary>
     private bool IsConnectionAllowed(Port startPort, Port targetPort)
     {
+        // Стандартные проверки
+        if (startPort == targetPort ||
+            startPort.node == targetPort.node ||
+            startPort.direction != Direction.Output ||
+            targetPort.direction != Direction.Input)
+            return false;
+
         var startNode = startPort.node as BaseNode;
         var targetNode = targetPort.node as BaseNode;
-
         if (startNode == null || targetNode == null)
             return false;
 
-        // Проверяем, являются ли оба узла OptionNode (включая подтипы)
-        bool IsOptionNode(BaseNode node) =>
-            node is OptionNode || node is OptionNodeText || node is OptionNodeAudio || node is OptionNodeImage;
-
-        if (IsOptionNode(startNode) && IsOptionNode(targetNode))
+        // Правило 1: Нельзя соединять узел сам с собой
+        if (startNode == targetNode)
             return false;
 
-        // Все остальные соединения разрешены
+        // Правило 2: Если новый узел - Speech Node
+        if (IsSpeechNode(targetNode))
+        {
+            // Проверяем, есть ли уже соединения с Speech Node
+            var existingSpeechConnections = startPort.connections
+                .Where(e => e.input?.node is BaseNode inputNode && IsSpeechNode(inputNode))
+                .ToList();
+
+            // Если уже есть соединения с Speech Node, новое соединение не разрешено
+            // (конфликт будет разрешен в HandleConflictingConnections)
+            return true;
+        }
+
+        // Правило 3: Если новый узел - Option Node
+        if (IsOptionNode(targetNode) && targetPort.direction == Direction.Input)
+            return true;
+
+        // Правило 4: Для всех остальных случаев проверяем существующие соединения
+        var existingConnections = startPort.connections.ToList();
+
+        // Если это WireNode, определяем его поведение
+        bool isWireNode = startNode is WireNode;
+        bool wireBehavesAsOption = false;
+        if (isWireNode)
+        {
+            wireBehavesAsOption = IsWireNodeBehavingAsOptionNode(startNode as WireNode);
+        }
+
+        // Если у порта уже есть соединения
+        if (existingConnections.Count > 0)
+        {
+            // Проверяем типы существующих соединений
+            bool hasOptionConnections = existingConnections.Any(e =>
+                e.input?.node is BaseNode inputNode && IsOptionNode(inputNode));
+
+            bool hasSpeechConnections = existingConnections.Any(e =>
+                e.input?.node is BaseNode inputNode && IsSpeechNode(inputNode));
+
+            bool hasRegularConnections = existingConnections.Any(e =>
+                e.input?.node is BaseNode inputNode && IsRegularNode(inputNode));
+
+            // Если новый узел - обычный узел
+            if (IsRegularNode(targetNode))
+            {
+                // Если есть соединения с Speech Node или Option Nodes, новое соединение не разрешено
+                // (конфликт будет разрешен в HandleConflictingConnections)
+                return true;
+            }
+        }
+
         return true;
     }
 
     /// <summary>
-    /// Проверяет, подключен ли узел условия к SpeechNode
+    /// Определяет совместимые порты для соединения
     /// </summary>
-    private bool IsConditionNodeConnectedToSpeech(BaseConditionNode conditionNode)
+    public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
-        if (conditionNode == null) return false;
+        var compatiblePorts = new List<Port>();
 
-        var inputPort = conditionNode.inputContainer.Children().FirstOrDefault() as Port;
-        return inputPort != null && inputPort.connections.Any(edge =>
-            edge.output.node is SpeechNode);
+        // Определяем тип стартового порта
+        var startNode = startPort.node as BaseNode;
+        if (startNode == null)
+            return compatiblePorts;
+
+        ports.ForEach(port =>
+        {
+            if (port == null || startPort == null)
+                return;
+
+            var targetNode = port.node as BaseNode;
+            if (targetNode == null)
+                return;
+
+            // Пропускаем порт того же узла
+            if (startPort.node == port.node)
+                return;
+
+            // Определяем правильное направление для проверки
+            Port checkOutput;
+            Port checkInput;
+
+            // Если стартовый порт - output, ищем совместимые input порты
+            if (startPort.direction == Direction.Output)
+            {
+                checkOutput = startPort;
+                checkInput = port;
+            }
+            // Если стартовый порт - input, ищем совместимые output порты
+            else if (startPort.direction == Direction.Input)
+            {
+                checkOutput = port;
+                checkInput = startPort;
+            }
+            // Если оба порта одного типа - несовместимы
+            else
+            {
+                return;
+            }
+
+            // Проверяем направление целевого порта
+            if (checkOutput.direction != Direction.Output || checkInput.direction != Direction.Input)
+                return;
+
+            // Проверяем, не является ли один из узлов EntryPoint (EntryNode)
+            if (startNode.EntryPoint && targetNode.EntryPoint)
+                return;
+
+            // Для входных портов Option Nodes разрешаем множественные соединения
+            if (checkInput.direction == Direction.Input && IsOptionNode(targetNode))
+            {
+                compatiblePorts.Add(port);
+                return;
+            }
+
+            // Проверка ёмкости целевого порта
+            if (checkInput.direction == Direction.Input &&
+                checkInput.capacity == Port.Capacity.Single &&
+                checkInput.connections.Count() >= 1)
+            {
+                // Разрешаем замену существующих соединений для Option Nodes
+                if (!IsOptionNode(targetNode))
+                    return;
+            }
+
+            // Проверка ограничений на соединения узлов
+            if (IsConnectionAllowed(checkOutput, checkInput))
+            {
+                compatiblePorts.Add(port);
+            }
+        });
+
+        return compatiblePorts;
     }
 
     /// <summary>
-    /// Проверяет, подключен ли узел условия к OptionNode
+    /// Обрабатывает конфликтующие соединения при создании нового соединения
     /// </summary>
-    private bool IsConditionNodeConnectedToOption(BaseConditionNode conditionNode)
+    private void HandleConflictingConnections(Edge newEdge, BaseNode startNode)
     {
-        if (conditionNode == null) return false;
+        var outputPort = newEdge.output;
+        var targetNode = newEdge.input.node as BaseNode;
+        if (outputPort == null || targetNode == null)
+            return;
 
-        var inputPort = conditionNode.inputContainer.Children().FirstOrDefault() as Port;
-        return inputPort != null && inputPort.connections.Any(edge =>
-            edge.output.node is OptionNode);
+        // Определяем тип нового соединения
+        bool isNewConnectionSpeechNode = IsSpeechNode(targetNode);
+        bool isNewConnectionOptionNode = IsOptionNode(targetNode);
+        bool isNewConnectionRegularNode = IsRegularNode(targetNode);
+
+        // Получаем все существующие соединения от этого порта (кроме нового)
+        var existingConnections = outputPort.connections
+            .Where(e => e != newEdge)
+            .ToList();
+
+        // Случай 1: Новое соединение - Speech Node
+        if (isNewConnectionSpeechNode)
+        {
+            // Удаляем все существующие соединения с другими Speech Node
+            foreach (var edge in existingConnections.ToList())
+            {
+                var inputNode = edge.input?.node as BaseNode;
+                if (inputNode != null && IsSpeechNode(inputNode))
+                {
+                    DeleteConnection(edge);
+                }
+            }
+        }
+
+        // Случай 2: Новое соединение - обычный узел (не Speech и не Option)
+        else if (isNewConnectionRegularNode)
+        {
+            // Удаляем все существующие соединения (включая Speech и Option)
+            foreach (var edge in existingConnections.ToList())
+            {
+                DeleteConnection(edge);
+            }
+        }
+
+        // Случай 3: Новое соединение - Option Node (оставляем текущую логику)
+        else if (isNewConnectionOptionNode)
+        {
+            // Проверяем, есть ли среди существующих соединений соединения с обычными узлами
+            var regularNodeConnections = existingConnections
+                .Where(e => e.input != null &&
+                           e.input.node != null &&
+                           IsRegularNode(e.input.node as BaseNode))
+                .ToList();
+
+            // Если есть соединения с обычными узлами, удаляем их все
+            foreach (var edge in regularNodeConnections)
+            {
+                DeleteConnection(edge);
+            }
+        }
+
+        // Случай 4: Wire Node меняет свое поведение
+        else if (startNode is WireNode wireNode)
+        {
+            bool behavesAsOption = IsWireNodeBehavingAsOptionNode(wireNode);
+            bool newConnectionIsOption = IsOptionNode(targetNode);
+
+            // Если Wire Node должен вести себя как обычный узел (только одно соединение)
+            if (!behavesAsOption)
+            {
+                // Удаляем все существующие соединения кроме нового
+                foreach (var edge in existingConnections.ToList())
+                {
+                    DeleteConnection(edge);
+                }
+            }
+        }
     }
 
     /// <summary>
-    /// Создает узел указанного типа в заданной позиции
+    /// Удаляет соединение и помечает изменения
     /// </summary>
-    public void CreateNode(Type nodeType, Vector2 position)
+    private void DeleteConnection(Edge edge)
     {
-        var command = new CreateNodeCommand(this, nodeType, position);
-        undoManager.ExecuteCommand(command);
-    }
+        if (edge == null || edge.parent == null)
+            return;
 
-    /// <summary>
-    /// Создать черную доску для exposed properties с поддержкой скроллинга
-    /// </summary>
+        // Удаляем соединение
+        edge.input?.Disconnect(edge);
+        edge.output?.Disconnect(edge);
+        RemoveElement(edge);
+        MarkUnsavedChangeWithoutFile();
+    }
     private void GenerateBlackBoard()
     {
         Blackboard = new Blackboard(this);
         Blackboard.title = "Exposed Properties";
-
-        // Устанавливаем фиксированные размеры для Blackboard
         Blackboard.style.minWidth = 300;
         Blackboard.style.maxWidth = 400;
         Blackboard.style.minHeight = 200;
         Blackboard.style.maxHeight = 500;
 
-        // Создаем основной скроллвью
         var scrollView = new ScrollView();
         scrollView.style.flexGrow = 1;
         scrollView.verticalScrollerVisibility = ScrollerVisibility.Auto;
         scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
 
-        // Создаем секции для разных типов свойств
         var intSection = new BlackboardSection { title = "Int Properties (0)" };
         var stringSection = new BlackboardSection { title = "String Properties (0)" };
 
-        // Добавляем секции в скроллвью
         scrollView.Add(intSection);
         scrollView.Add(stringSection);
 
-        // Добавляем скроллвью в Blackboard
         Blackboard.Add(scrollView);
 
-        // Сохраняем ссылки на секции для последующего использования
         IntSection = intSection;
         StringSection = stringSection;
 
-        // Функционал добавления новых свойств
         Blackboard.addItemRequested = blackboard =>
         {
             var menu = new GenericMenu();
@@ -385,12 +682,9 @@ public class DialogueGraphView : GraphView
             menu.ShowAsContext();
         };
 
-        // Функционал редактирования имен свойств
         Blackboard.editTextRequested = (blackboard, element, newValue) =>
         {
             var oldPropertyName = ((BlackboardField)element).text;
-
-            // Проверяем уникальность имени свойства
             if (IntExposedProperties.Any(x => x.PropertyName == newValue) ||
                 StringExposedProperties.Any(x => x.PropertyName == newValue))
             {
@@ -398,57 +692,42 @@ public class DialogueGraphView : GraphView
                 return;
             }
 
-            // Обновляем имя в Int свойствах
             var intPropertyIndex = IntExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (intPropertyIndex >= 0)
             {
                 IntExposedProperties[intPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
-
-                // Обновляем все узлы, которые используют это свойство
                 RefreshAllPropertyNodes();
                 return;
             }
 
-            // Обновляем имя в String свойствах
             var stringPropertyIndex = StringExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
             if (stringPropertyIndex >= 0)
             {
                 StringExposedProperties[stringPropertyIndex].PropertyName = newValue;
                 ((BlackboardField)element).text = newValue;
-
-                // Обновляем все узлы, которые используют это свойство
                 RefreshAllPropertyNodes();
             }
         };
 
-        // Добавляем кнопку очистки всех свойств
         var clearButton = new Button(ClearAllProperties)
         {
             text = "Clear All Properties"
         };
-
         clearButton.style.marginTop = 5;
         clearButton.style.marginLeft = 5;
         clearButton.style.marginRight = 5;
         clearButton.style.marginBottom = 5;
         Blackboard.Add(clearButton);
 
-        // Добавляем Blackboard в граф
         Add(Blackboard);
-
-        // Обновляем отображение количества свойств
         UpdateSectionTitles();
     }
 
-    // Добавьте эти поля в класс DialogueGraphView:
     private BlackboardSection IntSection;
     private BlackboardSection StringSection;
 
-    /// <summary>
-    /// Добавляет Int-свойство в Blackboard и в список IntExposedProperties
-    /// </summary>
-    private void AddIntPropertyToBlackBoard(IntExposedProperty intProperty)
+    public void AddIntPropertyToBlackBoard(IntExposedProperty intProperty)
     {
         var container = new VisualElement();
         container.style.marginBottom = 5;
@@ -457,40 +736,39 @@ public class DialogueGraphView : GraphView
             text = intProperty.PropertyName,
             typeText = "Int"
         };
-        // Поля для редактирования параметров свойства
+
         var nameField = new TextField("Name:") { value = intProperty.PropertyName };
         var minField = new IntegerField("Min:") { value = intProperty.MinValue };
         var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
         var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
 
-        // Обработчики изменений
         nameField.RegisterValueChangedCallback(evt =>
         {
             intProperty.PropertyName = evt.newValue;
             blackboardField.text = evt.newValue;
             UpdateSectionTitles();
             RefreshAllPropertyNodes();
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
         minField.RegisterValueChangedCallback(evt =>
         {
             intProperty.MinValue = evt.newValue;
             if (intProperty.IntValue < evt.newValue)
                 valueField.value = evt.newValue;
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
         maxField.RegisterValueChangedCallback(evt =>
         {
             intProperty.MaxValue = evt.newValue;
             if (intProperty.IntValue > evt.newValue)
                 valueField.value = evt.newValue;
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
         valueField.RegisterValueChangedCallback(evt =>
         {
             intProperty.IntValue = Mathf.Clamp(evt.newValue, intProperty.MinValue, intProperty.MaxValue);
             valueField.value = intProperty.IntValue;
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
 
         container.Add(blackboardField);
@@ -499,10 +777,8 @@ public class DialogueGraphView : GraphView
         container.Add(maxField);
         container.Add(valueField);
 
-        // Добавляем в секцию Int
         IntSection.Add(container);
 
-        // Контекстное меню для удаления
         blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             evt.menu.AppendAction("Delete", action =>
@@ -520,16 +796,12 @@ public class DialogueGraphView : GraphView
                     "Delete", "Cancel"))
                 {
                     RemoveIntProperty(intProperty, container);
-
                 }
             });
         }));
     }
 
-    /// <summary>
-    /// Добавляет String-свойство в Blackboard и в список StringExposedProperties
-    /// </summary>
-    private void AddStringPropertyToBlackBoard(StringExposedProperty stringProperty)
+    public void AddStringPropertyToBlackBoard(StringExposedProperty stringProperty)
     {
         var container = new VisualElement();
         container.style.marginBottom = 5;
@@ -538,6 +810,7 @@ public class DialogueGraphView : GraphView
             text = stringProperty.PropertyName,
             typeText = "String"
         };
+
         var nameField = new TextField("Name:") { value = stringProperty.PropertyName };
         var valueField = new TextField("Value:") { value = stringProperty.StringValue };
 
@@ -547,12 +820,12 @@ public class DialogueGraphView : GraphView
             blackboardField.text = evt.newValue;
             UpdateSectionTitles();
             RefreshAllPropertyNodes();
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
         valueField.RegisterValueChangedCallback(evt =>
         {
             stringProperty.StringValue = evt.newValue;
-            MarkUnsavedChangeWithoutFile(); // ← добавлено
+            MarkUnsavedChangeWithoutFile();
         });
 
         container.Add(blackboardField);
@@ -580,14 +853,10 @@ public class DialogueGraphView : GraphView
         }));
     }
 
-    /// <summary>
-    /// Удаляет Int-свойство из Blackboard и из списка
-    /// </summary>
     private void RemoveIntProperty(IntExposedProperty property, VisualElement container)
     {
         IntExposedProperties.Remove(property);
 
-        // Очищаем использование в узлах
         var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
         var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
         foreach (var node in conditionNodes)
@@ -610,17 +879,13 @@ public class DialogueGraphView : GraphView
         RefreshAllPropertyNodes();
         IntSection.Remove(container);
         UpdateSectionTitles();
-        MarkUnsavedChangeWithoutFile(); // ← добавлено
+        MarkUnsavedChangeWithoutFile();
     }
 
-    /// <summary>
-    /// Удаляет String-свойство из Blackboard и из списка
-    /// </summary>
     private void RemoveStringProperty(StringExposedProperty property, VisualElement container)
     {
         StringExposedProperties.Remove(property);
 
-        // Очищаем использование в узлах
         var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
         foreach (var node in conditionNodes)
         {
@@ -634,28 +899,21 @@ public class DialogueGraphView : GraphView
         RefreshAllPropertyNodes();
         StringSection.Remove(container);
         UpdateSectionTitles();
-        MarkUnsavedChangeWithoutFile(); // ← добавлено
+        MarkUnsavedChangeWithoutFile();
     }
 
-    /// <summary>
-    /// Вспомогательный метод для обновления заголовков секций с количеством свойств
-    /// </summary>
     private void UpdateSectionTitles()
     {
         if (IntSection != null)
         {
             IntSection.title = $"Int Properties ({IntExposedProperties.Count})";
         }
-
         if (StringSection != null)
         {
             StringSection.title = $"String Properties ({StringExposedProperties.Count})";
         }
     }
 
-    /// <summary>
-    /// Вспомогательный метод для обновления всех узлов, использующих свойства
-    /// </summary>
     private void RefreshAllPropertyNodes()
     {
         var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
@@ -665,17 +923,12 @@ public class DialogueGraphView : GraphView
         }
     }
 
-    /// <summary>
-    /// Полностью очищает все exposed properties из Blackboard
-    /// </summary>
     private void ClearAllProperties()
     {
-        // Проверяем, есть ли свойства для очистки
         bool hasProperties = IntExposedProperties.Count > 0 || StringExposedProperties.Count > 0;
-
         if (!hasProperties)
         {
-            return; // Нет свойств - ничего не делаем и не показываем никаких окон
+            return;
         }
 
         if (!EditorUtility.DisplayDialog("Clear All Properties",
@@ -691,237 +944,14 @@ public class DialogueGraphView : GraphView
         RefreshAllPropertyNodes();
         UpdateSectionTitles();
         Debug.Log("All exposed properties cleared successfully");
-        MarkUnsavedChangeWithoutFile(); // ← добавлено
+        MarkUnsavedChangeWithoutFile();
     }
 
-    /// <summary>
-    /// Очистить черную доску и exposed properties (для совместимости со старым кодом)
-    /// </summary>
     public void ClearBlackBoardAndExposedProperties()
     {
         ClearAllProperties();
     }
 
-    /// <summary>
-    /// Добавляет свойство на черную доску
-    /// </summary>
-    // <summary>
-    /// Добавляет свойство на черную доску
-    /// </summary>
-    public void AddPropertyToBlackBoard(object property)
-    {
-        if (property is IntExposedProperty intProperty)
-        {
-            IntExposedProperties.Add(intProperty);
-
-            var container = new VisualElement();
-            var blackboardField = new BlackboardField
-            {
-                text = intProperty.PropertyName,
-                typeText = "Int"
-            };
-
-            // Поля для редактирования int свойства
-            var nameField = new TextField("Name:") { value = intProperty.PropertyName };
-            var minField = new IntegerField("Min:") { value = intProperty.MinValue };
-            var maxField = new IntegerField("Max:") { value = intProperty.MaxValue };
-            var valueField = new IntegerField("Value:") { value = intProperty.IntValue };
-
-            // Обработчики изменений
-            nameField.RegisterValueChangedCallback(evt =>
-            {
-                intProperty.PropertyName = evt.newValue;
-                blackboardField.text = evt.newValue;
-            });
-
-            minField.RegisterValueChangedCallback(evt =>
-            {
-                intProperty.MinValue = evt.newValue;
-                if (intProperty.IntValue < evt.newValue)
-                    valueField.value = evt.newValue;
-            });
-
-            maxField.RegisterValueChangedCallback(evt =>
-            {
-                intProperty.MaxValue = evt.newValue;
-                if (intProperty.IntValue > evt.newValue)
-                    valueField.value = evt.newValue;
-            });
-
-            valueField.RegisterValueChangedCallback(evt =>
-            {
-                intProperty.IntValue = Mathf.Clamp(evt.newValue, intProperty.MinValue, intProperty.MaxValue);
-                valueField.value = intProperty.IntValue;
-            });
-
-            container.Add(blackboardField);
-            container.Add(nameField);
-            container.Add(minField);
-            container.Add(maxField);
-            container.Add(valueField);
-
-            Blackboard[0].Add(container); // Добавляем в секцию int свойств
-
-            blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
-            {
-                evt.menu.AppendAction("Delete", action =>
-                {
-                // Находим использование свойства
-                int usageCount = 0;
-                var conditionNodes = nodes.ToList().OfType<IntConditionNode>();
-                var modifyNodes = nodes.ToList().OfType<ModifyIntNode>();
-
-                foreach (var node in conditionNodes)
-                {
-                    if (node.SelectedProperty == intProperty.PropertyName)
-                        usageCount++;
-                }
-
-                foreach (var node in modifyNodes)
-                {
-                    if (node.SelectedProperty == intProperty.PropertyName)
-                        usageCount++;
-                }
-
-                    // Диалог подтверждения
-                    if (EditorUtility.DisplayDialog("Confirm Delete",
-                        $"Property '{intProperty.PropertyName}' is used in {usageCount} nodes.\nDelete anyway?",
-                        "Delete", "Cancel"))
-                    {
-                        // Удаляем из списка
-                        IntExposedProperties.Remove(intProperty);
-
-                        // Обновляем все узлы, которые использовали это свойство
-                        foreach (var node in conditionNodes)
-                        {
-                            if (node.SelectedProperty == intProperty.PropertyName)
-                            {
-                                node.SelectedProperty = "";
-                                Debug.LogError($"Error: Variable {intProperty.PropertyName} was removed but is still used in IntConditionNode {node.GUID}");
-                            }
-                        }
-
-                        foreach (var node in modifyNodes)
-                        {
-                            if (node.SelectedProperty == intProperty.PropertyName)
-                            {
-                                node.SelectedProperty = "";
-                                Debug.LogError($"Error: Variable {intProperty.PropertyName} was removed but is still used in ModifyIntNode {node.GUID}");
-                            }
-                        }
-
-                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
-                        var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
-                        foreach (var node in allPropertyNodes)
-                        {
-                            node.RefreshPropertyDropdown();
-                        }
-
-                        // Находим и удаляем визуальный элемент по имени свойства
-                        var containers = Blackboard[0].Children().ToList();
-                        foreach (var cont in containers)
-                        {
-                            var field = cont.Q<BlackboardField>();
-                            if (field != null && field.text == intProperty.PropertyName)
-                            {
-                                Blackboard[0].Remove(cont);
-                                break;
-                            }
-                        }
-                    }
-                });
-            }));
-        }
-        else if (property is StringExposedProperty stringProperty)
-        {
-            StringExposedProperties.Add(stringProperty);
-
-            var container = new VisualElement();
-            var blackboardField = new BlackboardField
-            {
-                text = stringProperty.PropertyName,
-                typeText = "String"
-            };
-
-            var nameField = new TextField("Name:") { value = stringProperty.PropertyName };
-            var valueField = new TextField("Value:") { value = stringProperty.StringValue };
-
-            nameField.RegisterValueChangedCallback(evt =>
-            {
-                stringProperty.PropertyName = evt.newValue;
-                blackboardField.text = evt.newValue;
-            });
-
-            valueField.RegisterValueChangedCallback(evt =>
-            {
-                stringProperty.StringValue = evt.newValue;
-            });
-
-            container.Add(blackboardField);
-            container.Add(nameField);
-            container.Add(valueField);
-
-            Blackboard[1].Add(container); // Добавляем в секцию string свойств
-
-            // Добавляем контекстное меню для string свойств
-            blackboardField.AddManipulator(new ContextualMenuManipulator(evt =>
-            {
-                evt.menu.AppendAction("Delete", action =>
-                {
-                    // Находим использование свойства
-                    int usageCount = 0;
-                    var conditionNodes = nodes.ToList().OfType<StringConditionNode>();
-                    foreach (var node in conditionNodes)
-                    {
-                        if (node.SelectedProperty == stringProperty.PropertyName)
-                            usageCount++;
-                    }
-
-                    // Диалог подтверждения
-                    if (EditorUtility.DisplayDialog("Confirm Delete",
-                        $"Property '{stringProperty.PropertyName}' is used in {usageCount} condition nodes.\nDelete anyway?",
-                        "Delete", "Cancel"))
-                    {
-                        // Удаляем из списка
-                        StringExposedProperties.Remove(stringProperty);
-
-                        // Обновляем все узлы, которые использовали это свойство
-                        foreach (var node in nodes.ToList().OfType<StringConditionNode>())
-                        {
-                            if (node.SelectedProperty == stringProperty.PropertyName)
-                            {
-                                node.SelectedProperty = "";
-                                Debug.LogError($"Error: Variable {stringProperty.PropertyName} was removed but is still used in StringConditionNode {node.GUID}");
-                            }
-                        }
-
-                        // ОБНОВЛЯЕМ ВСЕ УЗЛЫ С ВЫПАДАЮЩИМИ СПИСКАМИ
-                        var allPropertyNodes = nodes.ToList().OfType<IPropertyNode>();
-                        foreach (var node in allPropertyNodes)
-                        {
-                            node.RefreshPropertyDropdown();
-                        }
-
-                        // Находим и удаляем визуальный элемент по имени свойства
-                        var containers = Blackboard[1].Children().ToList();
-                        foreach (var cont in containers)
-                        {
-                            var field = cont.Q<BlackboardField>();
-                            if (field != null && field.text == stringProperty.PropertyName)
-                            {
-                                Blackboard[1].Remove(cont);
-                                break;
-                            }
-                        }
-                    }
-                });
-            }));
-        }
-    }
-
-    /// <summary>
-    /// Удаляет выбранные элементы из графа
-    /// </summary>
     private void DeleteSelection()
     {
         var selectionCopy = selection.ToList();
@@ -937,41 +967,28 @@ public class DialogueGraphView : GraphView
         undoManager.ClearStacks();
     }
 
-    // Метод для обработки изменений базового персонажа
     private void OnBaseCharacterChanged()
     {
-        // Можно добавить дополнительную логику при изменении базового персонажа
         Debug.Log($"Base character changed to: {BaseCharacterGuid}");
     }
 
-    /// <summary>
-    /// Публичный метод для полной очистки графа (кроме EntryNode)
-    /// </summary>
     private void ClearGraph()
     {
-        // Удаляем все узлы, кроме EntryPoint
         var nodesToRemove = this.nodes.ToList().Where(node => !(node is EntryNode)).ToList();
         foreach (var node in nodesToRemove)
         {
-            // Удаляем связанные рёбра
             var edgesToRemove = this.edges
                 .Where(e => e.input.node == node || e.output.node == node)
                 .ToList();
             foreach (var edge in edgesToRemove)
                 RemoveElement(edge);
-
             RemoveElement(node);
         }
-        // Очищаем Blackboard и exposed properties
+
         ClearBlackBoardAndExposedProperties();
-        // Сбрасываем BaseCharacterGuid
         BaseCharacterGuid = string.Empty;
     }
 
-    /// <summary>
-    /// Отмечает, что были внесены изменения без привязки к файлу.
-    /// Вызывается при добавлении/удалении узлов, связей, изменении Blackboard или Base Character.
-    /// </summary>
     public void MarkUnsavedChangeWithoutFile()
     {
         var assetField = this.parent?.parent?.Q<ObjectField>("Dialogue File");
@@ -986,7 +1003,6 @@ public class DialogueGraphView : GraphView
         }
         else
         {
-            // Если файл уже выбран, сбрасываем флаг
             _hasUnsavedChangesWithoutFile = false;
             _unsavedChangesWarningShown = false;
         }
@@ -994,14 +1010,10 @@ public class DialogueGraphView : GraphView
 
     public void OpenTextEditor(string initialText, string nodeGuid, Action<string> onTextChanged)
     {
-        // Закрываем предыдущее окно (оно само вызовет ClearNodeHighlight)
         _activeTextEditorWindow?.Close();
         _activeTextEditorWindow = null;
-
-        // ←←← КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: явно сбросить выделение, даже если окно не было открыто
         ClearNodeHighlight();
 
-        // Находим целевой узел
         var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == nodeGuid) as VisualElement;
         if (targetNode != null)
         {
@@ -1015,7 +1027,6 @@ public class DialogueGraphView : GraphView
         _activeTextEditorWindow.style.top = 30;
         _activeTextEditorWindow.style.right = 0;
         Add(_activeTextEditorWindow);
-
         ScrollToNode(nodeGuid);
     }
 
@@ -1023,18 +1034,14 @@ public class DialogueGraphView : GraphView
     {
         var targetNode = nodes.ToList().FirstOrDefault(n => n is BaseNode node && node.GUID == guid);
         if (targetNode == null) return;
-
         var nodeRect = targetNode.GetPosition();
         var center = nodeRect.center;
 
-        // Размер области просмотра
         float viewWidth = this.layout.width;
         float viewHeight = this.layout.height;
 
-        // Целевая позиция прокрутки с отступами 50px
         Vector2 targetScroll = center - new Vector2(viewWidth * 0.5f - 50f, viewHeight * 0.5f - 50f);
 
-        // Применяем с небольшой задержкой для корректного layout
         contentViewContainer.schedule.Execute(() =>
         {
             SetViewScroll(targetScroll);
@@ -1068,7 +1075,6 @@ public class DialogueGraphView : GraphView
     {
         if (_highlightedNode != null && _highlightedNode.parent != null)
             _highlightedNode.style.backgroundColor = _originalNodeBgColor;
-
         _highlightedNode = null;
     }
 
@@ -1077,7 +1083,6 @@ public class DialogueGraphView : GraphView
         if (evt.target is Port port && port.direction == Direction.Output)
         {
             _draggedOutputPort = port;
-            // Устанавливаем начальную позицию перетаскивания
             _dragReleasePosition = evt.position;
             port.RegisterCallback<PointerUpEvent>(OnPortPointerUp, TrickleDown.TrickleDown);
         }
@@ -1085,24 +1090,20 @@ public class DialogueGraphView : GraphView
 
     private void OnPortPointerUp(PointerUpEvent evt)
     {
-
         if (_draggedOutputPort == null)
         {
             return;
         }
 
-        // Фиксируем конечную позицию в локальных координатах contentViewContainer
         _dragReleasePosition = contentViewContainer.WorldToLocal(evt.position);
         _draggedOutputPort.UnregisterCallback<PointerUpEvent>(OnPortPointerUp);
 
-        // Проверка: если порт уже имеет соединение и имеет ограничение на одно соединение
         if (_draggedOutputPort.capacity == Port.Capacity.Single && _draggedOutputPort.connections.Any())
         {
             _draggedOutputPort = null;
             return;
         }
 
-        // Проверка опции в настройках
         var settings = LoadDialogueSettings();
         if (settings == null || !settings.General.EnableQuickNodeCreationOnDragDrop)
         {
@@ -1110,87 +1111,39 @@ public class DialogueGraphView : GraphView
             return;
         }
 
-        // Проверяем, было ли создано соединение
         bool connectionWasMade = edges.Any(edge =>
             edge.output == _draggedOutputPort && edge.input != null);
 
         if (!connectionWasMade)
         {
-            // Показываем фильтрованное окно поиска узлов для создания нового узла
             ShowFilteredNodeSearchWindow();
-            // ВАЖНО: не сбрасываем _draggedOutputPort здесь, это будет сделано в callback
             return;
         }
 
         _draggedOutputPort = null;
     }
 
-    private void ShowFilteredNodeSearchWindowForUndo()
-    {
-        if (_draggedOutputPort?.node is not BaseNode sourceNode)
-        {
-            _draggedOutputPort = null;
-            return;
-        }
-
-        Vector2 screenPosition = _dragReleasePosition;
-        if (editorWindow != null && editorWindow.rootVisualElement != null)
-        {
-            Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
-            Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
-            Rect windowRect = editorWindow.position;
-            screenPosition = new Vector2(
-                windowRect.x + rootPosition.x,
-                Screen.height - (windowRect.y + rootPosition.y)
-            );
-        }
-
-        screenPosition += new Vector2(10, 10);
-
-        var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
-        searchWindow.Init(editorWindow, this, sourceNode, (nodeType) =>
-        {
-            if (nodeType != null)
-            {
-                // Создаем узел в позиции отпускания
-                var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
-                if (newNode != null)
-                {
-                    // Создаем команду для создания узла и соединения
-                    var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
-                    undoManager.ExecuteCommand(command);
-                }
-            }
-            _draggedOutputPort = null;
-        });
-
-        SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
-    }
-
-
     private void ShowFilteredNodeSearchWindow()
     {
-        // Сохраняем локальную ссылку на порт
         var draggedOutputPort = _draggedOutputPort;
         if (draggedOutputPort?.node is not BaseNode sourceNode)
         {
             _draggedOutputPort = null;
             return;
         }
-        // Правильное получение экранных координат в UI Toolkit
+
         Vector2 screenPosition = _dragReleasePosition;
         if (editorWindow != null && editorWindow.rootVisualElement != null)
         {
             Vector2 worldPosition = contentViewContainer.LocalToWorld(_dragReleasePosition);
             Vector2 rootPosition = editorWindow.rootVisualElement.WorldToLocal(worldPosition);
-            // Преобразуем в экранные координаты с учетом позиции окна редактора
             Rect windowRect = editorWindow.position;
             screenPosition = new Vector2(
                 windowRect.x + rootPosition.x,
-                windowRect.y + rootPosition.y // УБРАНА ИНВЕРСИЯ Y
+                windowRect.y + rootPosition.y
             );
         }
-        // Корректируем позицию, чтобы окно не перекрывало курсор полностью
+
         screenPosition += new Vector2(10, 10);
 
         var searchWindow = ScriptableObject.CreateInstance<FilteredNodeSearchWindow>();
@@ -1198,18 +1151,17 @@ public class DialogueGraphView : GraphView
         {
             if (nodeType != null && draggedOutputPort != null)
             {
-                // Используем скорректированную позицию для создания узла
                 var newNode = NodeFactory.CreateNode(nodeType, _dragReleasePosition);
                 if (newNode != null)
                 {
                     AddElement(newNode);
                     MarkUnsavedChangeWithoutFile();
-                    // === ИСПРАВЛЕННЫЙ КОД ===
-                    // Подключение: находим ВСЕ input-порты и берем первый подходящий
+
                     var inputPorts = newNode.inputContainer.Children()
                         .OfType<Port>()
                         .Where(p => p.direction == Direction.Input)
                         .ToList();
+
                     if (inputPorts.Count > 0)
                     {
                         var inputPort = inputPorts[0];
@@ -1217,24 +1169,17 @@ public class DialogueGraphView : GraphView
                         draggedOutputPort.Connect(edge);
                         inputPort.Connect(edge);
                         Add(edge);
-                        // Явно обновляем отображение графа
                         this.MarkDirtyRepaint();
-                        Debug.Log($"Connection created: {sourceNode.title} -> {newNode.title}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Could not create connection for node {newNode.title}. " +
-                                        $"Input ports count: {inputPorts.Count}");
                     }
                 }
             }
-            // Сбрасываем только если обрабатывали именно этот порт
+
             if (_draggedOutputPort == draggedOutputPort)
             {
                 _draggedOutputPort = null;
             }
         });
-        // Открываем окно поиска в позиции курсора
+
         SearchWindow.Open(new SearchWindowContext(screenPosition), searchWindow);
     }
 
@@ -1244,15 +1189,12 @@ public class DialogueGraphView : GraphView
         if (guids.Length == 0)
             return null;
 
-        // Берем первый найденный файл настроек
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
     }
 
     public void CopySelectedNodes()
     {
-
-        // Игнорируем EntryNode и другие системные узлы
         var selectedNodes = selection.OfType<BaseNode>()
             .Where(node => !node.EntryPoint && !(node is WireNode))
             .ToList();
@@ -1261,7 +1203,6 @@ public class DialogueGraphView : GraphView
 
         var clipboardData = new ClipboardData();
 
-        // Сериализация узлов
         foreach (var node in selectedNodes)
         {
             clipboardData.nodes.Add(new SerializedNode
@@ -1273,7 +1214,6 @@ public class DialogueGraphView : GraphView
             });
         }
 
-        // Сериализация связей между выбранными узлами
         var edges = this.edges.ToList();
         foreach (var edge in edges)
         {
@@ -1291,10 +1231,8 @@ public class DialogueGraphView : GraphView
             }
         }
 
-        // Вычисление геометрии для позиционирования при вставке
         Vector2 minPos = new Vector2(float.MaxValue, float.MaxValue);
         Vector2 maxPos = new Vector2(float.MinValue, float.MinValue);
-
         foreach (var node in selectedNodes)
         {
             var pos = node.GetPosition().position;
@@ -1305,10 +1243,8 @@ public class DialogueGraphView : GraphView
         clipboardData.center = (minPos + maxPos) / 2;
         clipboardData.size = maxPos - minPos;
 
-        // Сериализация в JSON и сохранение в буфер
         string json = JsonUtility.ToJson(clipboardData);
         GUIUtility.systemCopyBuffer = json;
-
         Debug.Log($"Copied {selectedNodes.Count} nodes to clipboard");
     }
 
@@ -1321,7 +1257,6 @@ public class DialogueGraphView : GraphView
             var clipboardData = JsonUtility.FromJson<ClipboardData>(GUIUtility.systemCopyBuffer);
             if (clipboardData.nodes.Count == 0) return;
 
-            // Команда для UndoManager
             var command = new PasteNodesCommand(this, clipboardData, position);
             undoManager.ExecuteCommand(command);
         }
@@ -1331,61 +1266,10 @@ public class DialogueGraphView : GraphView
         }
     }
 
-    private void CreateNodeAtCursorPosition(Type nodeType)
+    public void CreateNode(Type nodeType, Vector2 position)
     {
-        // Проверка настроек и состояния окна
-        var settings = LoadDialogueSettings();
-        if (settings == null || !settings.General.EnableHotkeyUndoRedo || _activeTextEditorWindow != null)
-            return;
-
-        // Получение позиции курсора
-        Vector2 position = GetMousePositionInGraphSpace();
-
-        // Если курсор вне видимой области графа - создавать узел по центру экрана
-        if (float.IsNaN(position.x) || float.IsNaN(position.y) ||
-            position.x < -10000 || position.x > 10000 ||
-            position.y < -10000 || position.y > 10000)
-        {
-            position = Vector2.zero;
-        }
-
-        // Создание команды через undoManager
         var command = new CreateNodeCommand(this, nodeType, position);
         undoManager.ExecuteCommand(command);
-    }
-
-    private void CreateNodeWithConnection(Type nodeType)
-    {
-        // Проверяем, перетаскивается ли output port
-        if (_draggedOutputPort == null || _draggedOutputPort.node == null)
-            return;
-
-        // Получаем текущие настройки
-        var settings = LoadDialogueSettings();
-        if (settings == null || !settings.General.EnableHotkeyUndoRedo)
-            return;
-
-        // Проверяем, разрешено ли соединение с этим типом узла
-        var sourceNode = _draggedOutputPort.node as BaseNode;
-        var newNode = NodeFactory.CreateNode(nodeType, Vector2.zero); // Временный узел для проверки
-
-        if (newNode == null || !IsConnectionAllowed(_draggedOutputPort, newNode.inputContainer[0] as Port))
-        {
-            // Если соединение не разрешено, удаляем временный узел и выходим
-            if (newNode != null && newNode.parent != null)
-                this.RemoveElement(newNode);
-            return;
-        }
-
-        if (newNode != null && newNode.parent != null)
-            this.RemoveElement(newNode); // Удаляем временный узел
-
-        // Создаем команду для создания узла и соединения
-        var command = new CreateNodeAndConnectionCommand(this, nodeType, _dragReleasePosition, _draggedOutputPort);
-        undoManager.ExecuteCommand(command);
-
-        // Сбрасываем состояние перетаскивания
-        _draggedOutputPort = null;
     }
 
     [System.Serializable]
@@ -1413,13 +1297,4 @@ public class DialogueGraphView : GraphView
         public string targetGuid;
         public string portName;
     }
-
-    [System.Serializable]
-    private class IntConditionNodeData
-    {
-        public string SelectedProperty;
-        public ComparisonType Comparison;
-        public int CompareValue;
-    }
 }
-

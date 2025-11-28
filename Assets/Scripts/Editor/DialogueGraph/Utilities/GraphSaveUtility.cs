@@ -958,7 +958,6 @@ public class GraphSaveUtility
     private void CreateExposedProperties()
     {
         targetGraphView.ClearBlackBoardAndExposedProperties();
-
         // Загружаем Int свойства
         foreach (var prop in containerCache.IntExposedProperties)
         {
@@ -969,9 +968,10 @@ public class GraphSaveUtility
                 MinValue = prop.MinValue,
                 MaxValue = prop.MaxValue
             };
-            targetGraphView.AddPropertyToBlackBoard(newProp);
+            // Заменяем на существующий метод для добавления Int свойства
+            targetGraphView.IntExposedProperties.Add(newProp);
+            targetGraphView.AddIntPropertyToBlackBoard(newProp);
         }
-
         // Загружаем String свойства
         foreach (var prop in containerCache.StringExposedProperties)
         {
@@ -980,9 +980,10 @@ public class GraphSaveUtility
                 PropertyName = prop.PropertyName,
                 StringValue = prop.StringValue
             };
-            targetGraphView.AddPropertyToBlackBoard(newProp);
+            // Заменяем на существующий метод для добавления String свойства
+            targetGraphView.StringExposedProperties.Add(newProp);
+            targetGraphView.AddStringPropertyToBlackBoard(newProp);
         }
-
         // Принудительно обновляем все выпадающие списки после загрузки свойств
         var propertyNodes = targetGraphView.nodes.ToList().OfType<IPropertyNode>();
         foreach (var node in propertyNodes)
