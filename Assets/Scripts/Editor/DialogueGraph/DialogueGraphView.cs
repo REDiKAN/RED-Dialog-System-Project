@@ -75,6 +75,29 @@ public class DialogueGraphView : GraphView
 
         // Добавляем обработчик изменения графа
         this.graphViewChanged += OnGraphViewChanged;
+
+        EnsureGridIsVisible();
+    }
+
+    public void EnsureGridIsVisible()
+    {
+        // Проверяем, есть ли у нас настройки
+        var settings = LoadDialogueSettings();
+        if (settings == null) return;
+
+        // Если используется пользовательский фон, но мы хотим видеть сетку
+        if (settings.UI.UseCustomBackgroundColor)
+        {
+            // Добавляем класс для отображения сетки поверх фона
+            _gridBackground.AddToClassList("grid-visible");
+
+            // Важно: сетка должна быть над кастомным фоном, но под нодами
+            if (_gridBackground.parent == null)
+            {
+                Insert(1, _gridBackground); // Вставляем после кастомного фона
+                _gridBackground.StretchToParentSize();
+            }
+        }
     }
 
     private GraphViewChange OnGraphViewChanged(GraphViewChange change)

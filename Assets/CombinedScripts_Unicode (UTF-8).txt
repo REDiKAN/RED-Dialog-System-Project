@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.11.2025 16:05:30
+// Generation Time: 28.11.2025 18:17:00
 // Total Files: 97
 // =================================
 
@@ -2338,9 +2338,9 @@ public class DialogueSettingsData : ScriptableObject
         public bool EnableQuickNodeCreationOnDragDrop = true;
         public bool EnableHotkeyUndoRedo = true;
         public bool AutoSaveOnUnityClose = true;
-
         public bool enableAutoSaveLocation = true;
         public string autoSaveFolderPath = "";
+        public bool EnableEntryNodeMovement = false;
     }
     [System.Serializable]
     public class UISettings
@@ -2693,6 +2693,13 @@ public class DialogueSettingsWindow : EditorWindow
         var autoSaveToggle = new Toggle("Auto-save on Unity close") { value = _settings.General.AutoSaveOnUnityClose };
         autoSaveToggle.RegisterValueChangedCallback(evt => _settings.General.AutoSaveOnUnityClose = evt.newValue);
         _rightPanel.Add(autoSaveToggle);
+
+        var entryNodeMovementToggle = new Toggle("Enable Entry Node Movement")
+        {
+            value = _settings.General.EnableEntryNodeMovement
+        };
+        entryNodeMovementToggle.RegisterValueChangedCallback(evt => _settings.General.EnableEntryNodeMovement = evt.newValue);
+        _rightPanel.Add(entryNodeMovementToggle);
     }
     private void DrawUISettings()
     {
@@ -3725,6 +3732,29 @@ public class DialogueGraphView : GraphView
 
         // Добавляем обработчик изменения графа
         this.graphViewChanged += OnGraphViewChanged;
+
+        EnsureGridIsVisible();
+    }
+
+    public void EnsureGridIsVisible()
+    {
+        // Проверяем, есть ли у нас настройки
+        var settings = LoadDialogueSettings();
+        if (settings == null) return;
+
+        // Если используется пользовательский фон, но мы хотим видеть сетку
+        if (settings.UI.UseCustomBackgroundColor)
+        {
+            // Добавляем класс для отображения сетки поверх фона
+            _gridBackground.AddToClassList("grid-visible");
+
+            // Важно: сетка должна быть над кастомным фоном, но под нодами
+            if (_gridBackground.parent == null)
+            {
+                Insert(1, _gridBackground); // Вставляем после кастомного фона
+                _gridBackground.StretchToParentSize();
+            }
+        }
     }
 
     private GraphViewChange OnGraphViewChanged(GraphViewChange change)
@@ -6728,15 +6758,33 @@ public class EntryNode : BaseNode
         outputPort.portName = "Next";
         outputContainer.Add(outputPort);
 
-        // ��������� �������� � �����������
-        capabilities &= ~Capabilities.Movable;
-        capabilities &= ~Capabilities.Deletable;
+        // �������� ���������
+        DialogueSettingsData settings = null;
+        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:DialogueSettingsData");
+        if (guids.Length > 0)
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+            settings = UnityEditor.AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
+        }
 
-        // ��������� ���������� ��������� ����
+        bool canMove = settings != null && settings.General.EnableEntryNodeMovement;
+
+        // �����: ��������� ��� ������� capabilities ��� ���������� ������ � ������
+        capabilities = Capabilities.Selectable | Capabilities.Collapsible | Capabilities.Movable;
+
+        // ������������ � ����������� �� ��������� �����������
+        if (!canMove)
+        {
+            capabilities &= ~Capabilities.Movable;
+        }
+
+        capabilities &= ~Capabilities.Deletable; // ��������� �������� ������
+
+        // ��������� ��������� ����
         RefreshExpandedState();
         RefreshPorts();
 
-        // ��������� ����������� ����� ��� ���������� ����
+        // ��������� �����
         styleSheets.Add(Resources.Load<StyleSheet>("DefNode"));
     }
 
@@ -11395,9 +11443,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 97
-// Total Size: 397,78 KB
-// Total Lines: 11195
+// Total Size: 399,86 KB
+// Total Lines: 11243
 // Classes: 124
-// Methods: 685
-// Comments: 900
+// Methods: 688
+// Comments: 906
 // =====================================

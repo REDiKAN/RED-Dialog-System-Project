@@ -33,13 +33,11 @@ public class EntryNode : BaseNode
 
         bool canMove = settings != null && settings.General.EnableEntryNodeMovement;
 
-        // Настраиваем возможности узла в зависимости от настройки
-        capabilities = Capabilities.Selectable | Capabilities.Collapsible;
-        if (canMove)
-        {
-            capabilities |= Capabilities.Movable;
-        }
-        else
+        // Важно: сохраняем все базовые capabilities для корректной работы с сеткой
+        capabilities = Capabilities.Selectable | Capabilities.Collapsible | Capabilities.Movable;
+
+        // Корректируем в зависимости от настройки перемещения
+        if (!canMove)
         {
             capabilities &= ~Capabilities.Movable;
         }

@@ -59,8 +59,29 @@ MonoBehaviour:
     PortName: Timeout
     TargetNodeGuid: aee3b2aa-66af-4dd2-aae6-6b6b3d6b0b53
   SpeechNodeDatas:
+  - Guid: aee3b2aa-66af-4dd2-aae6-6b6b3d6b0b53
+    Position: {x: 991, y: 132}
+    DialogueText: "\u0418\u0433\u043D\u043E\u0440"
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: f8326547-c35f-4d00-a23b-16e6b336f0cf
+    Position: {x: 1281, y: -125}
+    DialogueText: 1
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
+  - Guid: c732952a-d8c7-4857-9095-30a26d1bf8ff
+    Position: {x: 1281, y: -3}
+    DialogueText: 2
+    AudioClipGuid: 
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+    NodeType: SpeechNodeText
   - Guid: 1a2589ac-170d-41cd-8e9f-b58245a86cf0
-    Position: {x: 2266, y: 492}
+    Position: {x: 824, y: 353}
     DialogueText: "\u0422\u044B \u043F\u0440\u0430\u0432\u0434\u0430 \u0434\u0443\u043C\u0430\u0435\u0448\u044C
       \u0447\u0442\u043E \u044F \u043D\u0435 \u0432\u0438\u0436\u0443 \u0447\u0442\u043E
       \u0442\u044B \u0447\u0438\u0442\u0430\u0435\u0448\u044C <u>\u043C\u043E\u0438
@@ -70,62 +91,41 @@ MonoBehaviour:
     SpeakerName: Lora
     NodeType: SpeechNodeText
   - Guid: 26d33410-1fff-4008-8f23-2a1c53e18fcb
-    Position: {x: 2924, y: 537}
+    Position: {x: 1445, y: 353}
     DialogueText: New Dialogue
-    AudioClipGuid: 
-    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
-    SpeakerName: Lora
-    NodeType: SpeechNodeText
-  - Guid: aee3b2aa-66af-4dd2-aae6-6b6b3d6b0b53
-    Position: {x: 1011, y: 200}
-    DialogueText: "\u0418\u0433\u043D\u043E\u0440"
-    AudioClipGuid: 
-    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
-    SpeakerName: Lora
-    NodeType: SpeechNodeText
-  - Guid: f8326547-c35f-4d00-a23b-16e6b336f0cf
-    Position: {x: 1301, y: -40}
-    DialogueText: 1
-    AudioClipGuid: 
-    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
-    SpeakerName: Lora
-    NodeType: SpeechNodeText
-  - Guid: c732952a-d8c7-4857-9095-30a26d1bf8ff
-    Position: {x: 1301, y: 84}
-    DialogueText: 2
     AudioClipGuid: 
     SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
     SpeakerName: Lora
     NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: 996fc5bd-bee2-4dcb-ae8f-05ce58fe0ff3
-    Position: {x: 542, y: 492}
-    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: 2593abb1-ea77-44d0-b792-251e0d137600
-    Position: {x: 2590, y: 492}
-    ResponseText: "\u0418\u0437\u0432\u0438\u043D\u0438\u0442\u0441\u044F"
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
-    Position: {x: 2590, y: 598}
+    Position: {x: 542, y: 353}
     ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
     AudioClipGuid: 
     NodeType: OptionNodeText
   - Guid: c3081c52-a74a-4359-a211-56262707f0ea
-    Position: {x: 542, y: 149}
+    Position: {x: 542, y: -3}
     ResponseText: "\u041F\u0440\u0438\u0432\u0435\u0442, \u043B\u043E\u0440\u0430"
     AudioClipGuid: 
     NodeType: OptionNodeText
   - Guid: 5226d4e8-5587-47f3-a766-339384f8cfd2
-    Position: {x: 1007, y: -40}
+    Position: {x: 998, y: -105}
     ResponseText: "\u0412\u0440 1"
     AudioClipGuid: 
     NodeType: OptionNodeText
   - Guid: aecefe31-05dd-40bf-8a4c-3b8ac1fbbee0
-    Position: {x: 1018, y: 84}
+    Position: {x: 998, y: 17}
     ResponseText: "\u0412\u0440 2"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 2593abb1-ea77-44d0-b792-251e0d137600
+    Position: {x: 1151, y: 353}
+    ResponseText: "\u0418\u0437\u0432\u0438\u043D\u0438\u0442\u0441\u044F"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 1bf1de16-449d-4e62-b7f0-d248c6c52c32
+    Position: {x: 1151, y: 459}
+    ResponseText: "\u0418\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C"
     AudioClipGuid: 
     NodeType: OptionNodeText
   ExposedProperties: []
@@ -160,10 +160,7 @@ MonoBehaviour:
   noteNodeDatas: []
   TimerNodeDatas:
   - Guid: df78eb21-9f1c-4377-9e2b-16922371c4e3
-    Position: {x: 839, y: 149}
+    Position: {x: 826, y: -3}
     DurationSeconds: 10
-  PauseNodeDatas:
-  - Guid: 32df084d-16c1-4e2c-a4f3-77b2198e2bed
-    Position: {x: 1000, y: 392}
-    DurationSeconds: 1
+  PauseNodeDatas: []
   WireNodeDatas: []

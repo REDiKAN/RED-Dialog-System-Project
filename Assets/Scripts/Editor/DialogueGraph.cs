@@ -43,55 +43,65 @@ public class DialogueGraph : EditorWindow
         // Проверяем комбинацию Ctrl + S (только Windows)
         if (!evt.ctrlKey || evt.keyCode != KeyCode.S)
             return;
-
         // Проверяем, что окно редактора активно
         if (EditorWindow.focusedWindow != this)
             return;
-
         evt.StopPropagation(); // Предотвращаем системное сохранение сцены
-
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         var container = assetField?.value as DialogueContainer;
-
         // Случай: нет привязанного файла
         if (container == null)
         {
             // Проверяем, есть ли хоть какой-то контент помимо EntryNode
             bool hasContent = graphView?.nodes != null &&
                               graphView.nodes.OfType<BaseNode>().Any(n => !n.EntryPoint);
-
             if (!hasContent)
             {
                 EditorUtility.DisplayDialog("No File", "No dialogue file is currently loaded. Please create or load one first.", "OK");
                 return;
             }
 
-            string path = EditorUtility.SaveFilePanelInProject(
-                "Save Dialogue As",
-                "NewDialogue",
-                "asset",
-                "Choose location and name for the dialogue file"
-            );
+            DialogueSettingsData settings = LoadDialogueSettings();
+            string path = null;
 
-            if (string.IsNullOrEmpty(path))
-                return;
+            // Проверяем настройки автосохранения
+            if (settings != null && settings.General.enableAutoSaveLocation &&
+                !string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
+                settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+            {
+                // Используем папку автосохранения
+                string folderPath = settings.GetFullPath();
+                string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string fileName = $"Dialogue_{timestamp}.asset";
+                path = System.IO.Path.Combine(folderPath, fileName);
+                path = path.Replace("\\", "/");
+            }
+            else
+            {
+                // ВСЕГДА показываем диалог при отключенном автосохранении
+                path = EditorUtility.SaveFilePanelInProject(
+                    "Save Dialogue As",
+                    "NewDialogue",
+                    "asset",
+                    "Choose location and name for the dialogue file"
+                );
+
+                if (string.IsNullOrEmpty(path))
+                    return;
+            }
 
             // Создаём новый контейнер
             var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
             var saveUtility = GraphSaveUtility.GetInstance(graphView);
             saveUtility.SaveGraphToExistingContainer(newContainer);
-
             // Сохраняем в AssetDatabase
             AssetDatabase.CreateAsset(newContainer, path);
             AssetDatabase.SaveAssets();
-
             // Обновляем ObjectField
             assetField.SetValueWithoutNotify(newContainer);
-
             EditorUtility.DisplayDialog("Saved", "Dialogue saved successfully!", "OK");
             return;
         }
-
         // Случай: файл уже задан — просто сохраняем
         SaveCurrentDialogue();
     }
@@ -154,47 +164,56 @@ public class DialogueGraph : EditorWindow
     }
 
     /// <summary>
-    /// Создаёт новый диалог и сохраняет его по указанному пользователем пути
+    /// Создаёт новый диалог и сохраняет его по пути в зависимости от настроек автосохранения
     /// </summary>
     private void CreateNewDialogue()
     {
-        // Определяем директорию по умолчанию
-        string defaultDirectory = "Assets/Resources/DialogueFiles";
+        DialogueSettingsData settings = LoadDialogueSettings();
+        string path = null;
 
-        // Создаем директории если они не существуют
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        if (!AssetDatabase.IsValidFolder(defaultDirectory))
-            AssetDatabase.CreateFolder("Assets/Resources", "DialogueFiles");
+        // Проверяем настройки автосохранения ПЕРЕД определением пути
+        if (settings != null && settings.General.enableAutoSaveLocation &&
+            !string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
+            settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+        {
+            // Используем папку автосохранения
+            string folderPath = settings.GetFullPath();
+            string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string fileName = $"Dialogue_{timestamp}.asset";
+            path = System.IO.Path.Combine(folderPath, fileName);
+            path = path.Replace("\\", "/");
+        }
+        else
+        {
+            // Показываем диалог выбора папки, если автосохранение отключено
+            path = EditorUtility.SaveFilePanelInProject(
+                "Save New Dialogue",
+                "NewDialogue",
+                "asset",
+                "Choose location and name for the dialogue file"
+            );
 
-        // Генерируем уникальное имя файла с временной меткой
-        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string fileName = $"Dialogue_{timestamp}.asset";
-        string path = System.IO.Path.Combine(defaultDirectory, fileName);
+            if (string.IsNullOrEmpty(path))
+                return;
+        }
 
         // Создаём контейнер
         var newContainer = ScriptableObject.CreateInstance<DialogueContainer>();
-
         // Сохраняем текущее состояние графа в контейнер
         var saveUtility = GraphSaveUtility.GetInstance(graphView);
         saveUtility.SaveGraphToExistingContainer(newContainer);
-
         // Сохраняем файл
         AssetDatabase.CreateAsset(newContainer, path);
         AssetDatabase.SaveAssets();
-
         // Обновляем ObjectField
         var assetField = rootVisualElement.Q<ObjectField>("Dialogue File");
         if (assetField != null)
             assetField.SetValueWithoutNotify(newContainer);
-
         // Загружаем диалог (это сбросит флаги)
         LoadDialogueFromFile(newContainer);
-
         // Сбрасываем состояние "без файла"
         graphView._hasUnsavedChangesWithoutFile = false;
         graphView._unsavedChangesWarningShown = false;
-
         Debug.Log($"Создан новый диалог: {path}");
         EditorUtility.DisplayDialog("Success", $"Диалог создан и открыт: {fileName}", "OK");
     }

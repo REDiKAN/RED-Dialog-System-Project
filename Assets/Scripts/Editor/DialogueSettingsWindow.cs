@@ -218,7 +218,10 @@ public class DialogueSettingsWindow : EditorWindow
         autoSaveToggle.RegisterValueChangedCallback(evt => _settings.General.AutoSaveOnUnityClose = evt.newValue);
         _rightPanel.Add(autoSaveToggle);
 
-        var entryNodeMovementToggle = new Toggle("Enable Entry Node Movement") { value = _settings.General.EnableEntryNodeMovement };
+        var entryNodeMovementToggle = new Toggle("Enable Entry Node Movement")
+        {
+            value = _settings.General.EnableEntryNodeMovement
+        };
         entryNodeMovementToggle.RegisterValueChangedCallback(evt => _settings.General.EnableEntryNodeMovement = evt.newValue);
         _rightPanel.Add(entryNodeMovementToggle);
     }

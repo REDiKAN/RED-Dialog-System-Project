@@ -30,24 +30,35 @@ public class GraphSaveUtility
     /// <summary>
     /// Сохранение графа в файл
     /// </summary>
+    /// <summary>
+    /// Сохранение графа в файл
+    /// </summary>
     public void SaveGraph(string fileName)
     {
         DialogueSettingsData settings = LoadDialogueSettings();
         string savePath = null;
 
-        // Если включена автосохранение и папка валидна - используем ее
-        if (settings != null && settings.General.enableAutoSaveLocation &&
-            !string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
-            settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+        // Сначала проверяем, включено ли автосохранение
+        bool useAutoSave = false;
+        if (settings != null && settings.General.enableAutoSaveLocation)
         {
-            // Формируем путь: [выбранная_папка]/[имя_диалога].asset
+            // Только если автосохранение включено, проверяем валидность пути
+            if (!string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
+                settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+            {
+                useAutoSave = true;
+            }
+        }
+
+        if (useAutoSave)
+        {
             string folderPath = settings.GetFullPath();
             savePath = System.IO.Path.Combine(folderPath, $"{fileName}.asset");
             savePath = savePath.Replace("\\", "/");
         }
         else
         {
-            // Стандартное поведение с диалогом выбора пути
+            // Всегда показываем диалог выбора пути, если автосохранение отключено
             savePath = EditorUtility.SaveFilePanelInProject(
                 "Save Dialogue",
                 fileName,
@@ -65,7 +76,6 @@ public class GraphSaveUtility
         SaveNodes(dialogueContainer);
         // Сохраняем свойства черной доски
         SaveExposedProperties(dialogueContainer);
-
         // Сохраняем ассет
         AssetDatabase.CreateAsset(dialogueContainer, savePath);
         AssetDatabase.SaveAssets();

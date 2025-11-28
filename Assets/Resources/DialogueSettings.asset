@@ -19,7 +19,7 @@ MonoBehaviour:
     EnableQuickNodeCreationOnDragDrop: 1
     EnableHotkeyUndoRedo: 1
     AutoSaveOnUnityClose: 1
-    enableAutoSaveLocation: 1
+    enableAutoSaveLocation: 0
     autoSaveFolderPath: Resources/Dialogue
     EnableEntryNodeMovement: 0
   UI:
