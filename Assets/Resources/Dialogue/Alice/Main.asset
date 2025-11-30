@@ -1,0 +1,513 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: Main
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueContainer
+  EntryNodeData:
+    Guid: c2019fc8-2654-44fa-b11b-cb78335110b6
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: c2019fc8-2654-44fa-b11b-cb78335110b6
+    PortName: Next
+    TargetNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
+  - BaseNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+    PortName: Next
+    TargetNodeGuid: 2243af0a-b294-4b44-ae72-2c571e6373a5
+  - BaseNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
+    PortName: Next
+    TargetNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+  - BaseNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
+    PortName: Next
+    TargetNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
+  - BaseNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
+    PortName: Next
+    TargetNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+  - BaseNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+    PortName: Next
+    TargetNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
+  - BaseNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
+    PortName: Next
+    TargetNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
+  - BaseNodeGuid: aa458c8f-6095-4979-9903-49160fa6fd9d
+    PortName: Next
+    TargetNodeGuid: 90627cef-7f7f-437a-9cbb-f947316a3b85
+  - BaseNodeGuid: 5c60e8ec-975d-49d8-a256-f44de3ac2f8c
+    PortName: Next
+    TargetNodeGuid: aa458c8f-6095-4979-9903-49160fa6fd9d
+  - BaseNodeGuid: 84563514-3037-4da0-a0df-6efd131335c4
+    PortName: Next
+    TargetNodeGuid: 5c60e8ec-975d-49d8-a256-f44de3ac2f8c
+  - BaseNodeGuid: 28fd919a-7c9d-4d7b-85ff-ff3a141738a6
+    PortName: Next
+    TargetNodeGuid: 84563514-3037-4da0-a0df-6efd131335c4
+  - BaseNodeGuid: ec7cb33b-b31a-4618-aa87-f740e891fdda
+    PortName: Next
+    TargetNodeGuid: 28fd919a-7c9d-4d7b-85ff-ff3a141738a6
+  - BaseNodeGuid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
+    PortName: Next
+    TargetNodeGuid: f53a9cb9-0d26-484a-8100-6a88a825ea65
+  - BaseNodeGuid: bacc07fc-5c78-4aa8-8690-0db30ccc3c0d
+    PortName: Next
+    TargetNodeGuid: 7e4a3660-4fee-4026-89d6-b0bdf1b83c78
+  - BaseNodeGuid: f53a9cb9-0d26-484a-8100-6a88a825ea65
+    PortName: Next
+    TargetNodeGuid: 4dd3bd88-36b3-424e-9cfe-b67e8a8e4c48
+  - BaseNodeGuid: 4dd3bd88-36b3-424e-9cfe-b67e8a8e4c48
+    PortName: Next
+    TargetNodeGuid: cb16ebfa-3a78-4256-b78e-5e594469bb0e
+  - BaseNodeGuid: 68148d85-4caf-4f1b-8470-acf9028aa673
+    PortName: Next
+    TargetNodeGuid: b3ab947f-a0bc-417e-bc50-16a744aa35c0
+  - BaseNodeGuid: cb16ebfa-3a78-4256-b78e-5e594469bb0e
+    PortName: Next
+    TargetNodeGuid: c2062348-c8aa-4490-b331-acab30743e9d
+  - BaseNodeGuid: b3ab947f-a0bc-417e-bc50-16a744aa35c0
+    PortName: Next
+    TargetNodeGuid: 2fdc83c4-ead1-4108-bf4e-ac1ee0349d10
+  - BaseNodeGuid: c2062348-c8aa-4490-b331-acab30743e9d
+    PortName: Next
+    TargetNodeGuid: 68148d85-4caf-4f1b-8470-acf9028aa673
+  - BaseNodeGuid: 2fdc83c4-ead1-4108-bf4e-ac1ee0349d10
+    PortName: Next
+    TargetNodeGuid: bacc07fc-5c78-4aa8-8690-0db30ccc3c0d
+  - BaseNodeGuid: 7e4a3660-4fee-4026-89d6-b0bdf1b83c78
+    PortName: Next
+    TargetNodeGuid: dfcb6201-4d42-430d-88ff-c6b8b4276658
+  - BaseNodeGuid: dfcb6201-4d42-430d-88ff-c6b8b4276658
+    PortName: Next
+    TargetNodeGuid: 6cee87b1-829e-4e2b-9ae3-b13ac7a8d380
+  - BaseNodeGuid: dfcb6201-4d42-430d-88ff-c6b8b4276658
+    PortName: Next
+    TargetNodeGuid: b1a1d784-bee2-48f8-ac39-873dfc588258
+  - BaseNodeGuid: d95eb68e-6a4c-40cc-a9b1-955038a7c3d0
+    PortName: Next
+    TargetNodeGuid: a8e69830-1ede-4526-96a1-a05958ae8027
+  - BaseNodeGuid: a8e69830-1ede-4526-96a1-a05958ae8027
+    PortName: Next
+    TargetNodeGuid: e013216c-024b-4494-9af1-4fd4aa4b90af
+  - BaseNodeGuid: 1b54c1bf-8cb8-4444-8c0d-5af5beb2202f
+    PortName: Next
+    TargetNodeGuid: 5230a3d1-0270-4e85-9dca-0f43adf17431
+  - BaseNodeGuid: 1b54c1bf-8cb8-4444-8c0d-5af5beb2202f
+    PortName: Next
+    TargetNodeGuid: b9ec12ce-22ac-40ab-9185-0033f7926039
+  - BaseNodeGuid: b7f5a1c9-1366-4583-a28e-6a4554593f48
+    PortName: Next
+    TargetNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+  - BaseNodeGuid: 7953e36b-60f3-4773-b554-67f2c6f08bac
+    PortName: Next
+    TargetNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+  - BaseNodeGuid: e013216c-024b-4494-9af1-4fd4aa4b90af
+    PortName: Next
+    TargetNodeGuid: 1b54c1bf-8cb8-4444-8c0d-5af5beb2202f
+  - BaseNodeGuid: 6cee87b1-829e-4e2b-9ae3-b13ac7a8d380
+    PortName: Next
+    TargetNodeGuid: d95eb68e-6a4c-40cc-a9b1-955038a7c3d0
+  - BaseNodeGuid: b9ec12ce-22ac-40ab-9185-0033f7926039
+    PortName: Next
+    TargetNodeGuid: b7f5a1c9-1366-4583-a28e-6a4554593f48
+  - BaseNodeGuid: 5230a3d1-0270-4e85-9dca-0f43adf17431
+    PortName: Next
+    TargetNodeGuid: 7953e36b-60f3-4773-b554-67f2c6f08bac
+  - BaseNodeGuid: b1a1d784-bee2-48f8-ac39-873dfc588258
+    PortName: Next
+    TargetNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+  - BaseNodeGuid: 2243af0a-b294-4b44-ae72-2c571e6373a5
+    PortName: Next
+    TargetNodeGuid: ec7cb33b-b31a-4618-aa87-f740e891fdda
+  - BaseNodeGuid: 90627cef-7f7f-437a-9cbb-f947316a3b85
+    PortName: Next
+    TargetNodeGuid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
+  - BaseNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+    PortName: Next
+    TargetNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
+  - BaseNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
+    PortName: Next
+    TargetNodeGuid: e162f435-0679-4662-8fae-111338461139
+  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
+    PortName: Next
+    TargetNodeGuid: 9682374d-8585-4848-9bf6-5f0359451bd4
+  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
+    PortName: Next
+    TargetNodeGuid: d0847994-9ba7-4eaa-8925-7c0a09ab4fd1
+  SpeechNodeDatas:
+  - Guid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+    Position: {x: 1775, y: 200}
+    DialogueText: '[23:47:37] Ghost protocol activated. No traces left.'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 65441762-64f2-4976-b2cc-07f35e4d120e
+    Position: {x: 1461, y: 200}
+    DialogueText: "[23:47:36] Erasing intrusion logs\u2026 <color=#169523>DONE</color>"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
+    Position: {x: 522, y: 200}
+    DialogueText: '[23:47:15] ICE-breaker v9.3 "Wraith" injected'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: d7f344a3-c795-4eaa-8a02-342206824494
+    Position: {x: 840, y: 200}
+    DialogueText: "[23:47:19] Privilege escalation\u2026 ROOT@pleasuresync-db"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+    Position: {x: 1145, y: 200}
+    DialogueText: "[23:47:34] Dumping financial ledger\u2026 450 344 credits transferred
+      \u2192 ghost_wallet_77x"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
+    Position: {x: 204, y: 200}
+    DialogueText: "[23:47:12] Connecting to CyberSin Corp internal grid\u2026 <color=#169523>OK</color>"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: aa458c8f-6095-4979-9903-49160fa6fd9d
+    Position: {x: 3594, y: 200}
+    DialogueText: "\u0418\u043B\u0438... \u041C\u043E\u0436\u043D\u043E \u0431\u0443\u0434\u0435\u0442
+      \u043D\u0430\u043D\u044F\u0442\u044C \u043F\u0430\u0440\u0443 \u0434\u0435\u0432\u043E\u0447\u0435\u043A,
+      \u0438 \u0438\u043B\u0438 \u0437\u0430\u0432\u0438\u0441\u043D\u0443\u0442\u044C
+      \u0432 \u043A\u043B\u0443\u0431\u0435 \u0438 \u0432\u044B\u0435... "
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: 5c60e8ec-975d-49d8-a256-f44de3ac2f8c
+    Position: {x: 3281, y: 200}
+    DialogueText: "\u0410 \u043C\u043E\u0436\u0435\u0442 \u0445\u0440\u0435\u043D
+      \u0441 \u043D\u0435\u0439, \u0441 \u043A\u0432\u0430\u0440\u0442\u0438\u0440\u043E\u0439?"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: 84563514-3037-4da0-a0df-6efd131335c4
+    Position: {x: 2986, y: 200}
+    DialogueText: " \u0420\u0430\u0437\u0434\u0430\u043C \u0432\u0441\u0435 \u0434\u043E\u043B\u0433\u0438,
+      \u043E\u0431\u043D\u043E\u0432\u043B\u044E \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B,
+      \u043C\u043E\u0436\u0435\u0442 \u0437\u0430 \u043A\u0432\u0430\u0440\u0442\u0438\u0440\u0443
+      \u0437\u0430\u043F\u043B\u0430\u0447\u0443."
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: 28fd919a-7c9d-4d7b-85ff-ff3a141738a6
+    Position: {x: 2671, y: 200}
+    DialogueText: "\u0421\u043F\u0430\u0441\u0438\u0431\u043E CyberSin \u0437\u0430
+      \u044D\u0442\u0443 \u043F\u0440\u0435\u043A\u0440\u0430\u0441\u043D\u0443\u044E
+      \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043E\u0431\u043E\u0433\u0430\u0442\u0438\u0442\u044C\u0441\u044F."
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: ec7cb33b-b31a-4618-aa87-f740e891fdda
+    Position: {x: 2372, y: 200}
+    DialogueText: "\u041D\u0430\u043A\u043E\u043D\u0435\u0446, \u0431\u043B\u044F\u0434\u044C...
+      \u041A\u0430\u043A \u0436\u0435 \u044F \u0443\u0441\u0442\u0430\u043B \u0436\u0440\u0430\u0442\u044C
+      \u043E\u0434\u043D\u0438 \u0441\u0438\u043D\u0442\u0435\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435
+      \u043F\u043E\u043C\u043E\u0438!"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
+    Position: {x: 4228, y: 200}
+    DialogueText: "[23:47:38] \u0410nomaly detected."
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: bacc07fc-5c78-4aa8-8690-0db30ccc3c0d
+    Position: {x: 6663, y: 200}
+    DialogueText: "\u0427\u0451\u0440\u0442... \u0410 \u0432\u0435\u0434\u044C \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E.
+      \u042D\u0442\u043E \u0432\u0438\u0434\u0438\u043C\u043E \u0432\u043B\u0430\u0434\u0435\u043B\u0438\u0446\u0430
+      \u0442\u043E\u0439 \u043F\u043E\u0447\u0442\u044B \u0438\u0437 \u043A\u043E\u0442\u043E\u0440\u043E\u0439
+      \u044F \u043F\u043E\u043B\u0443\u0447\u0438\u043B \u0434\u043E\u0441\u0442\u0443\u043F
+      \u043A \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0439
+      \u043F\u043E\u0447\u0442\u0435. "
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: f53a9cb9-0d26-484a-8100-6a88a825ea65
+    Position: {x: 4533, y: 200}
+    DialogueText: '[23:47:39] Personal mailbox "alice.kim@cybersin.corp" was used
+      as proxy relay.'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 4dd3bd88-36b3-424e-9cfe-b67e8a8e4c48
+    Position: {x: 4849, y: 200}
+    DialogueText: '[23:47:40] Mailbox owner may have received automated intrusion
+      alert.'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 68148d85-4caf-4f1b-8470-acf9028aa673
+    Position: {x: 5757, y: 200}
+    DialogueText: "Subject: <b>\u0422\u044B \u0441\u043E\u0432\u0441\u0435\u043C
+      \u043E\u0445\u0443\u0435\u043B?</b>"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: cb16ebfa-3a78-4256-b78e-5e594469bb0e
+    Position: {x: 5156, y: 200}
+    DialogueText: "\u0425\u043C... \u0417\u043D\u0430\u043A\u043E\u043C\u043E\u0435
+      \u0438\u043C\u044F... "
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: b3ab947f-a0bc-417e-bc50-16a744aa35c0
+    Position: {x: 6062, y: 200}
+    DialogueText: "\u0423\u0445\u0442\u044B... \u041D\u0435\u043E\u0436\u0438\u0434\u0430\u043D\u043D\u044B\u0439
+      \u043F\u043E\u0432\u043E\u0440\u043E\u0442, \u0438 \u043A\u0442\u043E \u0436\u0435
+      \u044D\u0442\u043E \u0443 \u043D\u0430\u0441 \u0442\u0430\u043A\u043E\u0439
+      \u0437\u043B\u043E\u0431\u043D\u044B\u0439?"
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: c2062348-c8aa-4490-b331-acab30743e9d
+    Position: {x: 5452, y: 200}
+    DialogueText: "[23:47:41] New mail \u2192 alice.kim@cybersin.corp"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 2fdc83c4-ead1-4108-bf4e-ac1ee0349d10
+    Position: {x: 6361, y: 200}
+    DialogueText: "\u042D\u0439, \u0434\u044F\u0434\u044F \u0445\u0430\u043A\u0435\u0440.\n\u0422\u044B,
+      \u043A\u043E\u043D\u0435\u0447\u043D\u043E, \u043F\u0440\u043E\u0444\u0438
+      \u2014 \u0434\u043E \u0441\u0438\u0445 \u043F\u043E\u0440 \u043D\u0438\u043A\u0442\u043E
+      \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0437\u0430\u043C\u0435\u0442\u0438\u043B.\n450\u043A
+      \u043A\u0440\u0435\u0434\u0438\u0442\u043E\u0432, \u0434\u0430? \u041D\u0435\u043F\u043B\u043E\u0445\u043E
+      \u0434\u043B\u044F \u043E\u0434\u043D\u043E\u0439 \u043D\u043E\u0447\u0438
+      :)\n\u041D\u041E \u0422\u042B \u041E\u0421\u0422\u0410\u0412\u0418\u041B \u0421\u041B\u0415\u0414\u042B
+      \u041D\u0410 \u041C\u041E\u0415\u0419 \u041F\u041E\u0427\u0422\u0415, \u0414\u0415\u0411\u0418\u041B!\n\u041A\u0430\u043A-\u0442\u043E\u043B\u044C\u043A\u043E
+      \u043E\u043D\u0438 \u0437\u0430\u043C\u0435\u0442\u044F\u0442 \u0447\u0442\u043E
+      \u0434\u0435\u043D\u044C\u0433\u0438 \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0446\u0438\u0438,
+      \u0445\u043E\u0442\u044C \u0438 \u0442\u0430\u043A\u0438\u0435 \u043C\u0435\u043B\u043A\u0438\u0435,
+      \u043F\u0440\u043E\u043F\u0430\u043B\u0438, \u043D\u0430\u0447\u043D\u0451\u0442\u0441\u044F
+      \u0440\u0430\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0435.\n\u0418
+      \u043F\u0440\u0438\u043C\u0435\u0440\u043D\u043E \u0447\u0435\u0440\u0435\u0437
+      \u0447\u0430\u0441 \u0437\u0430 \u043C\u043D\u043E\u0439 (\u0438 \u0437\u0430
+      \u0442\u043E\u0431\u043E\u0439) \u043F\u0440\u0438\u0434\u0443\u0442.\n\u041F\u043E\u044D\u0442\u043E\u043C\u0443
+      \u0431\u044B\u0441\u0442\u0440\u043E \u043F\u0438\u0448\u0438 \u0432 NeonChat:
+      @alice_in_sin\n\u0418\u043D\u0430\u0447\u0435 \u044F \u0441\u0430\u043C\u0430
+      \u0441\u0434\u0430\u043C \u0442\u0435\u0431\u044F. \u0418 \u043F\u043E\u0432\u0435\u0440\u044C
+      \u2014 \u0443 \u043C\u0435\u043D\u044F \u0435\u0441\u0442\u044C \u0445\u043E\u0442\u044F
+      \u0431\u044B \u043A\u0440\u0430\u0441\u0438\u0432\u0430\u044F \u0436\u043E\u043F\u0430,
+      \u0438 \u0435\u0441\u043B\u0438 \u0442\u0435\u0431\u0435 \u0435\u0451 \u043F\u043E\u0440\u0432\u0443\u0442
+      \u0432 \u043F\u0440\u044F\u043C\u043E\u043C \u0441\u043C\u044B\u0441\u043B\u0435,
+      \u0442\u043E \u043C\u043D\u0435 \u043F\u0440\u043E\u0446\u0435\u0441\u0441
+      \u043C\u043E\u0436\u0435\u0442 \u0434\u0430\u0436\u0435 \u043F\u043E\u043D\u0440\u0430\u0432\u0438\u0442\u044C\u0441\u044F!\n\u0423
+      \u0442\u0435\u0431\u044F \u0440\u043E\u0432\u043D\u043E 10 \u043C\u0438\u043D\u0443\u0442,
+      \u0438\u043B\u0438 \u044F \u0441\u0430\u043C\u0430 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044E
+      \u043E\u0442\u0447\u0451\u0442.\n\u0416\u0434\u0443."
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: 7e4a3660-4fee-4026-89d6-b0bdf1b83c78
+    Position: {x: 6962, y: 200}
+    DialogueText: "\u041D\u0435\u0443\u0434\u043E\u0431\u043D\u043E \u0432\u044B\u0448\u043B\u043E.
+      \u0418 \u0433\u043B\u0443\u043F\u043E. "
+    AudioClipGuid: 
+    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
+    SpeakerName: Player
+    NodeType: SpeechNodeText
+  - Guid: dfcb6201-4d42-430d-88ff-c6b8b4276658
+    Position: {x: 7270, y: 200}
+    DialogueText: '[23:47:41] Start encripted chat whith @alice_in_sin'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: d95eb68e-6a4c-40cc-a9b1-955038a7c3d0
+    Position: {x: 7966, y: 89}
+    DialogueText: "\u041E\u0445\u0440\u0435\u043D\u0435\u043B?"
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: a8e69830-1ede-4526-96a1-a05958ae8027
+    Position: {x: 8277, y: 89}
+    DialogueText: "\u0410 \u0445\u043E\u0442\u044F... \u041B\u0430\u0434\u043D\u043E,
+      \u0443 \u0442\u0435\u0431\u044F \u0435\u0441\u0442\u044C 450 \u0448\u0442\u0443\u043A,
+      \u0442\u0430\u043A \u0447\u0442\u043E \u0437\u0430\u043F\u0438\u0448\u0443
+      \u0432 \u0441\u0447\u0451\u0442 \u0442\u0432\u043E\u0435\u0433\u043E \u0431\u0443\u0434\u0443\u0449\u0435\u0433\u043E
+      \u0434\u043E\u043B\u0433\u0430 \u043C\u043D\u0435. "
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: 1b54c1bf-8cb8-4444-8c0d-5af5beb2202f
+    Position: {x: 8888, y: 89}
+    DialogueText: "\u0414\u043E\u0432\u043E\u043B\u0435\u043D?"
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: b7f5a1c9-1366-4583-a28e-6a4554593f48
+    Position: {x: 9561, y: 0}
+    DialogueText: "\u0425\u0440\u0435\u043D \u0442\u0435\u0431\u0435, \u0430 \u043D\u0435
+      \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u043E\u0441\u0442\u0438. \u0423
+      \u043D\u0430\u0441 \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u043D\u0435\u0442."
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: 7953e36b-60f3-4773-b554-67f2c6f08bac
+    Position: {x: 9561, y: 206}
+    DialogueText: "\u0425\u0430-\u0445\u0430. \u0417\u0430\u043F\u043B\u0430\u0442\u0438\u0442\u044C
+      \u0432\u0441\u0451 \u0440\u0430\u0432\u043D\u043E \u043F\u0440\u0438\u0434\u0451\u0442\u0441\u044F.
+      ;)"
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: f9c34544-a518-4fe7-9de5-1b828334bb93
+    Position: {x: 9994, y: 407}
+    DialogueText: "\u0414\u0430\u0432\u0430\u0439 \u043E\u0431\u0441\u0443\u0434\u0438\u043C
+      \u043D\u0430\u0448\u0443 \u0441 \u0442\u043E\u0431\u043E\u0439, \u043F\u043E\u043F\u0440\u043E\u0448\u0443
+      \u0437\u0430\u043C\u0435\u0442\u0438\u0442\u044C - \"\u043E\u0431\u0449\u0443\u044E
+      \"\u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0443!"
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: 369cad31-f773-44da-9499-8a95ee98bc95
+    Position: {x: 10307, y: 407}
+    DialogueText: "\u0422\u044B \u043D\u0430\u0441\u0440\u0430\u043B \u0432 \u043C\u043E\u0435\u0439
+      \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0439
+      \u043F\u043E\u0447\u0442\u0435. \u041C\u043E\u0439 \u043B\u0438\u0447\u043D\u044B\u0439
+      \u0438\u0441\u043A\u0438\u043D \u043E\u0431\u043D\u0430\u0440\u0443\u0436\u0438\u043B
+      \u0442\u0432\u043E\u0438 \u0441\u043B\u0435\u0434\u044B \u043D\u0430 \u043C\u043E\u0435\u0439
+      \u043F\u043E\u0447\u0442\u0435."
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: e162f435-0679-4662-8fae-111338461139
+    Position: {x: 10619, y: 407}
+    DialogueText: "\u0418 \u043D\u0430\u043C \u0441 \u0442\u043E\u0431\u043E\u0439
+      \u043F\u043E\u0432\u0435\u0437\u043B\u043E \u0447\u0442\u043E \u044F \u043D\u0435
+      \u0431\u0435\u0437\u0440\u043E\u043F\u043E\u0442\u043D\u0430\u044F \u0441\u0443\u0447\u043A\u0430,
+      \u0438 \u0438\u0441\u043A\u0438\u043D \u043B\u043E\u043C\u0430\u043D\u044B\u0439,
+      \u0438 \u043D\u0435 \u043F\u043E\u0431\u0435\u0436\u0430\u043B \u0434\u043E\u043A\u043B\u0430\u0434\u044B\u0432\u0430\u0442\u044C
+      \u043D\u0430\u0447\u0430\u043B\u044C\u0441\u0442\u0432\u0443 \u043E \u043D\u0430\u0445\u043E\u0434\u043A\u0435,
+      \u0430 \u0441\u043F\u0435\u0440\u0432\u0430 \u0440\u0430\u0437\u0431\u0443\u0434\u0438\u043B
+      \u043C\u0435\u043D\u044F."
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  OptionNodeDatas:
+  - Guid: 6cee87b1-829e-4e2b-9ae3-b13ac7a8d380
+    Position: {x: 7696, y: 89}
+    ResponseText: "\u041A\u0440\u0430\u0441\u0438\u0432\u0430\u044F \u0436\u043E\u043F\u0430,
+      \u0433\u043E\u0432\u043E\u0440\u0438\u0448\u044C? \u0414\u043E\u043A\u0430\u0436\u0438,
+      \u0430 \u0442\u043E \u043D\u0435 \u0432\u0435\u0440\u0438\u0442\u0441\u044F
+      \u0432 \u0441\u0435\u0440\u044C\u0451\u0437\u043D\u043E\u0441\u0442\u044C \u0442\u0432\u043E\u0438\u0445
+      \u0443\u0433\u0440\u043E\u0437. "
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: b9ec12ce-22ac-40ab-9185-0033f7926039
+    Position: {x: 9274, y: 0}
+    ResponseText: "\u0412\u043E \u043F\u0435\u0440\u0432\u044B\u0445 -  \u044D\u0442\u043E
+      \u0431\u044B\u043B\u0430 \u0448\u0443\u0442\u043A\u0430.\n\u0410 \u0432\u043E
+      \u0432\u0442\u043E\u0440\u044B\u0445 - \u0435\u0441\u043B\u0438 \u043C\u044B
+      \u0433\u043E\u0432\u043E\u0440\u0438\u043C \u0437\u0430 \u0442\u043E \u0447\u0442\u043E
+      \u044D\u0442\u043E \u043F\u043B\u0430\u0442\u043D\u0430\u044F \u0443\u0441\u043B\u0443\u0433\u0430
+      - \u0442\u043E \u043D\u0435 \u0434\u043E\u0432\u043E\u043B\u0435\u043D. \u0425\u043E\u0442\u0435\u043B\u043E\u0441\u044C
+      \u0431\u044B \u043F\u043E\u0431\u043E\u043B\u044C\u0448\u0435. \u0412\u0441\u0451-\u0442\u0430\u043A\u0438
+      \u0436\u043E\u043F\u043A\u0430 \u0442\u043E \u0448\u0438\u043A\u0430\u0440\u043D\u0430\u044F."
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 5230a3d1-0270-4e85-9dca-0f43adf17431
+    Position: {x: 9274, y: 206}
+    ResponseText: "\u042D\u0442\u043E \u0432\u043E\u043E\u0431\u0449\u0435-\u0442\u043E
+      \u0448\u0443\u0442\u043A\u0430 \u0431\u044B\u043B\u0430. \u041D\u043E, \u0434\u0430,
+      \u044F \u0434\u043E\u0432\u043E\u043B\u0435\u043D."
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: b1a1d784-bee2-48f8-ac39-873dfc588258
+    Position: {x: 7696, y: 407}
+    ResponseText: "\u041F\u0440\u0438\u0432\u0435\u0442. \u0422\u044B \u0445\u043E\u0442\u0435\u043B\u0430
+      \u0441\u043E \u043C\u043D\u043E\u0439 \u043E\u0431\u0441\u0443\u0434\u0438\u0442\u044C
+      \u0447\u0442\u043E-\u0442\u043E? \u041D\u0443 \u0438\u0437\u043B\u0430\u0433\u0430\u0439."
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: d0847994-9ba7-4eaa-8925-7c0a09ab4fd1
+    Position: {x: 10966, y: 573}
+    ResponseText: "\u041D\u0443 \u0442\u0430\u043A \u0431\u044B \u043C\u043E\u0433\u043B\u0430
+      \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u043B\u0435\u0434\u044B \u0438
+      \u0434\u0435\u043B\u043E \u0441 \u043A\u043E\u043D\u0446\u0430\u043C\u0438."
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  - Guid: 9682374d-8585-4848-9bf6-5f0359451bd4
+    Position: {x: 10966, y: 290}
+    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E. \u0418 \u043F\u043E\u0447\u0435\u043C\u0443
+      \u0442\u044B \u0440\u0435\u0448\u0438\u043B\u0430 \u0441\u0432\u044F\u0437\u0430\u0442\u044C\u0441\u044F
+      \u0441\u043E \u043C\u043D\u043E\u0439?"
+    AudioClipGuid: 
+    NodeType: OptionNodeText
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas:
+  - Guid: e013216c-024b-4494-9af1-4fd4aa4b90af
+    Position: {x: 8580, y: 87}
+    ImageSpriteGuid: 
+    ImageSpritePath: 
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas: []
+  PauseNodeDatas:
+  - Guid: 2243af0a-b294-4b44-ae72-2c571e6373a5
+    Position: {x: 2182, y: 200}
+    DurationSeconds: 5
+  - Guid: 90627cef-7f7f-437a-9cbb-f947316a3b85
+    Position: {x: 3984, y: 200}
+    DurationSeconds: 5
+  WireNodeDatas: []
