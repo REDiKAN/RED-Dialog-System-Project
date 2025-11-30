@@ -94,18 +94,18 @@ MonoBehaviour:
   - BaseNodeGuid: 090a254b-61f1-4e7a-b634-b749ca153ee4
     PortName: Next
     TargetNodeGuid: 7bc17219-c026-4892-aadd-0cfb57f2dab9
+  - BaseNodeGuid: 747edac1-5a01-4712-ba89-9751ff77b6af
+    PortName: Next
+    TargetNodeGuid: c6aab0d3-e042-4dec-9907-33d05a0de3bc
+  - BaseNodeGuid: 58da9ca8-0a4a-45e8-915d-df7f7ea505b7
+    PortName: Next
+    TargetNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
   - BaseNodeGuid: c6aab0d3-e042-4dec-9907-33d05a0de3bc
     PortName: Next
     TargetNodeGuid: 3cacebac-afaa-4653-a571-3819f00b8d34
   - BaseNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
     PortName: Next
     TargetNodeGuid: 3cacebac-afaa-4653-a571-3819f00b8d34
-  - BaseNodeGuid: 58da9ca8-0a4a-45e8-915d-df7f7ea505b7
-    PortName: Next
-    TargetNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
-  - BaseNodeGuid: 747edac1-5a01-4712-ba89-9751ff77b6af
-    PortName: Next
-    TargetNodeGuid: c6aab0d3-e042-4dec-9907-33d05a0de3bc
   SpeechNodeDatas:
   - Guid: 2310d678-541b-4f9e-a929-214f5cfa595b
     Position: {x: 216, y: 196}
@@ -233,7 +233,8 @@ MonoBehaviour:
   OptionNodeDatas:
   - Guid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
     Position: {x: 533, y: 247}
-    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E"
+    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E/ sdfgs/ ihybasdhyifdsauihdfs/d
+      sfisd ifhsdf asd asd asd asda sd asd asd asd asd as asd asd asd asd asd asd "
     AudioClipGuid: 
     NodeType: OptionNodeText
   - Guid: 5a678be6-5abc-40a6-aaaa-dc00e7527ed5
