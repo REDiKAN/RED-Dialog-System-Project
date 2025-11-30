@@ -726,7 +726,7 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: e4bfcb4ebcb74a241841e8b323409001, type: 2}
+  currentDialogue: {fileID: 11400000, guid: c3710028d1a705d4aac7b368382b2577, type: 2}
   _timerDisplayController: {fileID: 1859932804}
 --- !u!4 &541927738
 Transform:
