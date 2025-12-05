@@ -21,6 +21,9 @@ public class CharacterData : ScriptableObject
     public GameObject SpeechImageMessagePrefab;
     public GameObject SpeechAudioMessagePrefab;
 
+    [Header("Message Sending Settings")]
+    public bool RequireButtonPressForMessages = false; // false = time delay, true = button press
+
     public void AddVariable(string variableName = "NewVariable", int initialValue = 0)
     {
         Variables.Add(new CharacterVariable(variableName, initialValue));

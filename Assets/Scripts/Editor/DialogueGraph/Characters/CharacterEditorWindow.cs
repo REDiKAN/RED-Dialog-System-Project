@@ -256,6 +256,20 @@ public class CharacterEditorWindow : EditorWindow
         selectedCharacter.NameColor = EditorGUILayout.ColorField("Name Color", selectedCharacter.NameColor);
         EditorGUILayout.Space();
 
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Message Sending", EditorStyles.boldLabel);
+        selectedCharacter.RequireButtonPressForMessages = EditorGUILayout.Toggle(
+            "Require Button Press",
+            selectedCharacter.RequireButtonPressForMessages
+        );
+        EditorGUILayout.HelpBox(
+            selectedCharacter.RequireButtonPressForMessages ?
+            "Messages will require player button press to continue." :
+            "Messages will auto-continue after delay.",
+            MessageType.Info
+        );
+        EditorGUILayout.Space();
+
         // Message Prefabs
         EditorGUILayout.LabelField("Message Prefabs", EditorStyles.boldLabel);
         DrawPrefabFieldWithValidation(

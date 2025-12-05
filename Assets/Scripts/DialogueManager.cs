@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿// Assets/Scripts/DialogueManager.cs
+
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using System;
 using System.Collections;
@@ -16,19 +17,23 @@ public class DialogueManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private ChatPanel chatPanel;
     [SerializeField] private OptionPanel optionPanel;
+    [SerializeField] private Button _continueButton; // Кнопка продолжения диалога
 
     [Header("Dialogue Settings")]
     [SerializeField] private float messageDelay = 0.5f; // Задержка между сообщениями
-
     [SerializeField] private DialogueContainer currentDialogue;
-    private object currentNode; // Исправлено: BaseNodeData -> object (ошибки 1,9)
+
+    private object currentNode;
     private Dictionary<string, int> intVariables = new Dictionary<string, int>();
     private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
-    private List<object> visitedNodes = new List<object>(); // Исправлено: BaseNodeData -> object
-
+    private List<object> visitedNodes = new List<object>();
     private readonly System.Random random = new System.Random();
-
     [SerializeField] private TimerDisplayController _timerDisplayController;
+
+    // Для работы режима ожидания нажатия кнопки
+    private SpeechNodeData _pendingSpeechNode;
+    private SpeechNodeImageData _pendingSpeechImageNode;
+    private SpeechRandNodeData _pendingSpeechRandNode;
 
     private void Start()
     {
@@ -47,8 +52,20 @@ public class DialogueManager : MonoBehaviour
             Debug.LogError("ChatPanel not assigned in DialogueManager");
         }
 
+        // Настройка кнопки продолжения
+        if (_continueButton != null)
+        {
+            _continueButton.onClick.AddListener(OnContinueButtonPressed);
+            _continueButton.gameObject.SetActive(false); // Изначально скрыта
+        }
+        else
+        {
+            Debug.LogWarning("Continue button not assigned in DialogueManager. Button press feature will not work.");
+        }
+
         StartDialogue(currentDialogue);
     }
+
     /// <summary>
     /// Запускает диалог по указанному контейнеру
     /// </summary>
@@ -64,7 +81,6 @@ public class DialogueManager : MonoBehaviour
         {
             intVariables[prop.PropertyName] = prop.IntValue;
         }
-
         foreach (var prop in currentDialogue.StringExposedProperties)
         {
             stringVariables[prop.PropertyName] = prop.StringValue;
@@ -128,7 +144,9 @@ public class DialogueManager : MonoBehaviour
                 {
                     currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
                     ProcessNextNode();
-                } else currentNode = null;
+                }
+                else
+                    currentNode = null;
                 break;
             case CharacterIntConditionNodeData charIntCondition:
                 ProcessCharacterIntCondition(charIntCondition);
@@ -242,10 +260,9 @@ public class DialogueManager : MonoBehaviour
                 if (optNode is OptionNodeData opt)
                     text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
 
-                // ← Ищем связь ИЗ опции к следующему узлу — для ВСЕХ типов опций
+                // Ищем связь ИЗ опции к следующему узлу
                 var nextLink = currentDialogue.NodeLinks
                     .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optNode).Guid);
-
                 if (nextLink != null)
                 {
                     options.Add(new Option
@@ -255,7 +272,6 @@ public class DialogueManager : MonoBehaviour
                     });
                 }
             }
-
             if (options.Count > 0)
             {
                 optionPanel.ShowOptions(options);
@@ -327,7 +343,6 @@ public class DialogueManager : MonoBehaviour
             {
                 Debug.LogWarning($"RandomBranchNode {randomBranchNode.Guid} has multiple connections for port {selectedPort}. Using first.");
             }
-
             currentNode = GetNodeByGuid(outgoingLinks.First().TargetNodeGuid);
             ProcessNextNode();
         }
@@ -345,7 +360,6 @@ public class DialogueManager : MonoBehaviour
             speaker = CharacterManager.Instance?.GetCharacter(speechRandNode.SpeakerName);
 
         string selectedText = "";
-
         if (speechRandNode.Variants.Count > 0)
         {
             // Взвешенный случайный выбор
@@ -373,8 +387,8 @@ public class DialogueManager : MonoBehaviour
                 }
             }
         }
-        // Если список пуст — selectedText остаётся ""
 
+        // Если список пуст — selectedText остаётся ""
         var message = new Message
         {
             Type = SenderType.NPC,
@@ -383,9 +397,19 @@ public class DialogueManager : MonoBehaviour
             Audio = null,
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
 
-        // Обработка исходящих связей — как в SpeechNode
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker != null && speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechRandNode = speechRandNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Обработка исходящих связей
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechRandNode.Guid)
             .ToList();
@@ -403,11 +427,14 @@ public class DialogueManager : MonoBehaviour
             {
                 var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
                 if (optionNode == null) continue;
+
                 string text = "Изображение";
                 if (optionNode is OptionNodeData opt)
                     text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
                 var nextLinkAfterOption = currentDialogue.NodeLinks
                     .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
                 if (nextLinkAfterOption != null)
                 {
                     options.Add(new Option
@@ -417,6 +444,7 @@ public class DialogueManager : MonoBehaviour
                     });
                 }
             }
+
             if (options.Count > 0 && optionPanel != null)
             {
                 optionPanel.ShowOptions(options);
@@ -467,7 +495,6 @@ public class DialogueManager : MonoBehaviour
         // Находим следующий узел после EntryNode
         var nextLink = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.BaseNodeGuid == entryNode.Guid);
-
         if (nextLink != null)
         {
             currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
@@ -486,7 +513,7 @@ public class DialogueManager : MonoBehaviour
     /// <param name="speechNode">Данные узла речи</param>
     private void ProcessSpeechNode(SpeechNodeData speechNode)
     {
-        CharacterData speaker = GetCharacterByName(speechNode.SpeakerName); // ← изменено
+        CharacterData speaker = GetCharacterByName(speechNode.SpeakerName);
         if (speaker == null)
         {
             Debug.LogError($"SpeechNode '{speechNode.Guid}' has no valid speaker. Assign a CharacterData in the graph editor.");
@@ -501,11 +528,27 @@ public class DialogueManager : MonoBehaviour
             Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid),
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
 
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechNode = speechNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Исходная логика продолжения с задержкой
         if (message.Audio != null)
             StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
 
+        ProcessSpeechNodeContinuation(speechNode);
+    }
+
+    private void ProcessSpeechNodeContinuation(SpeechNodeData speechNode)
+    {
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechNode.Guid)
             .ToList();
@@ -519,7 +562,7 @@ public class DialogueManager : MonoBehaviour
 
         if (optionLinks.Any())
         {
-            // Режим выбора опций — как раньше
+            // Режим выбора опций
             var options = new List<Option>();
             foreach (var linkToOption in optionLinks)
             {
@@ -532,6 +575,7 @@ public class DialogueManager : MonoBehaviour
 
                 var nextLinkAfterOption = currentDialogue.NodeLinks
                     .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
                 if (nextLinkAfterOption != null)
                 {
                     options.Add(new Option
@@ -568,7 +612,6 @@ public class DialogueManager : MonoBehaviour
             {
                 Debug.LogWarning($"SpeechNode {speechNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
             }
-
             string nextGuid = speechLinks.First().TargetNodeGuid;
             StartCoroutine(DelayedGoToNode(nextGuid));
             return;
@@ -593,7 +636,7 @@ public class DialogueManager : MonoBehaviour
     /// <param name="speechImageNode">Данные узла изображения речи</param>
     private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
     {
-        CharacterData speaker = GetCharacterByName(speechImageNode.SpeakerName); // ← изменено
+        CharacterData speaker = GetCharacterByName(speechImageNode.SpeakerName);
         if (speaker == null)
         {
             Debug.LogError($"SpeechImageNode '{speechImageNode.Guid}' has no valid speaker...");
@@ -604,12 +647,29 @@ public class DialogueManager : MonoBehaviour
         {
             Type = SenderType.NPC,
             Text = null,
-            Image = !string.IsNullOrEmpty(speechImageNode.ImageSpritePath)? Resources.Load<Sprite>(speechImageNode.ImageSpritePath): null,
+            Image = !string.IsNullOrEmpty(speechImageNode.ImageSpritePath) ?
+                Resources.Load<Sprite>(speechImageNode.ImageSpritePath) : null,
             Audio = null,
             Sender = speaker
         };
-        chatPanel.AddMessage(message, MessageTypeDialogue.SpeechImage);
 
+        chatPanel.AddMessage(message, MessageTypeDialogue.SpeechImage);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechImageNode = speechImageNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Исходная логика продолжения с задержкой
+        ProcessSpeechImageNodeContinuation(speechImageNode);
+    }
+
+    private void ProcessSpeechImageNodeContinuation(SpeechNodeImageData speechImageNode)
+    {
         var outgoingLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == speechImageNode.Guid)
             .ToList();
@@ -635,6 +695,7 @@ public class DialogueManager : MonoBehaviour
 
                 var nextLinkAfterOption = currentDialogue.NodeLinks
                     .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
                 if (nextLinkAfterOption != null)
                 {
                     options.Add(new Option
@@ -670,13 +731,128 @@ public class DialogueManager : MonoBehaviour
             {
                 Debug.LogWarning($"SpeechImageNode {speechImageNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
             }
-
             string nextGuid = speechLinks.First().TargetNodeGuid;
             StartCoroutine(DelayedGoToNode(nextGuid));
             return;
         }
 
         // Линейный переход
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    private void ShowContinueButton()
+    {
+        if (_continueButton != null)
+        {
+            _continueButton.gameObject.SetActive(true);
+        }
+    }
+
+    private void HideContinueButton()
+    {
+        if (_continueButton != null)
+        {
+            _continueButton.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnContinueButtonPressed()
+    {
+        HideContinueButton();
+
+        // Продолжаем диалог в зависимости от типа ожидаемого узла
+        if (_pendingSpeechNode != null)
+        {
+            ProcessSpeechNodeContinuation(_pendingSpeechNode);
+            _pendingSpeechNode = null;
+        }
+        else if (_pendingSpeechImageNode != null)
+        {
+            ProcessSpeechImageNodeContinuation(_pendingSpeechImageNode);
+            _pendingSpeechImageNode = null;
+        }
+        else if (_pendingSpeechRandNode != null)
+        {
+            ProcessSpeechRandNodeContinuation(_pendingSpeechRandNode);
+            _pendingSpeechRandNode = null;
+        }
+    }
+
+    private void ProcessSpeechRandNodeContinuation(SpeechRandNodeData speechRandNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechRandNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData || target is SpeechRandNodeData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechRandNode {speechRandNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
         var nextLinearLink = outgoingLinks.FirstOrDefault();
         if (nextLinearLink != null)
         {
@@ -704,7 +880,6 @@ public class DialogueManager : MonoBehaviour
     {
         // Создаем список вариантов ответа
         var options = new List<Option>();
-
         // Находим все связи от этого узла
         var optionLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == optionNode.Guid)
@@ -714,7 +889,6 @@ public class DialogueManager : MonoBehaviour
         {
             var targetNode = GetNodeByGuid(link.TargetNodeGuid);
             string optionText = "Вариант ответа";
-
             if (targetNode is OptionNodeData optionTarget)
             {
                 optionText = !string.IsNullOrEmpty(optionTarget.ResponseText) ?
@@ -724,7 +898,6 @@ public class DialogueManager : MonoBehaviour
             {
                 optionText = "Изображение";
             }
-
             options.Add(new Option
             {
                 Text = optionText,
@@ -741,7 +914,6 @@ public class DialogueManager : MonoBehaviour
         else
         {
             Debug.LogWarning($"No options found for OptionNode {optionNode.Guid}");
-
             // Пытаемся найти следующий узел
             var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
             if (nextLink != null)
@@ -764,7 +936,6 @@ public class DialogueManager : MonoBehaviour
     {
         // Получаем варианты ответов из узла
         var options = new List<Option>();
-
         // Получаем связанные OptionNodeData для всех выходов
         var optionLinks = currentDialogue.NodeLinks
             .Where(l => l.BaseNodeGuid == optionImageNode.Guid)
@@ -786,7 +957,7 @@ public class DialogueManager : MonoBehaviour
                 // Для изображений вариантов ответа
                 options.Add(new Option
                 {
-                    Text = "Изображение", // Исправлено: OptionNodeImageData не имеет ResponseText
+                    Text = "Изображение",
                     NextNodeGuid = link.TargetNodeGuid
                 });
             }
@@ -794,7 +965,6 @@ public class DialogueManager : MonoBehaviour
 
         // Показываем панель вариантов ответов
         optionPanel.ShowOptions(options);
-
         // Устанавливаем текущий узел как OptionNode для последующей обработки выбора
         currentNode = optionImageNode;
     }
@@ -919,7 +1089,6 @@ public class DialogueManager : MonoBehaviour
         // Находим следующий узел
         var nextLink = currentDialogue.NodeLinks
             .FirstOrDefault(l => l.BaseNodeGuid == modifyNode.Guid);
-
         if (nextLink != null)
         {
             currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
@@ -943,7 +1112,9 @@ public class DialogueManager : MonoBehaviour
             Type = SenderType.System,
             Text = "Диалог завершен"
         };
+
         chatPanel.AddMessage(message, MessageTypeDialogue.System);
+        chatPanel.ForceScrollToBottom();
 
         // Если указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
@@ -976,15 +1147,6 @@ public class DialogueManager : MonoBehaviour
         _timerDisplayController?.StopTimer();
 
         currentNode = GetNodeByGuid(nextNodeGuid);
-        ProcessNextNode();
-    }
-
-    /// <summary>
-    /// Задержка перед обработкой следующего узла (для плавности диалога)
-    /// </summary>
-    private IEnumerator DelayedProcessNextNode()
-    {
-        yield return new WaitForSeconds(messageDelay);
         ProcessNextNode();
     }
 
@@ -1038,7 +1200,7 @@ public class DialogueManager : MonoBehaviour
         var debugErrNode = currentDialogue.DebugErrorNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (debugErrNode != null) return debugErrNode;
 
-        // Добавлено: поддержка SpeechRandNodeData
+        // Поддержка SpeechRandNodeData
         var speechRandNode = currentDialogue.SpeechRandNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechRandNode != null) return speechRandNode;
 
@@ -1185,6 +1347,7 @@ public class DialogueManager : MonoBehaviour
                 return;
             }
         }
+
         Debug.LogWarning($"No matching output port for CharacterIntConditionNode {condition.Guid}");
         currentNode = null;
     }

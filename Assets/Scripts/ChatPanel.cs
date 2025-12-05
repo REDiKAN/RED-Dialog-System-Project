@@ -109,4 +109,13 @@ public class ChatPanel : MonoBehaviour
 
         return (prefab as GameObject);
     }
+
+    public void ForceScrollToBottom()
+    {
+        // Принудительно обновляем холст, чтобы убедиться, что размеры контента актуальны
+        Canvas.ForceUpdateCanvases();
+        // Устанавливаем позицию прокрутки в самый низ
+        if (scrollRect.content != null)
+            scrollRect.verticalNormalizedPosition = 0f; // Unity использует 0 для "самого низа"
+    }
 }
