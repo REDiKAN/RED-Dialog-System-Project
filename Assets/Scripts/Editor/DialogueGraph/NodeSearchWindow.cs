@@ -130,10 +130,14 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         AddNodeEntry(entries, "CharacterModifyIntNode", 2);
         AddNodeEntry(entries, "EventNode", 2);
 
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Character Nodes"), 1));
+        AddNodeEntry(entries, "CharacterButtonPressNode", 2);
+
         entries.Add(new SearchTreeGroupEntry(new GUIContent("Debug Nodes"), 1));
         AddNodeEntry(entries, "DebugLogNode", 2);
         AddNodeEntry(entries, "DebugWarningNode", 2);
         AddNodeEntry(entries, "DebugErrorNode", 2);
+
 
         return entries;
     }

@@ -76,4 +76,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Wire Nodes")]
     public List<WireNodeData> WireNodeDatas = new List<WireNodeData>();
+
+    [Header("Character Button Press Nodes")]
+    public List<CharacterButtonPressNodeData> CharacterButtonPressNodeDatas = new List<CharacterButtonPressNodeData>();
 }

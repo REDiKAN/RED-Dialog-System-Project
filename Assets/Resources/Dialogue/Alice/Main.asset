@@ -19,21 +19,9 @@ MonoBehaviour:
   - BaseNodeGuid: c2019fc8-2654-44fa-b11b-cb78335110b6
     PortName: Next
     TargetNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
-  - BaseNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
-    PortName: Next
-    TargetNodeGuid: 2243af0a-b294-4b44-ae72-2c571e6373a5
-  - BaseNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
-    PortName: Next
-    TargetNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
   - BaseNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
     PortName: Next
-    TargetNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
-  - BaseNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
-    PortName: Next
-    TargetNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
-  - BaseNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
-    PortName: Next
-    TargetNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
+    TargetNodeGuid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
   - BaseNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
     PortName: Next
     TargetNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
@@ -106,6 +94,30 @@ MonoBehaviour:
   - BaseNodeGuid: 7953e36b-60f3-4773-b554-67f2c6f08bac
     PortName: Next
     TargetNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+  - BaseNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
+    PortName: Next
+    TargetNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
+  - BaseNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
+    PortName: Next
+    TargetNodeGuid: e162f435-0679-4662-8fae-111338461139
+  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
+    PortName: Next
+    TargetNodeGuid: 9682374d-8585-4848-9bf6-5f0359451bd4
+  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
+    PortName: Next
+    TargetNodeGuid: d0847994-9ba7-4eaa-8925-7c0a09ab4fd1
+  - BaseNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+    PortName: Next
+    TargetNodeGuid: 2243af0a-b294-4b44-ae72-2c571e6373a5
+  - BaseNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
+    PortName: Next
+    TargetNodeGuid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+  - BaseNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
+    PortName: Next
+    TargetNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+  - BaseNodeGuid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+    PortName: Next
+    TargetNodeGuid: 65441762-64f2-4976-b2cc-07f35e4d120e
   - BaseNodeGuid: e013216c-024b-4494-9af1-4fd4aa4b90af
     PortName: Next
     TargetNodeGuid: 1b54c1bf-8cb8-4444-8c0d-5af5beb2202f
@@ -127,51 +139,13 @@ MonoBehaviour:
   - BaseNodeGuid: 90627cef-7f7f-437a-9cbb-f947316a3b85
     PortName: Next
     TargetNodeGuid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
-  - BaseNodeGuid: f9c34544-a518-4fe7-9de5-1b828334bb93
-    PortName: Next
-    TargetNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
-  - BaseNodeGuid: 369cad31-f773-44da-9499-8a95ee98bc95
-    PortName: Next
-    TargetNodeGuid: e162f435-0679-4662-8fae-111338461139
-  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
-    PortName: Next
-    TargetNodeGuid: 9682374d-8585-4848-9bf6-5f0359451bd4
-  - BaseNodeGuid: e162f435-0679-4662-8fae-111338461139
-    PortName: Next
-    TargetNodeGuid: d0847994-9ba7-4eaa-8925-7c0a09ab4fd1
+  - BaseNodeGuid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
+    PortName: Output
+    TargetNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
   SpeechNodeDatas:
-  - Guid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
-    Position: {x: 1775, y: 200}
-    DialogueText: '[23:47:37] Ghost protocol activated. No traces left.'
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
-  - Guid: 65441762-64f2-4976-b2cc-07f35e4d120e
-    Position: {x: 1461, y: 200}
-    DialogueText: "[23:47:36] Erasing intrusion logs\u2026 <color=#169523>DONE</color>"
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
   - Guid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
     Position: {x: 522, y: 200}
     DialogueText: '[23:47:15] ICE-breaker v9.3 "Wraith" injected'
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
-  - Guid: d7f344a3-c795-4eaa-8a02-342206824494
-    Position: {x: 840, y: 200}
-    DialogueText: "[23:47:19] Privilege escalation\u2026 ROOT@pleasuresync-db"
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
-  - Guid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
-    Position: {x: 1145, y: 200}
-    DialogueText: "[23:47:34] Dumping financial ledger\u2026 450 344 credits transferred
-      \u2192 ghost_wallet_77x"
     AudioClipGuid: 
     SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
     SpeakerName: System
@@ -426,6 +400,35 @@ MonoBehaviour:
     SpeakerGuid: 9c350932098057440a0ccc790af5da30
     SpeakerName: Alise
     NodeType: SpeechNodeText
+  - Guid: 5720e1c0-03d3-4de5-a324-87d7568b3e12
+    Position: {x: 2031, y: 616}
+    DialogueText: '[23:47:37] Ghost protocol activated. No traces left.'
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: 65441762-64f2-4976-b2cc-07f35e4d120e
+    Position: {x: 1717, y: 616}
+    DialogueText: "[23:47:36] Erasing intrusion logs\u2026 <color=#169523>DONE</color>"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: d7f344a3-c795-4eaa-8a02-342206824494
+    Position: {x: 1096, y: 616}
+    DialogueText: "[23:47:19] Privilege escalation\u2026 ROOT@pleasuresync-db"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
+  - Guid: ec4650e9-f39e-4957-9860-fa7e34f4f3fc
+    Position: {x: 1401, y: 616}
+    DialogueText: "[23:47:34] Dumping financial ledger\u2026 450 344 credits transferred
+      \u2192 ghost_wallet_77x"
+    AudioClipGuid: 
+    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
+    SpeakerName: System
+    NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: 6cee87b1-829e-4e2b-9ae3-b13ac7a8d380
     Position: {x: 7696, y: 89}
@@ -511,3 +514,8 @@ MonoBehaviour:
     Position: {x: 3984, y: 200}
     DurationSeconds: 5
   WireNodeDatas: []
+  CharacterButtonPressNodeDatas:
+  - Guid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
+    Position: {x: 913, y: 239}
+    CharacterName: System
+    RequireButtonPress: 0

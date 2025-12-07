@@ -57,11 +57,19 @@ public static class NodeFactory
             return CreatePauseNode(position);
         else if (nodeType == typeof(WireNode))
             return CreateWireNode(position);
+        else if (nodeType == typeof(CharacterButtonPressNode))
+            return CreateCharacterButtonPressNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
+    }
+    public static CharacterButtonPressNode CreateCharacterButtonPressNode(Vector2 position)
+    {
+        var node = new CharacterButtonPressNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static WireNode CreateWireNode(Vector2 position)

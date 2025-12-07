@@ -287,6 +287,20 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
             typeof(RandomBranchNode), typeof(WireNode)
         });
         }
+        else if (sourceType == typeof(CharacterButtonPressNode))
+        {
+            allowed.UnionWith(new Type[] {
+        typeof(SpeechNodeText), typeof(SpeechNodeAudio), typeof(SpeechNodeImage), typeof(SpeechNodeRandText),
+        typeof(OptionNodeText), typeof(OptionNodeAudio), typeof(OptionNodeImage),
+        typeof(IntConditionNode), typeof(StringConditionNode),
+        typeof(CharacterIntConditionNode),
+        typeof(EndNode), typeof(EventNode),
+        typeof(ModifyIntNode), typeof(CharacterModifyIntNode),
+        typeof(TimerNode), typeof(PauseNode),
+        typeof(RandomBranchNode), typeof(WireNode),
+        typeof(CharacterButtonPressNode)
+    });
+        }
 
         return allowed;
     }

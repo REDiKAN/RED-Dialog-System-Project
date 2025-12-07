@@ -343,6 +343,16 @@ public class GraphSaveUtility
                     Position = node.GetPosition().position
                 });
             }
+            else if (node is CharacterButtonPressNode charButtonPressNode)
+            {
+                dialogueContainer.CharacterButtonPressNodeDatas.Add(new CharacterButtonPressNodeData
+                {
+                    Guid = charButtonPressNode.GUID,
+                    Position = node.GetPosition().position,
+                    CharacterName = charButtonPressNode.CharacterAsset ? charButtonPressNode.CharacterAsset.name : "",
+                    RequireButtonPress = charButtonPressNode.RequireButtonPress
+                });
+            }
         }
     }
 
@@ -782,6 +792,43 @@ public class GraphSaveUtility
             tempNode.GUID = nodeData.Guid;
             targetGraphView.AddElement(tempNode);
         }
+
+        foreach (var nodeData in containerCache.CharacterButtonPressNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateCharacterButtonPressNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+            if (tempNode is CharacterButtonPressNode node)
+            {
+                CharacterData character = null;
+
+                // 1. Сначала пытаемся загрузить через CharacterManager
+                if (CharacterManager.Instance != null && !string.IsNullOrEmpty(nodeData.CharacterName))
+                {
+                    character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
+                }
+
+                // 2. Если не получилось, ищем напрямую через AssetDatabase
+                if (character == null && !string.IsNullOrEmpty(nodeData.CharacterName))
+                {
+                    string[] characterGuids = AssetDatabase.FindAssets($"t:CharacterData {nodeData.CharacterName}");
+                    if (characterGuids.Length > 0)
+                    {
+                        string characterPath = AssetDatabase.GUIDToAssetPath(characterGuids[0]);
+                        character = AssetDatabase.LoadAssetAtPath<CharacterData>(characterPath);
+                    }
+                }
+
+                node.CharacterAsset = character;
+                node.RequireButtonPress = nodeData.RequireButtonPress;
+
+                // 3. Обновляем UI через метод UpdateUIFromData
+                if (node.characterField != null)
+                    node.characterField.SetValueWithoutNotify(character);
+                if (node.buttonPressToggle != null)
+                    node.buttonPressToggle.SetValueWithoutNotify(node.RequireButtonPress);
+            }
+            targetGraphView.AddElement(tempNode);
+        }
     }
 
     /// <summary>
@@ -925,6 +972,26 @@ public class GraphSaveUtility
                             wireNode.RefreshExpandedState();
                         }
                     }
+                    else if (nodeList[i] is CharacterButtonPressNode charButtonPressNode)
+                    {
+                        foreach (var port in charButtonPressNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет
+                            outputPort = charButtonPressNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = connection.PortName; // Должно быть "Output"
+                            charButtonPressNode.outputContainer.Add(outputPort);
+                            charButtonPressNode.RefreshPorts();
+                            charButtonPressNode.RefreshExpandedState();
+                        }
+                    }
 
                     // Получаем inputPort у целевого узла
                     Port inputPort = null;
@@ -1017,6 +1084,7 @@ public class GraphSaveUtility
 
             targetGraphView.RemoveElement(node);
         }
+
     }
     #endregion
 
@@ -1089,6 +1157,7 @@ public class GraphSaveUtility
         existingContainer.DebugLogNodeDatas.Clear();
         existingContainer.DebugWarningNodeDatas.Clear();
         existingContainer.DebugErrorNodeDatas.Clear();
+        existingContainer.CharacterButtonPressNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
 

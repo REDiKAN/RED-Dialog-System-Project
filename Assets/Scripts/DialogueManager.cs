@@ -35,6 +35,25 @@ public class DialogueManager : MonoBehaviour
     private SpeechNodeImageData _pendingSpeechImageNode;
     private SpeechRandNodeData _pendingSpeechRandNode;
 
+    private void Awake()
+    {
+        // Гарантируем создание CharacterManager при запуске
+        if (CharacterManager.Instance == null)
+        {
+            GameObject managerObject = GameObject.Find("CharacterManager");
+            if (managerObject == null)
+            {
+                managerObject = new GameObject("CharacterManager");
+                managerObject.AddComponent<CharacterManager>();
+            }
+            else
+            {
+                managerObject.AddComponent<CharacterManager>();
+            }
+            DontDestroyOnLoad(managerObject);
+        }
+    }
+
     private void Start()
     {
         // Подписываемся на событие выбора опции
@@ -181,6 +200,9 @@ public class DialogueManager : MonoBehaviour
             case WireNodeData wireNode:
                 GoToNextNode(wireNode.Guid);
                 break;
+            case CharacterButtonPressNodeData characterButtonPressNode:
+                ProcessCharacterButtonPressNode(characterButtonPressNode);
+                break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
                 currentNode = null;
@@ -216,6 +238,54 @@ public class DialogueManager : MonoBehaviour
         }
 
         _timerDisplayController.StartTimer(pauseNode.DurationSeconds, OnPauseTimeout);
+    }
+
+    private void ProcessCharacterButtonPressNode(CharacterButtonPressNodeData nodeData)
+    {
+        // Проверяем, существует ли CharacterManager.Instance, и если нет - пытаемся создать его
+        if (CharacterManager.Instance == null)
+        {
+            Debug.LogWarning("CharacterManager instance is null. Attempting to initialize...");
+            var managerObject = new GameObject("CharacterManager");
+            managerObject.AddComponent<CharacterManager>();
+
+            // Проверяем снова после создания
+            if (CharacterManager.Instance == null)
+            {
+                Debug.LogError("Failed to create CharacterManager instance. Cannot process character button press node.");
+                GoToNextNode(nodeData.Guid);
+                return;
+            }
+        }
+
+        // Сначала пытаемся получить персонажа через CharacterManager.Instance
+        CharacterData character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
+
+        // Если не удалось, пытаемся загрузить напрямую из Resources
+        if (character == null)
+        {
+            character = Resources.Load<CharacterData>($"Characters/{nodeData.CharacterName}");
+            if (character != null)
+            {
+                Debug.Log($"Loaded character '{nodeData.CharacterName}' from Resources as fallback");
+                // Добавляем персонажа в кэш CharacterManager
+                if (CharacterManager.Instance != null)
+                {
+                    CharacterManager.Instance.GetCharacter(nodeData.CharacterName); // Вызовет загрузку всех персонажей при следующем обращении
+                }
+            }
+        }
+
+        if (character == null)
+        {
+            Debug.LogError($"Character '{nodeData.CharacterName}' not found for button press node '{nodeData.Guid}'.");
+            GoToNextNode(nodeData.Guid);
+            return;
+        }
+
+        character.RequireButtonPressForMessages = nodeData.RequireButtonPress;
+        Debug.Log($"Changed RequireButtonPressForMessages for character '{nodeData.CharacterName}' to {nodeData.RequireButtonPress}");
+        GoToNextNode(nodeData.Guid);
     }
 
     private IEnumerator DelayedGoToNextNode(PauseNodeData pauseNode)
@@ -1212,6 +1282,9 @@ public class DialogueManager : MonoBehaviour
 
         var wireNode = currentDialogue.WireNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (wireNode != null) return wireNode;
+
+        var charButtonPressNode = currentDialogue.CharacterButtonPressNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charButtonPressNode != null) return charButtonPressNode;
 
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)
