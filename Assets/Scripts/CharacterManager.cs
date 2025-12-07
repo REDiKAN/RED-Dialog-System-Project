@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
@@ -42,5 +43,10 @@ public class CharacterManager : MonoBehaviour
 
         Debug.LogError($"Персонаж {characterName} не найден в Resources/Characters");
         return null;
+    }
+
+    public List<CharacterData> GetAllCharacters()
+    {
+        return characterCache.Values.ToList();
     }
 }

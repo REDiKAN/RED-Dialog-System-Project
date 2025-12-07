@@ -30,6 +30,8 @@ public class DialogueManager : MonoBehaviour
     private readonly System.Random random = new System.Random();
     [SerializeField] private TimerDisplayController _timerDisplayController;
 
+    private Dictionary<string, bool> _originalButtonPressStates = new Dictionary<string, bool>();
+
     // Для работы режима ожидания нажатия кнопки
     private SpeechNodeData _pendingSpeechNode;
     private SpeechNodeImageData _pendingSpeechImageNode;
@@ -89,11 +91,14 @@ public class DialogueManager : MonoBehaviour
     /// Запускает диалог по указанному контейнеру
     /// </summary>
     /// <param name="dialogueContainer">Контейнер диалога для запуска</param>
-    public void StartDialogue(DialogueContainer dialogueContainer)
+    private void StartDialogue(DialogueContainer dialogueContainer)
     {
         currentDialogue = dialogueContainer;
         ResetVariables();
         visitedNodes.Clear();
+
+        // Сохраняем исходные состояния всех персонажей перед запуском диалога
+        SaveOriginalCharacterStates();
 
         // Инициализация переменных из Exposed Properties
         foreach (var prop in currentDialogue.IntExposedProperties)
@@ -104,10 +109,27 @@ public class DialogueManager : MonoBehaviour
         {
             stringVariables[prop.PropertyName] = prop.StringValue;
         }
-
         // Начинаем диалог с EntryNode
         currentNode = currentDialogue.EntryNodeData;
         ProcessNextNode();
+    }
+
+    private void SaveOriginalCharacterStates()
+    {
+        _originalButtonPressStates.Clear();
+
+        // Получаем всех персонажей из CharacterManager
+        if (CharacterManager.Instance != null)
+        {
+            var allCharacters = CharacterManager.Instance.GetAllCharacters();
+            foreach (var character in allCharacters)
+            {
+                if (!_originalButtonPressStates.ContainsKey(character.name))
+                {
+                    _originalButtonPressStates[character.name] = character.RequireButtonPressForMessages;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -242,45 +264,18 @@ public class DialogueManager : MonoBehaviour
 
     private void ProcessCharacterButtonPressNode(CharacterButtonPressNodeData nodeData)
     {
-        // Проверяем, существует ли CharacterManager.Instance, и если нет - пытаемся создать его
-        if (CharacterManager.Instance == null)
-        {
-            Debug.LogWarning("CharacterManager instance is null. Attempting to initialize...");
-            var managerObject = new GameObject("CharacterManager");
-            managerObject.AddComponent<CharacterManager>();
-
-            // Проверяем снова после создания
-            if (CharacterManager.Instance == null)
-            {
-                Debug.LogError("Failed to create CharacterManager instance. Cannot process character button press node.");
-                GoToNextNode(nodeData.Guid);
-                return;
-            }
-        }
-
-        // Сначала пытаемся получить персонажа через CharacterManager.Instance
-        CharacterData character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
-
-        // Если не удалось, пытаемся загрузить напрямую из Resources
-        if (character == null)
-        {
-            character = Resources.Load<CharacterData>($"Characters/{nodeData.CharacterName}");
-            if (character != null)
-            {
-                Debug.Log($"Loaded character '{nodeData.CharacterName}' from Resources as fallback");
-                // Добавляем персонажа в кэш CharacterManager
-                if (CharacterManager.Instance != null)
-                {
-                    CharacterManager.Instance.GetCharacter(nodeData.CharacterName); // Вызовет загрузку всех персонажей при следующем обращении
-                }
-            }
-        }
-
+        var character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
         if (character == null)
         {
             Debug.LogError($"Character '{nodeData.CharacterName}' not found for button press node '{nodeData.Guid}'.");
             GoToNextNode(nodeData.Guid);
             return;
+        }
+
+        // Если мы впервые меняем этого персонажа в текущем диалоге, сохраняем исходное состояние
+        if (!_originalButtonPressStates.ContainsKey(nodeData.CharacterName))
+        {
+            _originalButtonPressStates[nodeData.CharacterName] = character.RequireButtonPressForMessages;
         }
 
         character.RequireButtonPressForMessages = nodeData.RequireButtonPress;
@@ -1325,10 +1320,28 @@ public class DialogueManager : MonoBehaviour
     /// </summary>
     public void ResetDialogue()
     {
+        // Восстанавливаем исходные состояния персонажей
+        RestoreOriginalCharacterStates();
+
         currentDialogue = null;
         currentNode = null;
         visitedNodes.Clear();
         ResetVariables();
+    }
+
+    private void RestoreOriginalCharacterStates()
+    {
+        foreach (var kvp in _originalButtonPressStates)
+        {
+            var character = CharacterManager.Instance.GetCharacter(kvp.Key);
+            if (character != null)
+            {
+                character.RequireButtonPressForMessages = kvp.Value;
+            }
+        }
+
+        // Очищаем кэш после восстановления
+        _originalButtonPressStates.Clear();
     }
 
     /// <summary>
@@ -1463,5 +1476,10 @@ public class DialogueManager : MonoBehaviour
             ProcessNextNode();
         }
         else currentNode = null;
+    }
+
+    private void OnDestroy()
+    {
+        RestoreOriginalCharacterStates();
     }
 }
