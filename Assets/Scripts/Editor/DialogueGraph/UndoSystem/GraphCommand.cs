@@ -8,6 +8,6 @@ public abstract class GraphCommand : ICommand
     }
 
     public abstract void Execute();
+
     public abstract void Undo();
-    public virtual void Redo() => Execute();
 }

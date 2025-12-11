@@ -24,7 +24,29 @@ MonoBehaviour:
     Value: 0
   - VariableName: NewVariable
     Value: 0
-  RequireButtonPressForMessages: 1
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
+  - VariableName: NewVariable
+    Value: 0
   SpeechTextMessagePrefab: {fileID: 3713886175979679301, guid: 0110fc194df2bd2449b6128658dab362, type: 3}
   SpeechImageMessagePrefab: {fileID: 3713886175979679301, guid: e2e2077b0c1a3ab4383bbd0eadbb41ce, type: 3}
   SpeechAudioMessagePrefab: {fileID: 0}
+  RequireButtonPressForMessages: 1

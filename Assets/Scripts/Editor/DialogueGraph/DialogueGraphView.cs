@@ -107,16 +107,13 @@ public class DialogueGraphView : GraphView
         {
             var edgesToRemove = new List<Edge>();
             var edgesToAdd = new List<Edge>();
-
             foreach (var edge in change.edgesToCreate.ToList())
             {
                 if (edge.input == null || edge.output == null)
                     continue;
-
                 // Определяем правильное направление соединения
                 Port trueOutput = null;
                 Port trueInput = null;
-
                 // Если соединение уже идет в правильном направлении (output -> input)
                 if (edge.output.direction == Direction.Output && edge.input.direction == Direction.Input)
                 {
@@ -135,7 +132,6 @@ public class DialogueGraphView : GraphView
                     edgesToRemove.Add(edge);
                     continue;
                 }
-
                 // Если направление изменилось, создаем новое соединение с правильными портами
                 if (trueOutput != edge.output || trueInput != edge.input)
                 {
@@ -143,13 +139,10 @@ public class DialogueGraphView : GraphView
                     // Проверка на возможность соединения
                     if (IsConnectionAllowed(trueOutput, trueInput))
                     {
-                        var newEdge = new Edge
-                        {
-                            output = trueOutput,
-                            input = trueInput
-                        };
-                        trueOutput.Connect(newEdge);
-                        trueInput.Connect(newEdge);
+                        // Создаем команду для создания соединения
+                        var newEdge = new Edge { output = trueOutput, input = trueInput };
+                        var command = new CreateConnectionCommand(this, newEdge);
+                        undoManager.ExecuteCommand(command);
                         edgesToAdd.Add(newEdge);
                     }
                 }
@@ -160,15 +153,18 @@ public class DialogueGraphView : GraphView
                     {
                         edgesToRemove.Add(edge);
                     }
+                    else
+                    {
+                        var command = new CreateConnectionCommand(this, edge);
+                        undoManager.ExecuteCommand(command);
+                    }
                 }
             }
-
             // Удаляем некорректные соединения
             foreach (var edge in edgesToRemove)
             {
                 change.edgesToCreate.Remove(edge);
             }
-
             // Добавляем исправленные соединения
             if (edgesToAdd.Count > 0)
             {
@@ -176,22 +172,7 @@ public class DialogueGraphView : GraphView
                     change.edgesToCreate = new List<Edge>();
                 change.edgesToCreate.AddRange(edgesToAdd);
             }
-
-            // Обрабатываем конфликты для всех новых соединений
-            foreach (var edge in change.edgesToCreate.ToList())
-            {
-                if (edge.output != null && edge.input != null)
-                {
-                    var startNode = edge.output.node as BaseNode;
-                    var targetNode = edge.input.node as BaseNode;
-                    if (startNode != null && targetNode != null)
-                    {
-                        HandleConflictingConnections(edge, startNode);
-                    }
-                }
-            }
         }
-
         // Обработка удаленных элементов
         if (change.elementsToRemove != null)
         {
@@ -199,56 +180,25 @@ public class DialogueGraphView : GraphView
             {
                 if (element is Edge edge)
                 {
-                    // Удаляем соединение и помечаем изменения
-                    if (edge.output != null && edge.input != null)
-                    {
-                        edge.output.Disconnect(edge);
-                        edge.input.Disconnect(edge);
-                        MarkUnsavedChangeWithoutFile();
-                    }
+                    // Создаем команду для удаления соединения
+                    var command = new DeleteEdgeCommand(this, edge);
+                    undoManager.ExecuteCommand(command);
                 }
                 else if (element is BaseNode node)
                 {
-                    // Автоматически удаляем все соединения, связанные с удаляемым узлом
-                    var edgesToRemove = edges.ToList()
-                        .Where(e => e.output?.node == node || e.input?.node == node)
-                        .ToList();
-
-                    foreach (var edgeA in edgesToRemove)
-                    {
-                        if (edgeA.output != null)
-                            edgeA.output.Disconnect(edgeA);
-                        if (edgeA.input != null)
-                            edgeA.input.Disconnect(edgeA);
-                        RemoveElement(edgeA);
-                    }
-
                     // Защита от удаления EntryNode
                     if (node.EntryPoint)
                     {
                         change.elementsToRemove.Remove(element);
                         EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
+                        continue;
                     }
-                    else
-                    {
-                        MarkUnsavedChangeWithoutFile();
-                    }
+                    // Создаем команду для удаления узла
+                    var command = new DeleteElementCommand(this, node);
+                    undoManager.ExecuteCommand(command);
                 }
             }
         }
-
-        // Обработка перемещенных элементов
-        if (change.movedElements != null)
-        {
-            foreach (var element in change.movedElements)
-            {
-                if (element is BaseNode node)
-                {
-                    MarkUnsavedChangeWithoutFile();
-                }
-            }
-        }
-
         return change;
     }
 
@@ -300,6 +250,16 @@ public class DialogueGraphView : GraphView
 
         var settings = LoadDialogueSettings();
         bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
+
+        if (!hotkeysEnabled)
+            return;
+
+        // Ctrl + Z (Windows) или Cmd + Z (Mac) для Undo
+        if ((evt.ctrlKey || evt.commandKey) && evt.keyCode == KeyCode.Z && undoManager.CanUndo())
+        {
+            undoManager.Undo();
+            evt.StopPropagation();
+        }
     }
 
     public void DuplicateSelectedNodes()

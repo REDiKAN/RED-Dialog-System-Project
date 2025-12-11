@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3d240acc2926d439e212816b276939, type: 3}
+  m_Name: NewasfdasdAAA
+  m_EditorClassIdentifier: 
+  EntryNodeData:
+    Guid: 5d361493-9a02-4a47-89bb-38e012540c05
+    Position: {x: 100, y: 200}
+  NodeLinks:
+  - BaseNodeGuid: 5d361493-9a02-4a47-89bb-38e012540c05
+    PortName: Next
+    TargetNodeGuid: 89f3781e-226e-438b-ba89-c6ab826572c9
+  - BaseNodeGuid: 89f3781e-226e-438b-ba89-c6ab826572c9
+    PortName: Next
+    TargetNodeGuid: 62538db0-48aa-439d-835a-b15c498f4f88
+  SpeechNodeDatas:
+  - Guid: 89f3781e-226e-438b-ba89-c6ab826572c9
+    Position: {x: 319, y: 263}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  - Guid: 62538db0-48aa-439d-835a-b15c498f4f88
+    Position: {x: 667, y: 319}
+    DialogueText: New Dialogue
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  OptionNodeDatas: []
+  ExposedProperties: []
+  IntExposedProperties: []
+  StringExposedProperties: []
+  IntConditionNodeDatas: []
+  StringConditionNodeDatas: []
+  ModifyIntNodeDatas: []
+  EndNodeDatas: []
+  SpeechNodeImageDatas: []
+  OptionNodeImageDatas: []
+  BaseCharacterGuid: 
+  EventNodeDatas: []
+  CharacterIntConditionNodeDatas: []
+  CharacterModifyIntNodeDatas: []
+  DebugLogNodeDatas: []
+  DebugWarningNodeDatas: []
+  DebugErrorNodeDatas: []
+  SpeechRandNodeDatas: []
+  RandomBranchNodeDatas: []
+  noteNodeDatas: []
+  TimerNodeDatas: []
+  PauseNodeDatas: []
+  WireNodeDatas: []
+  CharacterButtonPressNodeDatas: []

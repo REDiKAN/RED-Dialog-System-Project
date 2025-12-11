@@ -146,6 +146,18 @@ public class DialogueGraph : EditorWindow
         toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
         // Кнопка сохранения
         toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
+
+        // Добавляем кнопки Undo/Redo
+        var undoButton = new Button(() => graphView.undoManager.Undo()) { text = "Undo (Ctrl+Z)" };
+
+        // Обновляем состояние кнопки в реальном времени
+        graphView.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            undoButton.SetEnabled(graphView.undoManager.CanUndo());
+        });
+
+        toolbar.Add(undoButton);
+
         // Base Character field (в конце)
         var baseCharacterField = new ObjectField("Base Character")
         {

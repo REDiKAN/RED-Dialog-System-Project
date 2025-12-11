@@ -11,24 +11,18 @@ public class DeleteElementCommand : GraphCommand
     private Vector2 position;
     private System.Type elementType;
     private string guid;
-    // Изменено: вместо хранения связей как NodeLinkData, храним реальные Edge
     private List<Edge> connections = new List<Edge>();
+    private List<NodeLinkData> edgeData = new List<NodeLinkData>();
 
     public DeleteElementCommand(DialogueGraphView graphView, ISelectable element)
         : base(graphView)
     {
         this.element = element;
-
         if (element is BaseNode node)
         {
             elementType = node.GetType();
             guid = node.GUID;
             position = node.GetPosition().position;
-
-            // Сохраняем реальные связи вместо данных из containerCache
-            connections = graphView.edges
-                .Where(e => e.input.node == node || e.output.node == node)
-                .ToList();
         }
     }
 
@@ -36,61 +30,61 @@ public class DeleteElementCommand : GraphCommand
     {
         if (element is BaseNode node)
         {
-            // Сохраняем связи перед удалением
+            // Сохраняем все соединения перед удалением
             connections = graphView.edges
                 .Where(e => e.input.node == node || e.output.node == node)
                 .ToList();
 
-            // Удаляем все связи узла
+            // Сохраняем данные о соединениях для восстановления
+            foreach (var edge in connections)
+            {
+                if (edge.output?.node is BaseNode outputNode && edge.input?.node is BaseNode inputNode)
+                {
+                    edgeData.Add(new NodeLinkData
+                    {
+                        BaseNodeGuid = outputNode.GUID,
+                        PortName = edge.output.portName,
+                        TargetNodeGuid = inputNode.GUID
+                    });
+                }
+            }
+
+            // Удаляем все соединения
             foreach (var edge in connections.ToList())
             {
                 graphView.RemoveElement(edge);
             }
 
+            // Удаляем сам узел
             graphView.RemoveElement(node);
         }
         else if (element is Edge edge)
         {
+            // Для удаления отдельного соединения
             graphView.RemoveElement(edge);
+            connections.Add(edge);
         }
-
-        graphView.MarkUnsavedChangeWithoutFile();
     }
-
     public override void Undo()
     {
         if (elementType != null && typeof(BaseNode).IsAssignableFrom(elementType))
         {
+            // Воссоздаём узел
             var node = NodeFactory.CreateNode(elementType, position);
             node.GUID = guid;
             graphView.AddElement(node);
 
-            // Восстанавливаем связи
-            foreach (var edge in connections)
+            // Восстанавливаем соединения
+            foreach (var linkData in edgeData)
             {
-                // Преобразуем узлы в BaseNode для доступа к GUID
-                BaseNode edgeOutputNode = edge.output.node as BaseNode;
-                BaseNode edgeInputNode = edge.input.node as BaseNode;
+                var outputNode = graphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == linkData.BaseNodeGuid) as BaseNode;
+                var inputNode = graphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == linkData.TargetNodeGuid) as BaseNode;
 
-                // Пропускаем, если преобразование не удалось
-                if (edgeOutputNode == null || edgeInputNode == null)
-                    continue;
-
-                // Ищем соответствующие узлы в графе по GUID
-                var outputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edgeOutputNode.GUID);
-                var inputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edgeInputNode.GUID);
-
-                // Проверяем, что нашли узлы и они являются BaseNode
-                if (outputNode is BaseNode outputBaseNode &&
-                    inputNode is BaseNode inputBaseNode)
+                if (outputNode != null && inputNode != null)
                 {
-                    // Находим соответствующие порты
-                    Port outputPort = FindPortByName(outputBaseNode, edge.output.portName);
-                    Port inputPort = FindPortByName(inputBaseNode, edge.input.portName);
+                    Port outputPort = FindPortByName(outputNode, linkData.PortName);
+                    Port inputPort = inputNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
 
-                    // Создаем и добавляем новое соединение
                     if (outputPort != null && inputPort != null)
                     {
                         var newEdge = new Edge
@@ -105,12 +99,21 @@ public class DeleteElementCommand : GraphCommand
                 }
             }
         }
-        graphView.MarkUnsavedChangeWithoutFile();
+        else if (connections.Count > 0)
+        {
+            // Восстанавливаем соединение
+            foreach (var edge in connections)
+            {
+                if (edge.output != null && edge.input != null && edge.parent == null)
+                {
+                    graphView.Add(edge);
+                }
+            }
+        }
     }
 
     private Port FindPortByName(BaseNode node, string portName)
     {
-        return node.outputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName) ??
-               node.inputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName);
+        return node.outputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName);
     }
 }

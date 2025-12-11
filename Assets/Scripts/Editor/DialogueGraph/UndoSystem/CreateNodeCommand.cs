@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 
 public class CreateNodeCommand : GraphCommand
 {
@@ -8,6 +10,7 @@ public class CreateNodeCommand : GraphCommand
     private Vector2 position;
     private Type nodeType;
     private string guid;
+    private List<Edge> createdEdges = new List<Edge>();
 
     public CreateNodeCommand(DialogueGraphView graphView, Type nodeType, Vector2 position)
         : base(graphView)
@@ -22,25 +25,25 @@ public class CreateNodeCommand : GraphCommand
         node = NodeFactory.CreateNode(nodeType, position);
         node.GUID = guid;
         graphView.AddElement(node);
-        graphView.MarkUnsavedChangeWithoutFile();
     }
 
     public override void Undo()
     {
         if (node != null && node.parent != null)
         {
-            // Удаляем все связи узла
-            var edgesToRemove = graphView.edges
+            // Сохраняем все соединения перед удалением узла
+            createdEdges = graphView.edges
                 .Where(e => e.input.node == node || e.output.node == node)
                 .ToList();
 
-            foreach (var edge in edgesToRemove)
+            // Удаляем все соединения
+            foreach (var edge in createdEdges.ToList())
             {
                 graphView.RemoveElement(edge);
             }
 
+            // Удаляем сам узел
             graphView.RemoveElement(node);
-            graphView.MarkUnsavedChangeWithoutFile();
         }
     }
 }

@@ -1,0 +1,274 @@
+﻿// ===== Console Log Export =====
+// Generated: 2025-12-09 21:28:39
+// Filters: Logs: ✓, Warnings: ✓, Errors: ✓
+// Message Limit: 0 (0 = unlimited)
+// Total messages captured: 74
+// Messages saved: 74 (Logs: 0, Warnings: 5, Errors: 69)
+// ==============================
+
+[2025-12-09 20:57:40] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(80,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(81,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(82,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(83,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(289,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(290,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(291,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(418,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(419,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(514,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\CreateNodeCommand.cs(515,1): error CS1529: A using clause must precede all other elements defined in the namespace except extern alias declarations
+------------------------------------------------------------
+[2025-12-09 20:58:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 20:58:53] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 20:59:14] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 20:59:19] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 20:59:58] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:00:18] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:00:29] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:00:44] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:01:03] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:01:24] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:01:57] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:02:13] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:02:48] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:03:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:03:08] [Error]
+GUI Error: Invalid GUILayout state in  view. Verify that all layout Begin/End calls match
+Stack Trace:
+UnityEngine.GUIUtility:ProcessEvent (int,intptr,bool&)
+
+------------------------------------------------------------
+[2025-12-09 21:03:08] [Exception]
+ArgumentOutOfRangeException: Specified argument was out of the range of valid values.
+Parameter name: startIndex
+Stack Trace:
+System.String.Insert (System.Int32 startIndex, System.String value) (at <ed969b0e627d471da4848289f9c322df>:0)
+UnityEngine.TextEditingUtilities.MoveSelectionToAltCursor () (at <44313a490f194ac399daed38f6ec3195>:0)
+UnityEngine.TextEditor.MoveSelectionToAltCursor () (at <44313a490f194ac399daed38f6ec3195>:0)
+UnityEditor.EditorGUI.DoTextField (UnityEditor.EditorGUI+RecycledTextEditor editor, System.Int32 id, UnityEngine.Rect position, System.String text, UnityEngine.GUIStyle style, System.String allowedletters, System.Boolean& changed, System.Boolean reset, System.Boolean multiline, System.Boolean passwordField, UnityEngine.GUIStyle cancelButtonStyle, System.Boolean checkTextLimit) (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.EditorGUI.ToolbarSearchField (System.Int32 id, UnityEngine.Rect position, System.String text, UnityEngine.GUIStyle searchFieldStyle, UnityEngine.GUIStyle cancelButtonStyle) (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.ProjectBrowser.SearchField () (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.ProjectBrowser.TopToolbar () (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.ProjectBrowser.OnGUI () (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.HostView.InvokeOnGUI (UnityEngine.Rect onGUIPosition) (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.DockArea.DrawView (UnityEngine.Rect dockAreaRect) (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEditor.DockArea.OldOnGUI () (at <878b6c863a9e4c42bf8483a7b6c60e0b>:0)
+UnityEngine.UIElements.IMGUIContainer.DoOnGUI (UnityEngine.Event evt, UnityEngine.Matrix4x4 parentTransform, UnityEngine.Rect clippingRect, System.Boolean isComputingLayout, UnityEngine.Rect layoutSize, System.Action onGUIHandler, System.Boolean canAffectFocus) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.HandleIMGUIEvent (UnityEngine.Event e, UnityEngine.Matrix4x4 worldTransform, UnityEngine.Rect clippingRect, System.Action onGUIHandler, System.Boolean canAffectFocus) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.HandleIMGUIEvent (UnityEngine.Event e, System.Action onGUIHandler, System.Boolean canAffectFocus) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.HandleIMGUIEvent (UnityEngine.Event e, System.Boolean canAffectFocus) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.SendEventToIMGUIRaw (UnityEngine.UIElements.EventBase evt, System.Boolean canAffectFocus, System.Boolean verifyBounds) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.SendEventToIMGUI (UnityEngine.UIElements.EventBase evt, System.Boolean canAffectFocus, System.Boolean verifyBounds) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.IMGUIContainer.HandleEventBubbleUp (UnityEngine.UIElements.EventBase evt) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.CallbackEventHandler.HandleEventBubbleUpInternal (UnityEngine.UIElements.EventBase evt) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.HandleEvent_BubbleUpHandleEvent (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, UnityEngine.UIElements.VisualElement element, System.Boolean disabled) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.HandleEvent_BubbleUpAllDefaultActions (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, UnityEngine.UIElements.VisualElement element, System.Boolean disabled, System.Boolean isCapturingTarget) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.HandleEventAcrossPropagationPathWithCompatibilityEvent (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.EventBase compatibilityEvt, UnityEngine.UIElements.BaseVisualElementPanel panel, UnityEngine.UIElements.VisualElement target, System.Boolean isCapturingTarget) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.PropagateEvent (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, UnityEngine.UIElements.VisualElement target, System.Boolean isCapturingTarget) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.DispatchToCapturingElement (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, System.Int32 pointerId, UnityEngine.Vector2 position) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatchUtilities.DispatchToCapturingElementOrElementUnderPointer (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, System.Int32 pointerId, UnityEngine.Vector2 position) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.PointerEventBase`1[T].Dispatch (UnityEngine.UIElements.BaseVisualElementPanel panel) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatcher.ProcessEvent (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.EventDispatcher.Dispatch (UnityEngine.UIElements.EventBase evt, UnityEngine.UIElements.BaseVisualElementPanel panel, UnityEngine.UIElements.DispatchMode dispatchMode) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.BaseVisualElementPanel.SendEvent (UnityEngine.UIElements.EventBase e, UnityEngine.UIElements.DispatchMode dispatchMode) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.UIElementsUtility.DoDispatch (UnityEngine.UIElements.BaseVisualElementPanel panel) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.UIElementsUtility.UnityEngine.UIElements.IUIElementsUtility.ProcessEvent (System.Int32 instanceID, System.IntPtr nativeEventPtr, System.Boolean& eventHandled) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.UIEventRegistration.ProcessEvent (System.Int32 instanceID, System.IntPtr nativeEventPtr) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.UIElements.UIEventRegistration+<>c.<.cctor>b__1_2 (System.Int32 i, System.IntPtr ptr) (at <743d97223c8b4d05a0ff33c535beb3d7>:0)
+UnityEngine.GUIUtility.ProcessEvent (System.Int32 instanceID, System.IntPtr nativeEventPtr, System.Boolean& result) (at <44313a490f194ac399daed38f6ec3195>:0)
+
+------------------------------------------------------------
+[2025-12-09 21:03:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:03:37] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:03:53] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:04:10] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:05:59] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:06:48] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:07:21] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:07:45] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:08:15] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:20:34] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:20:48] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:23:36] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:23:53] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(1,1): error CS1056: Unexpected character '\'
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\ModifyNodeTextCommand.cs(11,12): error CS0246: The type or namespace name 'List<>' could not be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\ModifyNodeTextCommand.cs(1,52): error CS0738: 'ModifyNodeTextCommand' does not implement interface member 'INodeAffectedCommand.AffectedNodeGUIDs'. 'ModifyNodeTextCommand.AffectedNodeGUIDs' cannot implement 'INodeAffectedCommand.AffectedNodeGUIDs' because it does not have the matching return type of 'List<string>'.
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\ModifyNodeTextCommand.cs(8,13): error CS0246: The type or namespace name 'Action<>' could not be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\ModifyNodeTextCommand.cs(14,110): error CS0246: The type or namespace name 'Action<>' could not be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Warning]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1195,18): warning CS0114: 'DialogueGraphView.DeleteSelection()' hides inherited member 'GraphView.DeleteSelection()'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(307,29): error CS0111: Type 'DialogueGraphView' already defines a member called 'OnGraphViewChanged' with the same parameter types
+------------------------------------------------------------
+[2025-12-09 21:24:02] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1251,17): error CS0111: Type 'DialogueGraphView' already defines a member called 'OpenTextEditor' with the same parameter types
+------------------------------------------------------------
+[2025-12-09 21:24:24] [Warning]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1195,18): warning CS0114: 'DialogueGraphView.DeleteSelection()' hides inherited member 'GraphView.DeleteSelection()'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+------------------------------------------------------------
+[2025-12-09 21:24:24] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(307,29): error CS0111: Type 'DialogueGraphView' already defines a member called 'OnGraphViewChanged' with the same parameter types
+------------------------------------------------------------
+[2025-12-09 21:24:24] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1251,17): error CS0111: Type 'DialogueGraphView' already defines a member called 'OpenTextEditor' with the same parameter types
+------------------------------------------------------------
+[2025-12-09 21:26:20] [Warning]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1018,18): warning CS0114: 'DialogueGraphView.DeleteSelection()' hides inherited member 'GraphView.DeleteSelection()'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+------------------------------------------------------------
+[2025-12-09 21:26:20] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1074,17): error CS0111: Type 'DialogueGraphView' already defines a member called 'OpenTextEditor' with the same parameter types
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Warning]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(992,18): warning CS0114: 'DialogueGraphView.DeleteSelection()' hides inherited member 'GraphView.DeleteSelection()'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph.cs(115,25): error CS1729: 'DialogueGraphView' does not contain a constructor that takes 1 arguments
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\DeleteConnectionCommand.cs(26,30): error CS1061: 'DialogueGraphView' does not contain a definition for 'FindEdgeByGUIDs' and no accessible extension method 'FindEdgeByGUIDs' accepting a first argument of type 'DialogueGraphView' could be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\DeleteConnectionCommand.cs(44,70): error CS0117: 'GraphViewChange' does not contain a definition for 'edgesToRemove'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\CreateConnectionCommand.cs(72,70): error CS0117: 'GraphViewChange' does not contain a definition for 'edgesToRemove'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\ModifyNodeTextCommand.cs(61,13): error CS0191: A readonly field cannot be assigned to (except in a constructor or init-only setter of the type in which the field is defined or a variable initializer)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\MoveNodeCommand.cs(63,13): error CS0191: A readonly field cannot be assigned to (except in a constructor or init-only setter of the type in which the field is defined or a variable initializer)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\Commands\DeleteNodeCommand.cs(169,66): error CS0117: 'GraphViewChange' does not contain a definition for 'elementsToAdd'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(317,36): error CS1503: Argument 1: cannot convert from 'DuplicateNodesCommand' to 'IUndoCommand'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(238,45): error CS1061: 'List<Node>' does not contain a definition for 'FirstOrDefault' and no accessible extension method 'FirstOrDefault' accepting a first argument of type 'List<Node>' could be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(252,45): error CS1061: 'List<Edge>' does not contain a definition for 'FirstOrDefault' and no accessible extension method 'FirstOrDefault' accepting a first argument of type 'List<Edge>' could be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(269,46): error CS0246: The type or namespace name 'Button' could not be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(269,43): error CS1061: 'VisualElement' does not contain a definition for 'Q' and no accessible extension method 'Q' accepting a first argument of type 'VisualElement' could be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(270,46): error CS0246: The type or namespace name 'Button' could not be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs(270,43): error CS1061: 'VisualElement' does not contain a definition for 'Q' and no accessible extension method 'Q' accepting a first argument of type 'VisualElement' could be found (are you missing a using directive or an assembly reference?)
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(441,81): error CS1503: Argument 2: cannot convert from 'System.Collections.Generic.List<BaseNode>' to 'System.Collections.Generic.List<UnityEditor.Experimental.GraphView.ISelectable>'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(442,44): error CS1503: Argument 1: cannot convert from 'ContextualDeleteCommand' to 'IUndoCommand'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(998,40): error CS1503: Argument 1: cannot convert from 'DeleteElementCommand' to 'IUndoCommand'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1201,44): error CS1503: Argument 1: cannot convert from 'CreateNodeAndConnectionCommand' to 'IUndoCommand'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Error]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(1288,40): error CS1503: Argument 1: cannot convert from 'PasteNodesCommand' to 'IUndoCommand'
+------------------------------------------------------------
+[2025-12-09 21:27:52] [Warning]
+Assets\Scripts\Editor\DialogueGraph\DialogueGraphView.cs(36,18): warning CS0414: The field 'DialogueGraphView.isUndoRedoOperation' is assigned but its value is never used
+
+// ===== End of Log =====
+// Total saved: 74 messages
+// File size: 38,95 KB
+// Generated by Console Log Saver
