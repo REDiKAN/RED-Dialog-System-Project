@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 11.12.2025 20:48:58
+// Generation Time: 14.12.2025 16:20:49
 // Total Files: 100
 // =================================
 
@@ -2397,6 +2397,18 @@ public class DialogueGraph : EditorWindow
         toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
         // Кнопка сохранения
         toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
+
+        // Добавляем кнопки Undo/Redo
+        var undoButton = new Button(() => graphView.undoManager.Undo()) { text = "Undo (Ctrl+Z)" };
+
+        // Обновляем состояние кнопки в реальном времени
+        graphView.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            undoButton.SetEnabled(graphView.undoManager.CanUndo());
+        });
+
+        toolbar.Add(undoButton);
+
         // Base Character field (в конце)
         var baseCharacterField = new ObjectField("Base Character")
         {
@@ -4059,16 +4071,13 @@ public class DialogueGraphView : GraphView
         {
             var edgesToRemove = new List<Edge>();
             var edgesToAdd = new List<Edge>();
-
             foreach (var edge in change.edgesToCreate.ToList())
             {
                 if (edge.input == null || edge.output == null)
                     continue;
-
                 // Определяем правильное направление соединения
                 Port trueOutput = null;
                 Port trueInput = null;
-
                 // Если соединение уже идет в правильном направлении (output -> input)
                 if (edge.output.direction == Direction.Output && edge.input.direction == Direction.Input)
                 {
@@ -4087,7 +4096,6 @@ public class DialogueGraphView : GraphView
                     edgesToRemove.Add(edge);
                     continue;
                 }
-
                 // Если направление изменилось, создаем новое соединение с правильными портами
                 if (trueOutput != edge.output || trueInput != edge.input)
                 {
@@ -4095,13 +4103,10 @@ public class DialogueGraphView : GraphView
                     // Проверка на возможность соединения
                     if (IsConnectionAllowed(trueOutput, trueInput))
                     {
-                        var newEdge = new Edge
-                        {
-                            output = trueOutput,
-                            input = trueInput
-                        };
-                        trueOutput.Connect(newEdge);
-                        trueInput.Connect(newEdge);
+                        // Создаем команду для создания соединения
+                        var newEdge = new Edge { output = trueOutput, input = trueInput };
+                        var command = new CreateConnectionCommand(this, newEdge);
+                        undoManager.ExecuteCommand(command);
                         edgesToAdd.Add(newEdge);
                     }
                 }
@@ -4112,15 +4117,18 @@ public class DialogueGraphView : GraphView
                     {
                         edgesToRemove.Add(edge);
                     }
+                    else
+                    {
+                        var command = new CreateConnectionCommand(this, edge);
+                        undoManager.ExecuteCommand(command);
+                    }
                 }
             }
-
             // Удаляем некорректные соединения
             foreach (var edge in edgesToRemove)
             {
                 change.edgesToCreate.Remove(edge);
             }
-
             // Добавляем исправленные соединения
             if (edgesToAdd.Count > 0)
             {
@@ -4128,22 +4136,7 @@ public class DialogueGraphView : GraphView
                     change.edgesToCreate = new List<Edge>();
                 change.edgesToCreate.AddRange(edgesToAdd);
             }
-
-            // Обрабатываем конфликты для всех новых соединений
-            foreach (var edge in change.edgesToCreate.ToList())
-            {
-                if (edge.output != null && edge.input != null)
-                {
-                    var startNode = edge.output.node as BaseNode;
-                    var targetNode = edge.input.node as BaseNode;
-                    if (startNode != null && targetNode != null)
-                    {
-                        HandleConflictingConnections(edge, startNode);
-                    }
-                }
-            }
         }
-
         // Обработка удаленных элементов
         if (change.elementsToRemove != null)
         {
@@ -4151,56 +4144,25 @@ public class DialogueGraphView : GraphView
             {
                 if (element is Edge edge)
                 {
-                    // Удаляем соединение и помечаем изменения
-                    if (edge.output != null && edge.input != null)
-                    {
-                        edge.output.Disconnect(edge);
-                        edge.input.Disconnect(edge);
-                        MarkUnsavedChangeWithoutFile();
-                    }
+                    // Создаем команду для удаления соединения
+                    var command = new DeleteEdgeCommand(this, edge);
+                    undoManager.ExecuteCommand(command);
                 }
                 else if (element is BaseNode node)
                 {
-                    // Автоматически удаляем все соединения, связанные с удаляемым узлом
-                    var edgesToRemove = edges.ToList()
-                        .Where(e => e.output?.node == node || e.input?.node == node)
-                        .ToList();
-
-                    foreach (var edgeA in edgesToRemove)
-                    {
-                        if (edgeA.output != null)
-                            edgeA.output.Disconnect(edgeA);
-                        if (edgeA.input != null)
-                            edgeA.input.Disconnect(edgeA);
-                        RemoveElement(edgeA);
-                    }
-
                     // Защита от удаления EntryNode
                     if (node.EntryPoint)
                     {
                         change.elementsToRemove.Remove(element);
                         EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
+                        continue;
                     }
-                    else
-                    {
-                        MarkUnsavedChangeWithoutFile();
-                    }
+                    // Создаем команду для удаления узла
+                    var command = new DeleteElementCommand(this, node);
+                    undoManager.ExecuteCommand(command);
                 }
             }
         }
-
-        // Обработка перемещенных элементов
-        if (change.movedElements != null)
-        {
-            foreach (var element in change.movedElements)
-            {
-                if (element is BaseNode node)
-                {
-                    MarkUnsavedChangeWithoutFile();
-                }
-            }
-        }
-
         return change;
     }
 
@@ -4252,6 +4214,16 @@ public class DialogueGraphView : GraphView
 
         var settings = LoadDialogueSettings();
         bool hotkeysEnabled = settings != null && settings.General.EnableHotkeyUndoRedo;
+
+        if (!hotkeysEnabled)
+            return;
+
+        // Ctrl + Z (Windows) или Cmd + Z (Mac) для Undo
+        if ((evt.ctrlKey || evt.commandKey) && evt.keyCode == KeyCode.Z && undoManager.CanUndo())
+        {
+            undoManager.Undo();
+            evt.StopPropagation();
+        }
     }
 
     public void DuplicateSelectedNodes()
@@ -10043,6 +10015,8 @@ public class CreateNodeAndConnectionCommand : GraphCommand
 using UnityEngine;
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 
 public class CreateNodeCommand : GraphCommand
 {
@@ -10050,6 +10024,7 @@ public class CreateNodeCommand : GraphCommand
     private Vector2 position;
     private Type nodeType;
     private string guid;
+    private List<Edge> createdEdges = new List<Edge>();
 
     public CreateNodeCommand(DialogueGraphView graphView, Type nodeType, Vector2 position)
         : base(graphView)
@@ -10064,25 +10039,25 @@ public class CreateNodeCommand : GraphCommand
         node = NodeFactory.CreateNode(nodeType, position);
         node.GUID = guid;
         graphView.AddElement(node);
-        graphView.MarkUnsavedChangeWithoutFile();
     }
 
     public override void Undo()
     {
         if (node != null && node.parent != null)
         {
-            // ������� ��� ����� ����
-            var edgesToRemove = graphView.edges
+            // ��������� ��� ���������� ����� ��������� ����
+            createdEdges = graphView.edges
                 .Where(e => e.input.node == node || e.output.node == node)
                 .ToList();
 
-            foreach (var edge in edgesToRemove)
+            // ������� ��� ����������
+            foreach (var edge in createdEdges.ToList())
             {
                 graphView.RemoveElement(edge);
             }
 
+            // ������� ��� ����
             graphView.RemoveElement(node);
-            graphView.MarkUnsavedChangeWithoutFile();
         }
     }
 }
@@ -10140,24 +10115,18 @@ public class DeleteElementCommand : GraphCommand
     private Vector2 position;
     private System.Type elementType;
     private string guid;
-    // ��������: ������ �������� ������ ��� NodeLinkData, ������ �������� Edge
     private List<Edge> connections = new List<Edge>();
+    private List<NodeLinkData> edgeData = new List<NodeLinkData>();
 
     public DeleteElementCommand(DialogueGraphView graphView, ISelectable element)
         : base(graphView)
     {
         this.element = element;
-
         if (element is BaseNode node)
         {
             elementType = node.GetType();
             guid = node.GUID;
             position = node.GetPosition().position;
-
-            // ��������� �������� ����� ������ ������ �� containerCache
-            connections = graphView.edges
-                .Where(e => e.input.node == node || e.output.node == node)
-                .ToList();
         }
     }
 
@@ -10165,61 +10134,61 @@ public class DeleteElementCommand : GraphCommand
     {
         if (element is BaseNode node)
         {
-            // ��������� ����� ����� ���������
+            // ��������� ��� ���������� ����� ���������
             connections = graphView.edges
                 .Where(e => e.input.node == node || e.output.node == node)
                 .ToList();
 
-            // ������� ��� ����� ����
+            // ��������� ������ � ����������� ��� ��������������
+            foreach (var edge in connections)
+            {
+                if (edge.output?.node is BaseNode outputNode && edge.input?.node is BaseNode inputNode)
+                {
+                    edgeData.Add(new NodeLinkData
+                    {
+                        BaseNodeGuid = outputNode.GUID,
+                        PortName = edge.output.portName,
+                        TargetNodeGuid = inputNode.GUID
+                    });
+                }
+            }
+
+            // ������� ��� ����������
             foreach (var edge in connections.ToList())
             {
                 graphView.RemoveElement(edge);
             }
 
+            // ������� ��� ����
             graphView.RemoveElement(node);
         }
         else if (element is Edge edge)
         {
+            // ��� �������� ���������� ����������
             graphView.RemoveElement(edge);
+            connections.Add(edge);
         }
-
-        graphView.MarkUnsavedChangeWithoutFile();
     }
-
     public override void Undo()
     {
         if (elementType != null && typeof(BaseNode).IsAssignableFrom(elementType))
         {
+            // ��������� ����
             var node = NodeFactory.CreateNode(elementType, position);
             node.GUID = guid;
             graphView.AddElement(node);
 
-            // ��������������� �����
-            foreach (var edge in connections)
+            // ��������������� ����������
+            foreach (var linkData in edgeData)
             {
-                // ����������� ���� � BaseNode ��� ������� � GUID
-                BaseNode edgeOutputNode = edge.output.node as BaseNode;
-                BaseNode edgeInputNode = edge.input.node as BaseNode;
+                var outputNode = graphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == linkData.BaseNodeGuid) as BaseNode;
+                var inputNode = graphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == linkData.TargetNodeGuid) as BaseNode;
 
-                // ����������, ���� �������������� �� �������
-                if (edgeOutputNode == null || edgeInputNode == null)
-                    continue;
-
-                // ���� ��������������� ���� � ����� �� GUID
-                var outputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edgeOutputNode.GUID);
-                var inputNode = graphView.nodes.ToList().FirstOrDefault(n =>
-                    n is BaseNode bn && bn.GUID == edgeInputNode.GUID);
-
-                // ���������, ��� ����� ���� � ��� �������� BaseNode
-                if (outputNode is BaseNode outputBaseNode &&
-                    inputNode is BaseNode inputBaseNode)
+                if (outputNode != null && inputNode != null)
                 {
-                    // ������� ��������������� �����
-                    Port outputPort = FindPortByName(outputBaseNode, edge.output.portName);
-                    Port inputPort = FindPortByName(inputBaseNode, edge.input.portName);
+                    Port outputPort = FindPortByName(outputNode, linkData.PortName);
+                    Port inputPort = inputNode.inputContainer.Children().OfType<Port>().FirstOrDefault();
 
-                    // ������� � ��������� ����� ����������
                     if (outputPort != null && inputPort != null)
                     {
                         var newEdge = new Edge
@@ -10234,13 +10203,22 @@ public class DeleteElementCommand : GraphCommand
                 }
             }
         }
-        graphView.MarkUnsavedChangeWithoutFile();
+        else if (connections.Count > 0)
+        {
+            // ��������������� ����������
+            foreach (var edge in connections)
+            {
+                if (edge.output != null && edge.input != null && edge.parent == null)
+                {
+                    graphView.Add(edge);
+                }
+            }
+        }
     }
 
     private Port FindPortByName(BaseNode node, string portName)
     {
-        return node.outputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName) ??
-               node.inputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName);
+        return node.outputContainer.Children().OfType<Port>().FirstOrDefault(p => p.portName == portName);
     }
 }
 
@@ -10255,8 +10233,8 @@ public abstract class GraphCommand : ICommand
     }
 
     public abstract void Execute();
+
     public abstract void Undo();
-    public virtual void Redo() => Execute();
 }
 
 //==== File 66 of 100: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\UndoSystem\ICommand.cs ====
@@ -10264,34 +10242,82 @@ public interface ICommand
 {
     void Execute();
     void Undo();
-    void Redo();
 }
 
 
 //==== File 67 of 100: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\UndoSystem\UndoManager.cs ====
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// �������� ��� ���������� ���������� ������ �������� � ����� �������
+/// </summary>
 public class UndoManager
 {
     private readonly DialogueGraphView graphView;
+    private readonly Stack<ICommand> undoStack = new Stack<ICommand>();
+    private bool isUndoing = false;
 
     public UndoManager(DialogueGraphView graphView)
     {
         this.graphView = graphView;
     }
 
-    // ��������� ������� �������� ��� ���������� ��� ������
+    /// <summary>
+    /// ��������� ������� � ��������� � � ���� ��� ������
+    /// </summary>
     public void ExecuteCommand(ICommand command)
     {
+        if (isUndoing)
+            return;
+
+        // ��������� �������
         command.Execute();
+
+        // ��������� � ���� ������
+        undoStack.Push(command);
+
+        // �������� ��������� � �����
+        graphView.MarkUnsavedChangeWithoutFile();
     }
 
-    // ��������� ���������������� ������
-    public void Undo() { }
+    /// <summary>
+    /// �������� ��������� �������
+    /// </summary>
+    public void Undo()
+    {
+        if (undoStack.Count == 0)
+            return;
 
-    // ��������� ���������������� �������
-    public void Redo() { }
+        isUndoing = true;
 
-    // ������� ����� (���� ��� ������ �� ������������)
-    public void ClearStacks() { }
+        // ������ ������� �� ����� ������
+        ICommand command = undoStack.Pop();
+
+        // ��������� ������
+        command.Undo();
+
+        // �������� ��������� � �����
+        graphView.MarkUnsavedChangeWithoutFile();
+
+        isUndoing = false;
+    }
+
+    /// <summary>
+    /// ������� ���� ������
+    /// </summary>
+    public void ClearStacks()
+    {
+        undoStack.Clear();
+    }
+
+    /// <summary>
+    /// ���������, ����� �� ��������� ������
+    /// </summary>
+    public bool CanUndo()
+    {
+        return undoStack.Count > 0;
+    }
 }
 
 //==== File 68 of 100: D:/Work/REDDialogSystemProject/Assets\Scripts\Editor\DialogueGraph\Utilities\AssetDatabaseHelper.cs ====
@@ -12269,9 +12295,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 100
-// Total Size: 432,24 KB
-// Total Lines: 12063
+// Total Size: 432,46 KB
+// Total Lines: 12089
 // Classes: 129
-// Methods: 733
-// Comments: 965
+// Methods: 731
+// Comments: 983
 // =====================================

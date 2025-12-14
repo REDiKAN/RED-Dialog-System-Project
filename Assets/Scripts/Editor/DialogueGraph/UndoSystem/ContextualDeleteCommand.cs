@@ -16,6 +16,8 @@ public class ContextualDeleteCommand : GraphCommand
     private List<string> _deletedNodeGuids = new List<string>();
     private List<string> _deletedEdgeGuids = new List<string>();
 
+    private Dictionary<string, string> _serializedNodeData = new Dictionary<string, string>();
+
     [System.Serializable]
     public class WireNodeConnectionData
     {
@@ -136,6 +138,17 @@ public class ContextualDeleteCommand : GraphCommand
                     PortName = edge.output.portName,
                     TargetNodeGuid = inputNode.GUID
                 });
+            }
+        }
+
+        foreach (var element in _nodesToDelete)
+        {
+            if (element is BaseNode node && !(node is WireNode))
+            {
+                _nodePositions[node.GUID] = node.GetPosition().position;
+                _elementGuids[element] = node.GUID;
+                // Сохраняем данные узла
+                _serializedNodeData[node.GUID] = node.SerializeNodeData();
             }
         }
     }
@@ -265,6 +278,41 @@ public class ContextualDeleteCommand : GraphCommand
                         inputPort.Connect(edge);
                         graphView.Add(edge);
                     }
+                }
+            }
+
+        }
+
+        foreach (var kvp in _nodePositions)
+        {
+            var guid = kvp.Key;
+            var position = kvp.Value;
+            var node = graphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == guid) as BaseNode;
+
+            if (node == null)
+            {
+                // Если узел не найден, создаем новый того же типа
+                var originalNode = _nodesToDelete.FirstOrDefault(n => n is BaseNode bn && bn.GUID == guid) as BaseNode;
+                if (originalNode != null)
+                {
+                    node = NodeFactory.CreateNode(originalNode.GetType(), position);
+                    node.GUID = guid;
+                }
+            }
+
+            if (node != null)
+            {
+                node.SetPosition(new Rect(position, graphView.DefaultNodeSize));
+
+                // Восстанавливаем данные узла
+                if (_serializedNodeData.TryGetValue(guid, out var data) && !string.IsNullOrEmpty(data))
+                {
+                    node.DeserializeNodeData(data);
+                }
+
+                if (node.parent == null)
+                {
+                    graphView.AddElement(node);
                 }
             }
         }
