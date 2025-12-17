@@ -267,12 +267,10 @@ public class DialogueGraphView : GraphView
         var selectedNodes = selection.OfType<BaseNode>()
             .Where(node => !node.EntryPoint)
             .ToList();
-
         if (selectedNodes.Count == 0)
             return;
 
-        Vector2 pastePosition = GetMousePositionInGraphSpace();
-        var command = new DuplicateNodesCommand(this, selectedNodes, pastePosition);
+        var command = new DuplicateNodesCommand(this, selectedNodes);
         undoManager.ExecuteCommand(command);
     }
 
@@ -339,14 +337,14 @@ public class DialogueGraphView : GraphView
     {
         if (evt.keyCode == KeyCode.Delete)
         {
-            // Проверяем, есть ли в выделении EntryNode
-            if (selection.OfType<BaseNode>().Any(node => node.EntryPoint))
-            {
-                EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
-                evt.StopPropagation();
-                return;
-            }
+            // существующий код удаления
             DeleteSelection();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+D для копирования
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.D)
+        {
+            DuplicateSelectedNodes();
             evt.StopPropagation();
         }
     }

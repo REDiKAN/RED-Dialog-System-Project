@@ -24,7 +24,7 @@ MonoBehaviour:
     EnableEntryNodeMovement: 0
   UI:
     UseCustomBackgroundColor: 0
-    CustomBackgroundColor: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
+    CustomBackgroundColor: {r: 0.4245283, g: 0.3984959, b: 0.3984959, a: 1}
   _favoriteNodeTypes:
   - SpeechNodeText
   - OptionNodeText
