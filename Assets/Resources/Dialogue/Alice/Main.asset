@@ -18,16 +18,7 @@ MonoBehaviour:
   NodeLinks:
   - BaseNodeGuid: c2019fc8-2654-44fa-b11b-cb78335110b6
     PortName: Next
-    TargetNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
-  - BaseNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
-    PortName: Next
-    TargetNodeGuid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
-  - BaseNodeGuid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
-    PortName: Next
-    TargetNodeGuid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
-  - BaseNodeGuid: aa458c8f-6095-4979-9903-49160fa6fd9d
-    PortName: Next
-    TargetNodeGuid: 90627cef-7f7f-437a-9cbb-f947316a3b85
+    TargetNodeGuid: d0e03107-bae0-41de-893a-ee82b0657027
   - BaseNodeGuid: 5c60e8ec-975d-49d8-a256-f44de3ac2f8c
     PortName: Next
     TargetNodeGuid: aa458c8f-6095-4979-9903-49160fa6fd9d
@@ -136,27 +127,19 @@ MonoBehaviour:
   - BaseNodeGuid: 2243af0a-b294-4b44-ae72-2c571e6373a5
     PortName: Next
     TargetNodeGuid: ec7cb33b-b31a-4618-aa87-f740e891fdda
-  - BaseNodeGuid: 90627cef-7f7f-437a-9cbb-f947316a3b85
-    PortName: Next
-    TargetNodeGuid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
-  - BaseNodeGuid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
+  - BaseNodeGuid: d0e03107-bae0-41de-893a-ee82b0657027
     PortName: Output
     TargetNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
+  - BaseNodeGuid: d0e03107-bae0-41de-893a-ee82b0657027
+    PortName: Output
+    TargetNodeGuid: d7f344a3-c795-4eaa-8a02-342206824494
+  - BaseNodeGuid: aa458c8f-6095-4979-9903-49160fa6fd9d
+    PortName: Next
+    TargetNodeGuid: 2f3003a5-8a0c-4935-bfc2-6a22609a2988
+  - BaseNodeGuid: 2f3003a5-8a0c-4935-bfc2-6a22609a2988
+    PortName: Output
+    TargetNodeGuid: f47c9cc4-4d8e-420e-935e-9bfb96d38fe3
   SpeechNodeDatas:
-  - Guid: ff3b7f76-2be4-4f40-bfdd-a5da4ba40852
-    Position: {x: 522, y: 200}
-    DialogueText: '[23:47:15] ICE-breaker v9.3 "Wraith" injected'
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
-  - Guid: 8ead4d60-92cd-44f8-9d52-5549618d7cbb
-    Position: {x: 204, y: 200}
-    DialogueText: "[23:47:12] Connecting to CyberSin Corp internal grid\u2026 <color=#169523>OK</color>"
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
   - Guid: aa458c8f-6095-4979-9903-49160fa6fd9d
     Position: {x: 3594, y: 200}
     DialogueText: "\u0418\u043B\u0438... \u041C\u043E\u0436\u043D\u043E \u0431\u0443\u0434\u0435\u0442
@@ -510,12 +493,12 @@ MonoBehaviour:
   - Guid: 2243af0a-b294-4b44-ae72-2c571e6373a5
     Position: {x: 2182, y: 200}
     DurationSeconds: 5
-  - Guid: 90627cef-7f7f-437a-9cbb-f947316a3b85
-    Position: {x: 3984, y: 200}
-    DurationSeconds: 5
   WireNodeDatas: []
-  CharacterButtonPressNodeDatas:
-  - Guid: e84d9d0b-8b01-438f-99cd-5bbc3062ea80
-    Position: {x: 913, y: 239}
-    CharacterName: System
-    RequireButtonPress: 0
+  CharacterButtonPressNodeDatas: []
+  ChatSwitchNodeDatas:
+  - Guid: d0e03107-bae0-41de-893a-ee82b0657027
+    Position: {x: 878, y: 200}
+    TargetChatIndex: 1
+  - Guid: 2f3003a5-8a0c-4935-bfc2-6a22609a2988
+    Position: {x: 3991, y: 200}
+    TargetChatIndex: 0

@@ -37,6 +37,17 @@ public class DialogueManager : MonoBehaviour
     private SpeechNodeImageData _pendingSpeechImageNode;
     private SpeechRandNodeData _pendingSpeechRandNode;
 
+    [SerializeField] private List<ChatConfiguration> chatConfigurations = new List<ChatConfiguration>();
+    private int currentChatIndex = 0;
+
+    [System.Serializable]
+    public class ChatConfiguration
+    {
+        public ChatPanel chatPanel;
+        public OptionPanel optionPanel;
+        public TimerDisplayController timerDisplayController;
+    }
+
     private void Awake()
     {
         // Гарантируем создание CharacterManager при запуске
@@ -112,6 +123,47 @@ public class DialogueManager : MonoBehaviour
         // Начинаем диалог с EntryNode
         currentNode = currentDialogue.EntryNodeData;
         ProcessNextNode();
+    }
+    private void SwitchChat(int targetChatIndex)
+    {
+        if (targetChatIndex < 0 || targetChatIndex >= chatConfigurations.Count)
+        {
+            Debug.LogError($"Invalid chat index: {targetChatIndex}. Available range: 0-{chatConfigurations.Count - 1}");
+            return;
+        }
+        // Отключаем текущий чат
+        if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
+        {
+            var currentConfig = chatConfigurations[currentChatIndex];
+            if (currentConfig.chatPanel != null) currentConfig.chatPanel.gameObject.SetActive(false);
+            if (currentConfig.optionPanel != null) currentConfig.optionPanel.gameObject.SetActive(false);
+            if (currentConfig.timerDisplayController != null) currentConfig.timerDisplayController.gameObject.SetActive(false);
+        }
+        // Включаем новый чат
+        currentChatIndex = targetChatIndex;
+        var newConfig = chatConfigurations[currentChatIndex];
+        if (newConfig.chatPanel != null) newConfig.chatPanel.gameObject.SetActive(true);
+        if (newConfig.optionPanel != null) newConfig.optionPanel.gameObject.SetActive(true);
+        if (newConfig.timerDisplayController != null) newConfig.timerDisplayController.gameObject.SetActive(true);
+        // Обновляем ссылки в DialogueManager
+        chatPanel = newConfig.chatPanel;
+        optionPanel = newConfig.optionPanel;
+        _timerDisplayController = newConfig.timerDisplayController;
+        Debug.Log($"Switched to chat configuration index: {currentChatIndex}");
+
+        // Добавлено: проверка инициализации UI-элементов
+        if (chatPanel == null)
+        {
+            Debug.LogError("ChatPanel is not assigned in the new chat configuration. Dialogue will not continue properly.");
+            return;
+        }
+
+        if (optionPanel != null)
+        {
+            // Переподписываемся на событие выбора опции для нового optionPanel
+            optionPanel.onOptionSelected -= HandleOptionSelection;
+            optionPanel.onOptionSelected += HandleOptionSelection;
+        }
     }
 
     private void SaveOriginalCharacterStates()
@@ -224,6 +276,10 @@ public class DialogueManager : MonoBehaviour
                 break;
             case CharacterButtonPressNodeData characterButtonPressNode:
                 ProcessCharacterButtonPressNode(characterButtonPressNode);
+                break;
+            case ChatSwitchNodeData chatSwitchNode:
+                SwitchChat(chatSwitchNode.TargetChatIndex);
+                GoToNextNode(chatSwitchNode.Guid);
                 break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
@@ -1224,70 +1280,54 @@ public class DialogueManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(guid))
             return null;
-
         // Ищем в Speech
         var speechNode = currentDialogue.SpeechNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechNode != null) return speechNode;
-
         var speechImageNode = currentDialogue.SpeechNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechImageNode != null) return speechImageNode;
-
         var optionNode = currentDialogue.OptionNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (optionNode != null) return optionNode;
-
         var optionImageNode = currentDialogue.OptionNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
         if (optionImageNode != null) return optionImageNode;
-
         var intConditionNode = currentDialogue.IntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (intConditionNode != null) return intConditionNode;
-
         var stringConditionNode = currentDialogue.StringConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (stringConditionNode != null) return stringConditionNode;
-
         var modifyIntNode = currentDialogue.ModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (modifyIntNode != null) return modifyIntNode;
-
         var endNode = currentDialogue.EndNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (endNode != null) return endNode;
-
         var charIntConditionNode = currentDialogue.CharacterIntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (charIntConditionNode != null) return charIntConditionNode;
-
         var charModifyIntNode = currentDialogue.CharacterModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (charModifyIntNode != null) return charModifyIntNode;
-
         var debugLogNode = currentDialogue.DebugLogNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (debugLogNode != null) return debugLogNode;
-
         var debugWarnNode = currentDialogue.DebugWarningNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (debugWarnNode != null) return debugWarnNode;
-
         var debugErrNode = currentDialogue.DebugErrorNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (debugErrNode != null) return debugErrNode;
-
         // Поддержка SpeechRandNodeData
         var speechRandNode = currentDialogue.SpeechRandNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (speechRandNode != null) return speechRandNode;
-
         var timerNode = currentDialogue.TimerNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (timerNode != null) return timerNode;
-
         var pauseNode = currentDialogue.PauseNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (pauseNode != null) return pauseNode;
-
         var wireNode = currentDialogue.WireNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (wireNode != null) return wireNode;
-
         var charButtonPressNode = currentDialogue.CharacterButtonPressNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (charButtonPressNode != null) return charButtonPressNode;
-
+        // Добавлено: обработка ChatSwitchNodeData
+        var chatSwitchNode = currentDialogue.ChatSwitchNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (chatSwitchNode != null) return chatSwitchNode;
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)
             return currentDialogue.EntryNodeData;
-
         // Если ничего не найдено — возвращаем null
         return null;
     }
+
 
     private void GoToNextNode(string currentGuid)
     {

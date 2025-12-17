@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using UnityEngine.Events;
-
 /// <summary>
 /// Утилита для сохранения и загрузки диалоговых графов
 /// </summary>
@@ -14,10 +13,8 @@ public class GraphSaveUtility
 {
     private DialogueGraphView targetGraphView;
     private DialogueContainer containerCache;
-
     private List<BaseNode> GetNodes() => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
     private List<Edge> GetEdges() => targetGraphView.edges.ToList();
-
     /// <summary>
     /// Получение экземпляра утилиты для сохранения
     /// </summary>
@@ -25,11 +22,7 @@ public class GraphSaveUtility
     {
         return new GraphSaveUtility { targetGraphView = targetGraphView };
     }
-
     #region Saving
-    /// <summary>
-    /// Сохранение графа в файл
-    /// </summary>
     /// <summary>
     /// Сохранение графа в файл
     /// </summary>
@@ -37,7 +30,6 @@ public class GraphSaveUtility
     {
         DialogueSettingsData settings = LoadDialogueSettings();
         string savePath = null;
-
         // Сначала проверяем, включено ли автосохранение
         bool useAutoSave = false;
         if (settings != null && settings.General.enableAutoSaveLocation)
@@ -49,7 +41,6 @@ public class GraphSaveUtility
                 useAutoSave = true;
             }
         }
-
         if (useAutoSave)
         {
             string folderPath = settings.GetFullPath();
@@ -66,10 +57,8 @@ public class GraphSaveUtility
                 "Save dialogue asset"
             );
         }
-
         if (string.IsNullOrEmpty(savePath))
             return;
-
         // Создаем контейнер для данных диалога
         var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
         // Сохраняем узлы и связи
@@ -81,19 +70,17 @@ public class GraphSaveUtility
         AssetDatabase.SaveAssets();
         EditorUtility.DisplayDialog("Success", $"Graph saved as {fileName}", "OK");
     }
-
     /// <summary>
     /// Сохраняет узлы в контейнер
     /// </summary>
     private void SaveNodes(DialogueContainer dialogueContainer)
     {
         dialogueContainer.BaseCharacterGuid = targetGraphView.BaseCharacterGuid;
-
         // Сохраняем связи между узлами
         var edgesList = targetGraphView.edges.ToList();
         var connectedPorts = edgesList.Where(x => x.input.node != null).ToArray();
         foreach (var edge in connectedPorts)
-        {;
+        {
             var outputNode = edge.output.node as BaseNode;
             var inputNode = edge.input.node as BaseNode;
             dialogueContainer.NodeLinks.Add(new NodeLinkData
@@ -103,7 +90,6 @@ public class GraphSaveUtility
                 TargetNodeGuid = inputNode.GUID
             });
         }
-
         // Сохраняем данные узлов
         foreach (var node in GetNodes())
         {
@@ -353,9 +339,17 @@ public class GraphSaveUtility
                     RequireButtonPress = charButtonPressNode.RequireButtonPress
                 });
             }
+            else if (node is ChatSwitchNode chatSwitchNode)
+            {
+                dialogueContainer.ChatSwitchNodeDatas.Add(new ChatSwitchNodeData
+                {
+                    Guid = chatSwitchNode.GUID,
+                    Position = node.GetPosition().position,
+                    TargetChatIndex = chatSwitchNode.TargetChatIndex
+                });
+            }
         }
     }
-
     private string GetResourcePath(Sprite sprite)
     {
         if (sprite == null) return "";
@@ -370,7 +364,6 @@ public class GraphSaveUtility
             path = path.Substring(0, path.LastIndexOf('.'));
         return path;
     }
-
     /// <summary>
     /// Сохранение свойств черной доски
     /// </summary>
@@ -380,13 +373,11 @@ public class GraphSaveUtility
         dialogueContainer.ExposedProperties.Clear(); // для обратной совместимости, если используется
         dialogueContainer.IntExposedProperties.Clear();
         dialogueContainer.StringExposedProperties.Clear();
-
         // Сохранение актуальных данных
         dialogueContainer.IntExposedProperties.AddRange(targetGraphView.IntExposedProperties);
         dialogueContainer.StringExposedProperties.AddRange(targetGraphView.StringExposedProperties);
     }
     #endregion
-
     #region Loading
     /// <summary>
     /// Загрузка графа из файла
@@ -399,15 +390,12 @@ public class GraphSaveUtility
             EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exist", "OK");
             return;
         }
-
         ClearGraph();
         CreateNodes();
         ConnectNodes();
         CreateExposedProperties();
-
         EditorUtility.DisplayDialog("Success", $"Graph {fileName} loaded", "OK");
     }
-
     /// <summary>
     /// Создает узлы из загруженных данных
     /// </summary>
@@ -416,14 +404,13 @@ public class GraphSaveUtility
         // Восстанавливаем EntryNode
         if (containerCache.EntryNodeData != null)
         {
-            var entryNode = GetNodes().Find(x => x.EntryPoint);
+            var entryNode = GetNodes().FirstOrDefault(x => x.EntryPoint);
             if (entryNode != null)
             {
                 entryNode.GUID = containerCache.EntryNodeData.Guid;
                 entryNode.SetPosition(new Rect(containerCache.EntryNodeData.Position, targetGraphView.DefaultNodeSize));
             }
         }
-
         // Создаем SpeechNode
         foreach (var nodeData in containerCache.SpeechNodeDatas)
         {
@@ -449,7 +436,6 @@ public class GraphSaveUtility
                     break;
             }
             tempNode.GUID = nodeData.Guid;
-
             // Восстанавливаем аудио клип по GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
@@ -460,7 +446,6 @@ public class GraphSaveUtility
                     speechNode.AudioClip = audioClip;
                 }
             }
-
             // Восстанавливаем спикера по GUID
             if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
             {
@@ -470,17 +455,13 @@ public class GraphSaveUtility
                     speechNode.SetSpeaker(speaker);
                 }
             }
-
             targetGraphView.AddElement(tempNode);
         }
-
-        // Создаем SpeechNodeImage
         // Создаем SpeechNodeImage
         foreach (var nodeData in containerCache.SpeechNodeImageDatas)
         {
             var tempNode = NodeFactory.CreateSpeechNodeImage(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
-
             if (tempNode is SpeechNodeImage speechNodeImage)
             {
                 // Восстанавливаем спрайт
@@ -495,7 +476,6 @@ public class GraphSaveUtility
                     }
                     speechNodeImage.ImageSprite = sprite;
                 }
-
                 CharacterData speaker = null;
                 if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
                 {
@@ -506,7 +486,6 @@ public class GraphSaveUtility
                     speaker = CharacterManager.Instance?.GetCharacter(nodeData.SpeakerName);
                 }
                 speechNodeImage.SetSpeaker(speaker);
-
                 // Восстанавливаем спикера
                 if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
                 {
@@ -516,10 +495,8 @@ public class GraphSaveUtility
                         speechNodeImage.imageField.SetValueWithoutNotify(sprite);
                 }
             }
-
             targetGraphView.AddElement(tempNode);
         }
-
         // Создаем OptionNode
         foreach (var nodeData in containerCache.OptionNodeDatas)
         {
@@ -545,7 +522,6 @@ public class GraphSaveUtility
                     break;
             }
             tempNode.GUID = nodeData.Guid;
-
             // Восстанавливаем аудио клип по GUID
             if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
             {
@@ -556,16 +532,13 @@ public class GraphSaveUtility
                     optionNode.AudioClip = audioClip;
                 }
             }
-
             targetGraphView.AddElement(tempNode);
         }
-
         // Создаем OptionNodeImage
         foreach (var nodeData in containerCache.OptionNodeImageDatas)
         {
             var tempNode = NodeFactory.CreateOptionNodeImage(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
-
             // Восстанавливаем изображение по GUID
             if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
             {
@@ -576,10 +549,8 @@ public class GraphSaveUtility
                     optionNodeImage.ImageSprite = imageSprite;
                 }
             }
-
             targetGraphView.AddElement(tempNode);
         }
-
         // Создаем IntConditionNode
         foreach (var nodeData in containerCache.IntConditionNodeDatas)
         {
@@ -596,7 +567,6 @@ public class GraphSaveUtility
             if (tempNode is IntConditionNode icn)
                 icn.UpdateUIFromData();
         }
-
         // Создаем StringConditionNode
         foreach (var nodeData in containerCache.StringConditionNodeDatas)
         {
@@ -613,7 +583,6 @@ public class GraphSaveUtility
             if (tempNode is StringConditionNode scn)
                 scn.UpdateUIFromData();
         }
-
         // Создаем ModifyIntNode
         foreach (var nodeData in containerCache.ModifyIntNodeDatas)
         {
@@ -628,7 +597,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         // Создаем EndNode
         foreach (var nodeData in containerCache.EndNodeDatas)
         {
@@ -640,7 +608,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.EventNodeDatas)
         {
             var tempNode = new EventNode();
@@ -649,7 +616,6 @@ public class GraphSaveUtility
             tempNode.RuntimeEvent = nodeData.Event;
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.CharacterIntConditionNodeDatas)
         {
             var tempNode = NodeFactory.CreateCharacterIntConditionNode(nodeData.Position);
@@ -661,7 +627,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.CharacterModifyIntNodeDatas)
         {
             var tempNode = NodeFactory.CreateCharacterModifyIntNode(nodeData.Position);
@@ -676,7 +641,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.DebugLogNodeDatas)
         {
             var node = new DebugLogNode();
@@ -686,7 +650,6 @@ public class GraphSaveUtility
             if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
             targetGraphView.AddElement(node);
         }
-
         foreach (var nodeData in containerCache.DebugWarningNodeDatas)
         {
             var node = new DebugWarningNode();
@@ -696,7 +659,6 @@ public class GraphSaveUtility
             if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
             targetGraphView.AddElement(node);
         }
-
         foreach (var nodeData in containerCache.DebugErrorNodeDatas)
         {
             var node = new DebugErrorNode();
@@ -706,7 +668,6 @@ public class GraphSaveUtility
             if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
             targetGraphView.AddElement(node);
         }
-
         foreach (var nodeData in containerCache.SpeechRandNodeDatas)
         {
             var tempNode = NodeFactory.CreateSpeechNodeRandText(nodeData.Position);
@@ -719,7 +680,6 @@ public class GraphSaveUtility
             tempNode.LoadVariants(nodeData.Variants);
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.RandomBranchNodeDatas)
         {
             var tempNode = NodeFactory.CreateRandomBranchNode(nodeData.Position);
@@ -730,7 +690,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.NoteNodeDatas)
         {
             var tempNode = NodeFactory.CreateNoteNode(nodeData.Position);
@@ -743,7 +702,6 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.TimerNodeDatas)
         {
             var tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
@@ -751,33 +709,6 @@ public class GraphSaveUtility
             tempNode.SetDuration(nodeData.DurationSeconds);
             targetGraphView.AddElement(tempNode);
         }
-
-        foreach (var nodeData in containerCache.TimerNodeDatas)
-        {
-            // Проверяем, существует ли уже узел с таким GUID
-            var existingNode = GetNodes().FirstOrDefault(n => n.GUID == nodeData.Guid);
-            BaseNode tempNode;
-            if (existingNode != null)
-            {
-                // Если существует — используем его
-                tempNode = existingNode;
-                // Обновляем позицию
-                tempNode.SetPosition(new Rect(nodeData.Position, targetGraphView.DefaultNodeSize));
-            }
-            else
-            {
-                // Если не существует — создаём новый
-                tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
-                tempNode.GUID = nodeData.Guid;
-                targetGraphView.AddElement(tempNode);
-            }
-            // Обновляем данные узла
-            if (tempNode is TimerNode timerNode)
-            {
-                timerNode.SetDuration(nodeData.DurationSeconds);
-            }
-        }
-
         foreach (var nodeData in containerCache.PauseNodeDatas)
         {
             var tempNode = NodeFactory.CreatePauseNode(nodeData.Position);
@@ -785,14 +716,12 @@ public class GraphSaveUtility
             tempNode.SetDuration(nodeData.DurationSeconds);
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.WireNodeDatas)
         {
             var tempNode = NodeFactory.CreateWireNode(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
             targetGraphView.AddElement(tempNode);
         }
-
         foreach (var nodeData in containerCache.CharacterButtonPressNodeDatas)
         {
             var tempNode = NodeFactory.CreateCharacterButtonPressNode(nodeData.Position);
@@ -800,13 +729,11 @@ public class GraphSaveUtility
             if (tempNode is CharacterButtonPressNode node)
             {
                 CharacterData character = null;
-
                 // 1. Сначала пытаемся загрузить через CharacterManager
                 if (CharacterManager.Instance != null && !string.IsNullOrEmpty(nodeData.CharacterName))
                 {
                     character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
                 }
-
                 // 2. Если не получилось, ищем напрямую через AssetDatabase
                 if (character == null && !string.IsNullOrEmpty(nodeData.CharacterName))
                 {
@@ -817,10 +744,8 @@ public class GraphSaveUtility
                         character = AssetDatabase.LoadAssetAtPath<CharacterData>(characterPath);
                     }
                 }
-
                 node.CharacterAsset = character;
                 node.RequireButtonPress = nodeData.RequireButtonPress;
-
                 // 3. Обновляем UI через метод UpdateUIFromData
                 if (node.characterField != null)
                     node.characterField.SetValueWithoutNotify(character);
@@ -829,11 +754,37 @@ public class GraphSaveUtility
             }
             targetGraphView.AddElement(tempNode);
         }
+        foreach (var nodeData in containerCache.ChatSwitchNodeDatas.ToList())
+        {
+            // Проверяем, существует ли уже узел с таким GUID
+            var existingNode = GetNodes().FirstOrDefault(n => n.GUID == nodeData.Guid);
+            BaseNode tempNode;
+            if (existingNode != null)
+            {
+                // Если узел уже существует, используем его
+                tempNode = existingNode;
+                // Обновляем позицию
+                tempNode.SetPosition(new Rect(nodeData.Position, targetGraphView.DefaultNodeSize));
+            }
+            else
+            {
+                // Если не существует — создаём новый
+                tempNode = NodeFactory.CreateChatSwitchNode(nodeData.Position);
+                tempNode.GUID = nodeData.Guid;
+                targetGraphView.AddElement(tempNode);
+            }
+            // Обновляем данные узла
+            if (tempNode is ChatSwitchNode chatSwitchNode)
+            {
+                chatSwitchNode.TargetChatIndex = nodeData.TargetChatIndex;
+                // Безопасное обновление UI
+                if (chatSwitchNode.chatIndexField != null)
+                {
+                    chatSwitchNode.chatIndexField.SetValueWithoutNotify(nodeData.TargetChatIndex);
+                }
+            }
+        }
     }
-
-    /// <summary>
-    /// Восстановление связей между узлами
-    /// </summary>
     /// <summary>
     /// Восстановление связей между узлами
     /// </summary>
@@ -841,7 +792,7 @@ public class GraphSaveUtility
     {
         try
         {
-            var nodeList = this.targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
+            var nodeList = GetNodes().ToList(); // Используем GetNodes() вместо this.targetGraphView.nodes
             for (int i = 0; i < nodeList.Count; i++)
             {
                 var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == nodeList[i].GUID).ToList();
@@ -854,9 +805,7 @@ public class GraphSaveUtility
                         Debug.LogWarning($"Target node not found for GUID: {targetNodeGuid}");
                         continue;
                     }
-
                     Port outputPort = null;
-
                     // Определяем outputPort в зависимости от типа узла
                     if (nodeList[i] is SpeechNode speechNode)
                     {
@@ -992,14 +941,32 @@ public class GraphSaveUtility
                             charButtonPressNode.RefreshExpandedState();
                         }
                     }
-
+                    else if (nodeList[i] is ChatSwitchNode chatSwitchNode)
+                    {
+                        foreach (var port in chatSwitchNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет
+                            outputPort = chatSwitchNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = "Output"; // ВСЕГДА используем "Output" для ChatSwitchNode
+                            chatSwitchNode.outputContainer.Add(outputPort);
+                            chatSwitchNode.RefreshPorts();
+                            chatSwitchNode.RefreshExpandedState();
+                        }
+                    }
                     // Получаем inputPort у целевого узла
                     Port inputPort = null;
                     if (targetNode.inputContainer.childCount > 0)
                     {
                         inputPort = targetNode.inputContainer[0] as Port;
                     }
-
                     // Соединяем порты
                     if (outputPort != null && inputPort != null)
                     {
@@ -1017,7 +984,6 @@ public class GraphSaveUtility
             Debug.LogError($"Error connecting nodes: {e.Message}\n{e.StackTrace}");
         }
     }
-
     /// <summary>
     /// Связывание двух портов
     /// </summary>
@@ -1028,7 +994,6 @@ public class GraphSaveUtility
         tempEdge.output.Connect(tempEdge);
         targetGraphView.Add(tempEdge);
     }
-
     /// <summary>
     /// Восстановление свойств черной доски
     /// </summary>
@@ -1066,7 +1031,6 @@ public class GraphSaveUtility
         foreach (var node in propertyNodes)
             node.RefreshPropertyDropdown();
     }
-
     /// <summary>
     /// Очистка текущего графа перед загрузкой
     /// </summary>
@@ -1081,13 +1045,10 @@ public class GraphSaveUtility
             {
                 targetGraphView.RemoveElement(edge);
             }
-
             targetGraphView.RemoveElement(node);
         }
-
     }
     #endregion
-
     /// <summary>
     /// Загружает граф из уже загруженного DialogueContainer
     /// </summary>
@@ -1098,19 +1059,15 @@ public class GraphSaveUtility
             Debug.LogError("Cannot load null container");
             return;
         }
-
         targetGraphView.containerCache = container;
-
         // Очищаем стеки отмены перед загрузкой
         targetGraphView.ClearUndoRedoStacks();
-
         containerCache = container;
         ClearGraph();
         CreateNodes();
         ConnectNodes();
         CreateExposedProperties();
     }
-
     private DialogueSettingsData LoadDialogueSettings()
     {
         string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
@@ -1121,7 +1078,6 @@ public class GraphSaveUtility
         }
         return null;
     }
-
     /// <summary>
     /// Сохраняет граф в существующий DialogueContainer
     /// </summary>
@@ -1132,8 +1088,7 @@ public class GraphSaveUtility
             Debug.LogError("Cannot save to null container");
             return;
         }
-
-        // === ОЧИЩАЕМ ВСЕ СПИСКИ, ВКЛЮЧАЯ TimerNodeDatas ===
+        // === ОЧИЩАЕМ ВСЕ СПИСКИ ===
         existingContainer.NodeLinks.Clear();
         existingContainer.SpeechNodeDatas.Clear();
         existingContainer.OptionNodeDatas.Clear();
@@ -1158,15 +1113,12 @@ public class GraphSaveUtility
         existingContainer.DebugWarningNodeDatas.Clear();
         existingContainer.DebugErrorNodeDatas.Clear();
         existingContainer.CharacterButtonPressNodeDatas.Clear();
+        existingContainer.ChatSwitchNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
-
         // === Сохраняем новые данные ===
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
-
-        EditorUtility.SetDirty(existingContainer);
-        AssetDatabase.SaveAssets();
         EditorUtility.SetDirty(existingContainer);
         AssetDatabase.SaveAssets();
     }

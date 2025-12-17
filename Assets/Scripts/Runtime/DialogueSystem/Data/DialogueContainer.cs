@@ -79,4 +79,7 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Character Button Press Nodes")]
     public List<CharacterButtonPressNodeData> CharacterButtonPressNodeDatas = new List<CharacterButtonPressNodeData>();
+
+    [Header("Chat Switch Nodes")]
+    public List<ChatSwitchNodeData> ChatSwitchNodeDatas = new List<ChatSwitchNodeData>();
 }

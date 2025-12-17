@@ -59,11 +59,20 @@ public static class NodeFactory
             return CreateWireNode(position);
         else if (nodeType == typeof(CharacterButtonPressNode))
             return CreateCharacterButtonPressNode(position);
+        else if (nodeType == typeof(ChatSwitchNode))
+            return CreateChatSwitchNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
+    }
+
+    public static ChatSwitchNode CreateChatSwitchNode(Vector2 position)
+    {
+        var node = new ChatSwitchNode();
+        node.Initialize(position);
+        return node;
     }
     public static CharacterButtonPressNode CreateCharacterButtonPressNode(Vector2 position)
     {

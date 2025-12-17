@@ -39,7 +39,8 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         {"EventNode", "Event"},
         {"DebugLogNode", "Debug Log"},
         {"DebugWarningNode", "Debug Warning"},
-        {"DebugErrorNode", "Debug Error"}
+        {"DebugErrorNode", "Debug Error"},
+        {"ChatSwitchNode", "Chat Switch"}
     };
 
     /// <summary>
@@ -124,6 +125,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         AddNodeEntry(entries, "PauseNode", 2);
         AddNodeEntry(entries, "RandomBranchNode", 2);
         AddNodeEntry(entries, "WireNode", 2);
+        AddNodeEntry(entries, "ChatSwitchNode", 2);
 
         entries.Add(new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1));
         AddNodeEntry(entries, "ModifyIntNode", 2);

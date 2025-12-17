@@ -21,4 +21,4 @@ MonoBehaviour:
   SpeechTextMessagePrefab: {fileID: 3713886175979679301, guid: 0110fc194df2bd2449b6128658dab362, type: 3}
   SpeechImageMessagePrefab: {fileID: 0}
   SpeechAudioMessagePrefab: {fileID: 0}
-  RequireButtonPressForMessages: 1
+  RequireButtonPressForMessages: 0
