@@ -37,17 +37,15 @@ public class DialogueManager : MonoBehaviour
     private SpeechNodeImageData _pendingSpeechImageNode;
     private SpeechRandNodeData _pendingSpeechRandNode;
 
+    [Header("Chat Handlers")]
     [SerializeField] private List<ChatConfiguration> chatConfigurations = new List<ChatConfiguration>();
     private int currentChatIndex = 0;
 
     [System.Serializable]
     public class ChatConfiguration
     {
-        public ChatPanel chatPanel;
-        public OptionPanel optionPanel;
-        public TimerDisplayController timerDisplayController;
+        public ChatHandler chatHandler;
     }
-
     private void Awake()
     {
         // Гарантируем создание CharacterManager при запуске
@@ -69,26 +67,54 @@ public class DialogueManager : MonoBehaviour
 
     private void Start()
     {
-        // Подписываемся на событие выбора опции
-        if (optionPanel != null)
+        // Проверяем, что хотя бы один ChatHandler настроен
+        if (chatConfigurations.Count == 0 || chatConfigurations[0].chatHandler == null)
         {
+            Debug.LogError("No ChatHandlers configured in DialogueManager! Please assign at least one ChatHandler.");
+            return;
+        }
+
+        // Проверяем корректность настроек для всех ChatHandlers
+        for (int i = 0; i < chatConfigurations.Count; i++)
+        {
+            var config = chatConfigurations[i];
+            if (config.chatHandler == null)
+            {
+                Debug.LogWarning($"Chat configuration at index {i} has no ChatHandler assigned!");
+                continue;
+            }
+
+            config.chatHandler.ValidateSetup();
+
+            // Активируем только первый чат
+            config.chatHandler.SetActive(i == 0);
+        }
+
+        // Подписываемся на событие выбора опции только для активного чата
+        if (chatConfigurations[0].chatHandler?.optionPanel != null)
+        {
+            optionPanel = chatConfigurations[0].chatHandler.optionPanel;
             optionPanel.onOptionSelected += HandleOptionSelection;
         }
         else
         {
-            Debug.LogError("OptionPanel not assigned in DialogueManager");
+            Debug.LogError("OptionPanel not assigned in first ChatHandler");
         }
 
+        // Инициализация компонентов через ChatHandler
+        chatPanel = chatConfigurations[0].chatHandler?.chatPanel;
         if (chatPanel == null)
         {
-            Debug.LogError("ChatPanel not assigned in DialogueManager");
+            Debug.LogError("ChatPanel not assigned in first ChatHandler");
         }
+
+        _timerDisplayController = chatConfigurations[0].chatHandler?.timerDisplayController;
 
         // Настройка кнопки продолжения
         if (_continueButton != null)
         {
             _continueButton.onClick.AddListener(OnContinueButtonPressed);
-            _continueButton.gameObject.SetActive(false); // Изначально скрыта
+            _continueButton.gameObject.SetActive(false);
         }
         else
         {
@@ -131,39 +157,54 @@ public class DialogueManager : MonoBehaviour
             Debug.LogError($"Invalid chat index: {targetChatIndex}. Available range: 0-{chatConfigurations.Count - 1}");
             return;
         }
+
         // Отключаем текущий чат
         if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
         {
             var currentConfig = chatConfigurations[currentChatIndex];
-            if (currentConfig.chatPanel != null) currentConfig.chatPanel.gameObject.SetActive(false);
-            if (currentConfig.optionPanel != null) currentConfig.optionPanel.gameObject.SetActive(false);
-            if (currentConfig.timerDisplayController != null) currentConfig.timerDisplayController.gameObject.SetActive(false);
+            if (currentConfig.chatHandler != null)
+            {
+                currentConfig.chatHandler.SetActive(false);
+
+                // Отписываемся от событий предыдущего чата
+                if (currentConfig.chatHandler.optionPanel != null)
+                {
+                    currentConfig.chatHandler.optionPanel.onOptionSelected -= HandleOptionSelection;
+                }
+            }
         }
+
         // Включаем новый чат
         currentChatIndex = targetChatIndex;
         var newConfig = chatConfigurations[currentChatIndex];
-        if (newConfig.chatPanel != null) newConfig.chatPanel.gameObject.SetActive(true);
-        if (newConfig.optionPanel != null) newConfig.optionPanel.gameObject.SetActive(true);
-        if (newConfig.timerDisplayController != null) newConfig.timerDisplayController.gameObject.SetActive(true);
-        // Обновляем ссылки в DialogueManager
-        chatPanel = newConfig.chatPanel;
-        optionPanel = newConfig.optionPanel;
-        _timerDisplayController = newConfig.timerDisplayController;
-        Debug.Log($"Switched to chat configuration index: {currentChatIndex}");
 
-        // Добавлено: проверка инициализации UI-элементов
-        if (chatPanel == null)
+        if (newConfig.chatHandler == null)
         {
-            Debug.LogError("ChatPanel is not assigned in the new chat configuration. Dialogue will not continue properly.");
+            Debug.LogError($"Chat configuration at index {targetChatIndex} has no ChatHandler assigned!");
             return;
         }
 
-        if (optionPanel != null)
+        if (!newConfig.chatHandler.ValidateSetup())
         {
-            // Переподписываемся на событие выбора опции для нового optionPanel
-            optionPanel.onOptionSelected -= HandleOptionSelection;
-            optionPanel.onOptionSelected += HandleOptionSelection;
+            Debug.LogWarning($"ChatHandler at index {targetChatIndex} has invalid setup but will continue.");
         }
+
+        newConfig.chatHandler.SetActive(true);
+
+        // Переподписываемся на события нового чата
+        if (newConfig.chatHandler.optionPanel != null)
+        {
+            // Сначала отписываемся для предотвращения дублирования
+            newConfig.chatHandler.optionPanel.onOptionSelected -= HandleOptionSelection;
+            newConfig.chatHandler.optionPanel.onOptionSelected += HandleOptionSelection;
+        }
+
+        // Обновляем локальные ссылки
+        chatPanel = newConfig.chatHandler.chatPanel;
+        optionPanel = newConfig.chatHandler.optionPanel;
+        _timerDisplayController = newConfig.chatHandler.timerDisplayController;
+
+        Debug.Log($"Switched to chat configuration index: {currentChatIndex}, handler: {newConfig.chatHandler?.name}");
     }
 
     private void SaveOriginalCharacterStates()

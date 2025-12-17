@@ -1,1295 +1,1658 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 17.12.2025 19:07:49
-// Total Files: 1
+// Generation Time: 17.12.2025 20:21:12
+// Total Files: 2
 // =================================
 
-//==== File 1 of 1: D:/Work/REDDialogSystemProject/Assets\Scripts/Editor/DialogueGraph/Utilities/GraphSaveUtility.cs ====
-using UnityEditor.Experimental.GraphView;
-using System.Collections.Generic;
-using UnityEngine.UIElements;
-using System.Linq;
+//==== File 1 of 2: D:/Work/REDDialogSystemProject/Assets\Scripts/DialogueManager.cs ====
+// Assets/Scripts/DialogueManager.cs
+
 using UnityEngine;
-using UnityEditor;
-using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.UI;
 using UnityEngine.Events;
+using System;
+using System.Collections;
+using DialogueSystem;
 
 /// <summary>
-/// Утилита для сохранения и загрузки диалоговых графов
+/// Управляет выполнением диалогов в реальном времени
 /// </summary>
-public class GraphSaveUtility
+public class DialogueManager : MonoBehaviour
 {
-    private DialogueGraphView targetGraphView;
-    private DialogueContainer containerCache;
+    [Header("UI References")]
+    [SerializeField] private ChatPanel chatPanel;
+    [SerializeField] private OptionPanel optionPanel;
+    [SerializeField] private Button _continueButton; // Кнопка продолжения диалога
 
-    private List<BaseNode> GetNodes() => targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
-    private List<Edge> GetEdges() => targetGraphView.edges.ToList();
+    [Header("Dialogue Settings")]
+    [SerializeField] private float messageDelay = 0.5f; // Задержка между сообщениями
+    [SerializeField] private DialogueContainer currentDialogue;
 
-    /// <summary>
-    /// Получение экземпляра утилиты для сохранения
-    /// </summary>
-    public static GraphSaveUtility GetInstance(DialogueGraphView targetGraphView)
+    private object currentNode;
+    private Dictionary<string, int> intVariables = new Dictionary<string, int>();
+    private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
+    private List<object> visitedNodes = new List<object>();
+    private readonly System.Random random = new System.Random();
+    [SerializeField] private TimerDisplayController _timerDisplayController;
+
+    private Dictionary<string, bool> _originalButtonPressStates = new Dictionary<string, bool>();
+
+    // Для работы режима ожидания нажатия кнопки
+    private SpeechNodeData _pendingSpeechNode;
+    private SpeechNodeImageData _pendingSpeechImageNode;
+    private SpeechRandNodeData _pendingSpeechRandNode;
+
+    [Header("Chat Handlers")]
+    [SerializeField] private List<ChatConfiguration> chatConfigurations = new List<ChatConfiguration>();
+    private int currentChatIndex = 0;
+
+    [System.Serializable]
+    public class ChatConfiguration
     {
-        return new GraphSaveUtility { targetGraphView = targetGraphView };
+        public ChatHandle chatHandler;
     }
 
-    #region Saving
-    /// <summary>
-    /// Сохранение графа в файл
-    /// </summary>
-    /// <summary>
-    /// Сохранение графа в файл
-    /// </summary>
-    public void SaveGraph(string fileName)
+    private void Awake()
     {
-        DialogueSettingsData settings = LoadDialogueSettings();
-        string savePath = null;
-
-        // Сначала проверяем, включено ли автосохранение
-        bool useAutoSave = false;
-        if (settings != null && settings.General.enableAutoSaveLocation)
+        // Гарантируем создание CharacterManager при запуске
+        if (CharacterManager.Instance == null)
         {
-            // Только если автосохранение включено, проверяем валидность пути
-            if (!string.IsNullOrEmpty(settings.General.autoSaveFolderPath) &&
-                settings.IsValidSavePath(settings.General.autoSaveFolderPath))
+            GameObject managerObject = GameObject.Find("CharacterManager");
+            if (managerObject == null)
             {
-                useAutoSave = true;
+                managerObject = new GameObject("CharacterManager");
+                managerObject.AddComponent<CharacterManager>();
             }
+            else
+            {
+                managerObject.AddComponent<CharacterManager>();
+            }
+            DontDestroyOnLoad(managerObject);
+        }
+    }
+
+    private void Start()
+    {
+        // Проверяем, что хотя бы один ChatHandler настроен
+        if (chatConfigurations.Count == 0 || chatConfigurations[0].chatHandler == null)
+        {
+            Debug.LogError("No ChatHandlers configured in DialogueManager! Please assign at least one ChatHandler.");
+            return;
         }
 
-        if (useAutoSave)
+        // Проверяем корректность настроек для всех ChatHandlers
+        for (int i = 0; i < chatConfigurations.Count; i++)
         {
-            string folderPath = settings.GetFullPath();
-            savePath = System.IO.Path.Combine(folderPath, $"{fileName}.asset");
-            savePath = savePath.Replace("\\", "/");
+            var config = chatConfigurations[i];
+            if (config.chatHandler == null)
+            {
+                Debug.LogWarning($"Chat configuration at index {i} has no ChatHandler assigned!");
+                continue;
+            }
+
+            config.chatHandler.ValidateSetup();
+
+            // Активируем только первый чат
+            config.chatHandler.SetActive(i == 0);
+        }
+
+        // Подписываемся на событие выбора опции только для активного чата
+        if (chatConfigurations[0].chatHandler?.optionPanel != null)
+        {
+            optionPanel = chatConfigurations[0].chatHandler.optionPanel;
+            optionPanel.onOptionSelected += HandleOptionSelection;
         }
         else
         {
-            // Всегда показываем диалог выбора пути, если автосохранение отключено
-            savePath = EditorUtility.SaveFilePanelInProject(
-                "Save Dialogue",
-                fileName,
-                "asset",
-                "Save dialogue asset"
-            );
+            Debug.LogError("OptionPanel not assigned in first ChatHandler");
         }
 
-        if (string.IsNullOrEmpty(savePath))
-            return;
+        // Инициализация компонентов через ChatHandler
+        chatPanel = chatConfigurations[0].chatHandler?.chatPanel;
+        if (chatPanel == null)
+        {
+            Debug.LogError("ChatPanel not assigned in first ChatHandler");
+        }
 
-        // Создаем контейнер для данных диалога
-        var dialogueContainer = ScriptableObject.CreateInstance<DialogueContainer>();
-        // Сохраняем узлы и связи
-        SaveNodes(dialogueContainer);
-        // Сохраняем свойства черной доски
-        SaveExposedProperties(dialogueContainer);
-        // Сохраняем ассет
-        AssetDatabase.CreateAsset(dialogueContainer, savePath);
-        AssetDatabase.SaveAssets();
-        EditorUtility.DisplayDialog("Success", $"Graph saved as {fileName}", "OK");
+        _timerDisplayController = chatConfigurations[0].chatHandler?.timerDisplayController;
+
+        // Настройка кнопки продолжения
+        if (_continueButton != null)
+        {
+            _continueButton.onClick.AddListener(OnContinueButtonPressed);
+            _continueButton.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("Continue button not assigned in DialogueManager. Button press feature will not work.");
+        }
+
+        StartDialogue(currentDialogue);
     }
 
     /// <summary>
-    /// Сохраняет узлы в контейнер
+    /// Запускает диалог по указанному контейнеру
     /// </summary>
-    private void SaveNodes(DialogueContainer dialogueContainer)
+    /// <param name="dialogueContainer">Контейнер диалога для запуска</param>
+    private void StartDialogue(DialogueContainer dialogueContainer)
     {
-        dialogueContainer.BaseCharacterGuid = targetGraphView.BaseCharacterGuid;
+        currentDialogue = dialogueContainer;
+        ResetVariables();
+        visitedNodes.Clear();
 
-        // Сохраняем связи между узлами
-        var edgesList = targetGraphView.edges.ToList();
-        var connectedPorts = edgesList.Where(x => x.input.node != null).ToArray();
-        foreach (var edge in connectedPorts)
-        {;
-            var outputNode = edge.output.node as BaseNode;
-            var inputNode = edge.input.node as BaseNode;
-            dialogueContainer.NodeLinks.Add(new NodeLinkData
+        // Сохраняем исходные состояния всех персонажей перед запуском диалога
+        SaveOriginalCharacterStates();
+
+        // Инициализация переменных из Exposed Properties
+        foreach (var prop in currentDialogue.IntExposedProperties)
+        {
+            intVariables[prop.PropertyName] = prop.IntValue;
+        }
+        foreach (var prop in currentDialogue.StringExposedProperties)
+        {
+            stringVariables[prop.PropertyName] = prop.StringValue;
+        }
+        // Начинаем диалог с EntryNode
+        currentNode = currentDialogue.EntryNodeData;
+        ProcessNextNode();
+    }
+    private void SwitchChat(int targetChatIndex)
+    {
+        if (targetChatIndex < 0 || targetChatIndex >= chatConfigurations.Count)
+        {
+            Debug.LogError($"Invalid chat index: {targetChatIndex}. Available range: 0-{chatConfigurations.Count - 1}");
+            return;
+        }
+
+        // Отключаем текущий чат
+        if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
+        {
+            var currentConfig = chatConfigurations[currentChatIndex];
+            if (currentConfig.chatHandler != null)
             {
-                BaseNodeGuid = outputNode.GUID,
-                PortName = edge.output.portName,
-                TargetNodeGuid = inputNode.GUID
+                currentConfig.chatHandler.SetActive(false);
+
+                // Отписываемся от событий предыдущего чата
+                if (currentConfig.chatHandler.optionPanel != null)
+                {
+                    currentConfig.chatHandler.optionPanel.onOptionSelected -= HandleOptionSelection;
+                }
+            }
+        }
+
+        // Включаем новый чат
+        currentChatIndex = targetChatIndex;
+        var newConfig = chatConfigurations[currentChatIndex];
+
+        if (newConfig.chatHandler == null)
+        {
+            Debug.LogError($"Chat configuration at index {targetChatIndex} has no ChatHandler assigned!");
+            return;
+        }
+
+        if (!newConfig.chatHandler.ValidateSetup())
+        {
+            Debug.LogWarning($"ChatHandler at index {targetChatIndex} has invalid setup but will continue.");
+        }
+
+        newConfig.chatHandler.SetActive(true);
+
+        // Переподписываемся на события нового чата
+        if (newConfig.chatHandler.optionPanel != null)
+        {
+            // Сначала отписываемся для предотвращения дублирования
+            newConfig.chatHandler.optionPanel.onOptionSelected -= HandleOptionSelection;
+            newConfig.chatHandler.optionPanel.onOptionSelected += HandleOptionSelection;
+        }
+
+        // Обновляем локальные ссылки
+        chatPanel = newConfig.chatHandler.chatPanel;
+        optionPanel = newConfig.chatHandler.optionPanel;
+        _timerDisplayController = newConfig.chatHandler.timerDisplayController;
+
+        Debug.Log($"Switched to chat configuration index: {currentChatIndex}, handler: {newConfig.chatHandler?.name}");
+    }
+
+    private void SaveOriginalCharacterStates()
+    {
+        _originalButtonPressStates.Clear();
+
+        // Получаем всех персонажей из CharacterManager
+        if (CharacterManager.Instance != null)
+        {
+            var allCharacters = CharacterManager.Instance.GetAllCharacters();
+            foreach (var character in allCharacters)
+            {
+                if (!_originalButtonPressStates.ContainsKey(character.name))
+                {
+                    _originalButtonPressStates[character.name] = character.RequireButtonPressForMessages;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Сбрасывает все переменные диалога к значениям по умолчанию
+    /// </summary>
+    private void ResetVariables()
+    {
+        intVariables.Clear();
+        stringVariables.Clear();
+    }
+
+    private void ProcessNextNode()
+    {
+        if (currentNode == null)
+            return;
+
+        if (!visitedNodes.Contains(currentNode))
+            visitedNodes.Add(currentNode);
+
+        switch (currentNode)
+        {
+            case EntryNodeData entryNode:
+                ProcessEntryNode(entryNode);
+                break;
+            case SpeechNodeData speechNode:
+                ProcessSpeechNode(speechNode);
+                break;
+            case SpeechNodeImageData speechImageNode:
+                ProcessSpeechImageNode(speechImageNode);
+                break;
+            case IntConditionNodeData intCondition:
+                ProcessIntCondition(intCondition);
+                break;
+            case StringConditionNodeData stringCondition:
+                ProcessStringCondition(stringCondition);
+                break;
+            case ModifyIntNodeData modifyNode:
+                ProcessModifyIntNode(modifyNode);
+                break;
+            case EndNodeData endNode:
+                ProcessEndNode(endNode);
+                break;
+            case OptionNodeData optionNode:
+                ProcessOptionNode(optionNode);
+                break;
+            case OptionNodeImageData optionImageNode:
+                ProcessOptionImageNode(optionImageNode);
+                break;
+            case EventNodeData eventNode:
+                eventNode.Event.Invoke();
+                var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == eventNode.Guid);
+                if (nextLink != null)
+                {
+                    currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                    ProcessNextNode();
+                }
+                else
+                    currentNode = null;
+                break;
+            case CharacterIntConditionNodeData charIntCondition:
+                ProcessCharacterIntCondition(charIntCondition);
+                break;
+            case CharacterModifyIntNodeData charModifyInt:
+                ProcessCharacterModifyInt(charModifyInt);
+                break;
+            case DebugLogNodeData debugLog:
+                Debug.Log(debugLog.MessageText);
+                GoToNextNode(debugLog.Guid);
+                break;
+            case DebugWarningNodeData debugWarn:
+                Debug.LogWarning(debugWarn.MessageText);
+                GoToNextNode(debugWarn.Guid);
+                break;
+            case DebugErrorNodeData debugErr:
+                Debug.LogError(debugErr.MessageText);
+                GoToNextNode(debugErr.Guid);
+                break;
+            case SpeechRandNodeData speechRandNode:
+                ProcessSpeechRandNode(speechRandNode);
+                break;
+            case RandomBranchNodeData randomBranchNode:
+                ProcessRandomBranchNode(randomBranchNode);
+                break;
+            case TimerNodeData timerNode:
+                ProcessTimerNode(timerNode);
+                break;
+            case PauseNodeData pauseNode:
+                ProcessPauseNode(pauseNode);
+                return;
+            case WireNodeData wireNode:
+                GoToNextNode(wireNode.Guid);
+                break;
+            case CharacterButtonPressNodeData characterButtonPressNode:
+                ProcessCharacterButtonPressNode(characterButtonPressNode);
+                break;
+            case ChatSwitchNodeData chatSwitchNode:
+                SwitchChat(chatSwitchNode.TargetChatIndex);
+                GoToNextNode(chatSwitchNode.Guid);
+                break;
+            default:
+                Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
+                currentNode = null;
+                break;
+        }
+    }
+
+    private void ProcessPauseNode(PauseNodeData pauseNode)
+    {
+        if (_timerDisplayController == null)
+        {
+            Debug.LogError("TimerDisplayController is not assigned in DialogueManager. Pause timer will not be displayed.");
+            // fallback: просто ждём без отображения
+            StartCoroutine(DelayedGoToNextNode(pauseNode));
+            return;
+        }
+
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == pauseNode.Guid);
+        string nextGuid = nextLink?.TargetNodeGuid;
+
+        void OnPauseTimeout()
+        {
+            if (!string.IsNullOrEmpty(nextGuid))
+            {
+                currentNode = GetNodeByGuid(nextGuid);
+                ProcessNextNode();
+            }
+            else
+            {
+                currentNode = null;
+            }
+        }
+
+        _timerDisplayController.StartTimer(pauseNode.DurationSeconds, OnPauseTimeout);
+    }
+
+    private void ProcessCharacterButtonPressNode(CharacterButtonPressNodeData nodeData)
+    {
+        var character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
+        if (character == null)
+        {
+            Debug.LogError($"Character '{nodeData.CharacterName}' not found for button press node '{nodeData.Guid}'.");
+            GoToNextNode(nodeData.Guid);
+            return;
+        }
+
+        // Если мы впервые меняем этого персонажа в текущем диалоге, сохраняем исходное состояние
+        if (!_originalButtonPressStates.ContainsKey(nodeData.CharacterName))
+        {
+            _originalButtonPressStates[nodeData.CharacterName] = character.RequireButtonPressForMessages;
+        }
+
+        character.RequireButtonPressForMessages = nodeData.RequireButtonPress;
+        Debug.Log($"Changed RequireButtonPressForMessages for character '{nodeData.CharacterName}' to {nodeData.RequireButtonPress}");
+        GoToNextNode(nodeData.Guid);
+    }
+
+    private IEnumerator DelayedGoToNextNode(PauseNodeData pauseNode)
+    {
+        yield return new WaitForSeconds(pauseNode.DurationSeconds);
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == pauseNode.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    private void ProcessTimerNode(TimerNodeData timerNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == timerNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks
+            .Where(link => link.PortName == "Options")
+            .Select(link => GetNodeByGuid(link.TargetNodeGuid))
+            .Where(node => node is OptionNodeData or OptionNodeImageData)
+            .ToList();
+
+        string timeoutTargetGuid = null;
+        var timeoutLink = outgoingLinks.FirstOrDefault(l => l.PortName == "Timeout");
+        if (timeoutLink != null)
+            timeoutTargetGuid = timeoutLink.TargetNodeGuid;
+
+        if (optionLinks.Count > 0 && optionPanel != null)
+        {
+            var options = new List<Option>();
+            foreach (var optNode in optionLinks)
+            {
+                string text = "Изображение";
+                if (optNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                // Ищем связь ИЗ опции к следующему узлу
+                var nextLink = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optNode).Guid);
+                if (nextLink != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLink.TargetNodeGuid
+                    });
+                }
+            }
+            if (options.Count > 0)
+            {
+                optionPanel.ShowOptions(options);
+            }
+        }
+
+        void OnTimeout()
+        {
+            if (optionPanel != null && optionPanel.gameObject.activeSelf)
+                optionPanel.Hide();
+
+            if (!string.IsNullOrEmpty(timeoutTargetGuid))
+            {
+                currentNode = GetNodeByGuid(timeoutTargetGuid);
+                ProcessNextNode();
+            }
+            else
+            {
+                currentNode = null;
+            }
+        }
+
+        _timerDisplayController?.StartTimer(timerNode.DurationSeconds, OnTimeout);
+    }
+
+    private void ProcessRandomBranchNode(RandomBranchNodeData randomBranchNode)
+    {
+        if (randomBranchNode.Variants.Count == 0)
+        {
+            Debug.LogError($"RandomBranchNode {randomBranchNode.Guid} has no variants");
+            currentNode = null;
+            return;
+        }
+
+        // Взвешенный случайный выбор
+        float totalWeight = 0f;
+        foreach (var variant in randomBranchNode.Variants)
+            totalWeight += variant.WeightPercent;
+
+        string selectedPort = "";
+        if (totalWeight <= 0f)
+        {
+            // fallback: первый вариант
+            selectedPort = randomBranchNode.Variants[0].PortName;
+        }
+        else
+        {
+            float pick = (float)random.NextDouble() * totalWeight;
+            float current = 0f;
+            foreach (var variant in randomBranchNode.Variants)
+            {
+                current += variant.WeightPercent;
+                if (pick <= current)
+                {
+                    selectedPort = variant.PortName;
+                    break;
+                }
+            }
+        }
+
+        // Находим связь по выбранному порту
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == randomBranchNode.Guid && l.PortName == selectedPort)
+            .ToList();
+
+        if (outgoingLinks.Count > 0)
+        {
+            if (outgoingLinks.Count > 1)
+            {
+                Debug.LogWarning($"RandomBranchNode {randomBranchNode.Guid} has multiple connections for port {selectedPort}. Using first.");
+            }
+            currentNode = GetNodeByGuid(outgoingLinks.First().TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            Debug.LogWarning($"RandomBranchNode {randomBranchNode.Guid} has no connection for selected port {selectedPort}");
+            currentNode = null;
+        }
+    }
+
+    private void ProcessSpeechRandNode(SpeechRandNodeData speechRandNode)
+    {
+        CharacterData speaker = null;
+        if (!string.IsNullOrEmpty(speechRandNode.SpeakerName))
+            speaker = CharacterManager.Instance?.GetCharacter(speechRandNode.SpeakerName);
+
+        string selectedText = "";
+        if (speechRandNode.Variants.Count > 0)
+        {
+            // Взвешенный случайный выбор
+            float totalWeight = 0f;
+            foreach (var v in speechRandNode.Variants)
+                totalWeight += v.WeightPercent;
+
+            if (totalWeight <= 0f)
+            {
+                // fallback: первый
+                selectedText = speechRandNode.Variants[0].Text;
+            }
+            else
+            {
+                float pick = (float)random.NextDouble() * totalWeight;
+                float current = 0f;
+                foreach (var v in speechRandNode.Variants)
+                {
+                    current += v.WeightPercent;
+                    if (pick <= current)
+                    {
+                        selectedText = v.Text;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Если список пуст — selectedText остаётся ""
+        var message = new Message
+        {
+            Type = SenderType.NPC,
+            Text = selectedText,
+            Image = null,
+            Audio = null,
+            Sender = speaker
+        };
+
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker != null && speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechRandNode = speechRandNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Обработка исходящих связей
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechRandNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData || target is SpeechRandNodeData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechRandNode {speechRandNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// Обрабатывает EntryNodeData
+    /// </summary>
+    /// <param name="entryNode">Данные начального узла</param>
+    private void ProcessEntryNode(EntryNodeData entryNode)
+    {
+        // Находим следующий узел после EntryNode
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == entryNode.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            // Если нет следующего узла, завершаем диалог
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// Обрабатывает SpeechNodeData
+    /// </summary>
+    /// <param name="speechNode">Данные узла речи</param>
+    private void ProcessSpeechNode(SpeechNodeData speechNode)
+    {
+        CharacterData speaker = GetCharacterByName(speechNode.SpeakerName);
+        if (speaker == null)
+        {
+            Debug.LogError($"SpeechNode '{speechNode.Guid}' has no valid speaker. Assign a CharacterData in the graph editor.");
+            return;
+        }
+
+        var message = new Message
+        {
+            Type = SenderType.NPC,
+            Text = speechNode.DialogueText,
+            Image = null,
+            Audio = AssetLoader.LoadAudioClip(speechNode.AudioClipGuid),
+            Sender = speaker
+        };
+
+        chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechNode = speechNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Исходная логика продолжения с задержкой
+        if (message.Audio != null)
+            StartCoroutine(PlayAudioAfterDelay(message.Audio, messageDelay));
+
+        ProcessSpeechNodeContinuation(speechNode);
+    }
+
+    private void ProcessSpeechNodeContinuation(SpeechNodeData speechNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechNode.Guid)
+            .ToList();
+
+        // Проверяем: есть ли исходящие связи к OptionNode?
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            // Режим выбора опций
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        // Нет Option — проверяем: есть ли Speech-связи?
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            // Цепочка Speech → Speech: запускаем следующее сообщение с задержкой
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechNode {speechNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        // Нет ни Option, ни Speech — линейный переход (к Condition, Modify, End и т.д.)
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// Обрабатывает SpeechNodeImageData
+    /// </summary>
+    /// <param name="speechImageNode">Данные узла изображения речи</param>
+    private void ProcessSpeechImageNode(SpeechNodeImageData speechImageNode)
+    {
+        CharacterData speaker = GetCharacterByName(speechImageNode.SpeakerName);
+        if (speaker == null)
+        {
+            Debug.LogError($"SpeechImageNode '{speechImageNode.Guid}' has no valid speaker...");
+            return;
+        }
+
+        var message = new Message
+        {
+            Type = SenderType.NPC,
+            Text = null,
+            Image = !string.IsNullOrEmpty(speechImageNode.ImageSpritePath) ?
+                Resources.Load<Sprite>(speechImageNode.ImageSpritePath) : null,
+            Audio = null,
+            Sender = speaker
+        };
+
+        chatPanel.AddMessage(message, MessageTypeDialogue.SpeechImage);
+        chatPanel.ForceScrollToBottom();
+
+        // Если персонаж требует нажатия кнопки для продолжения
+        if (speaker.RequireButtonPressForMessages)
+        {
+            _pendingSpeechImageNode = speechImageNode;
+            ShowContinueButton();
+            return; // Останавливаем выполнение до нажатия кнопки
+        }
+
+        // Исходная логика продолжения с задержкой
+        ProcessSpeechImageNodeContinuation(speechImageNode);
+    }
+
+    private void ProcessSpeechImageNodeContinuation(SpeechNodeImageData speechImageNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechImageNode.Guid)
+            .ToList();
+
+        // Проверяем: есть ли исходящие связи к OptionNode?
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        // Нет Option — проверяем Speech-связи
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechImageNode {speechImageNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        // Линейный переход
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    private void ShowContinueButton()
+    {
+        if (_continueButton != null)
+        {
+            _continueButton.gameObject.SetActive(true);
+        }
+    }
+
+    private void HideContinueButton()
+    {
+        if (_continueButton != null)
+        {
+            _continueButton.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnContinueButtonPressed()
+    {
+        HideContinueButton();
+
+        // Продолжаем диалог в зависимости от типа ожидаемого узла
+        if (_pendingSpeechNode != null)
+        {
+            ProcessSpeechNodeContinuation(_pendingSpeechNode);
+            _pendingSpeechNode = null;
+        }
+        else if (_pendingSpeechImageNode != null)
+        {
+            ProcessSpeechImageNodeContinuation(_pendingSpeechImageNode);
+            _pendingSpeechImageNode = null;
+        }
+        else if (_pendingSpeechRandNode != null)
+        {
+            ProcessSpeechRandNodeContinuation(_pendingSpeechRandNode);
+            _pendingSpeechRandNode = null;
+        }
+    }
+
+    private void ProcessSpeechRandNodeContinuation(SpeechRandNodeData speechRandNode)
+    {
+        var outgoingLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == speechRandNode.Guid)
+            .ToList();
+
+        var optionLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is OptionNodeData || target is OptionNodeImageData;
+        }).ToList();
+
+        if (optionLinks.Any())
+        {
+            var options = new List<Option>();
+            foreach (var linkToOption in optionLinks)
+            {
+                var optionNode = GetNodeByGuid(linkToOption.TargetNodeGuid);
+                if (optionNode == null) continue;
+
+                string text = "Изображение";
+                if (optionNode is OptionNodeData opt)
+                    text = !string.IsNullOrEmpty(opt.ResponseText) ? opt.ResponseText : "Неизвестный вариант";
+
+                var nextLinkAfterOption = currentDialogue.NodeLinks
+                    .FirstOrDefault(l => l.BaseNodeGuid == ((BaseNodeData)optionNode).Guid);
+
+                if (nextLinkAfterOption != null)
+                {
+                    options.Add(new Option
+                    {
+                        Text = text,
+                        NextNodeGuid = nextLinkAfterOption.TargetNodeGuid
+                    });
+                }
+            }
+
+            if (options.Count > 0 && optionPanel != null)
+            {
+                optionPanel.ShowOptions(options);
+            }
+            else
+            {
+                Debug.LogError("Нет валидных вариантов для отображения!");
+                currentNode = null;
+            }
+            return;
+        }
+
+        var speechLinks = outgoingLinks.Where(link =>
+        {
+            var target = GetNodeByGuid(link.TargetNodeGuid);
+            return target is SpeechNodeData || target is SpeechNodeImageData || target is SpeechRandNodeData;
+        }).ToList();
+
+        if (speechLinks.Any())
+        {
+            if (speechLinks.Count > 1)
+            {
+                Debug.LogWarning($"SpeechRandNode {speechRandNode.Guid} имеет несколько исходящих Speech-связей. Будет использована первая.");
+            }
+            string nextGuid = speechLinks.First().TargetNodeGuid;
+            StartCoroutine(DelayedGoToNode(nextGuid));
+            return;
+        }
+
+        var nextLinearLink = outgoingLinks.FirstOrDefault();
+        if (nextLinearLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLinearLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    private IEnumerator DelayedGoToNode(string nextNodeGuid, float delay = -1f)
+    {
+        if (delay < 0f) delay = messageDelay;
+        yield return new WaitForSeconds(delay);
+        currentNode = GetNodeByGuid(nextNodeGuid);
+        ProcessNextNode();
+    }
+
+    /// <summary>
+    /// Обрабатывает OptionNodeData
+    /// </summary>
+    private void ProcessOptionNode(OptionNodeData optionNode)
+    {
+        // Создаем список вариантов ответа
+        var options = new List<Option>();
+        // Находим все связи от этого узла
+        var optionLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == optionNode.Guid)
+            .ToList();
+
+        foreach (var link in optionLinks)
+        {
+            var targetNode = GetNodeByGuid(link.TargetNodeGuid);
+            string optionText = "Вариант ответа";
+            if (targetNode is OptionNodeData optionTarget)
+            {
+                optionText = !string.IsNullOrEmpty(optionTarget.ResponseText) ?
+                    optionTarget.ResponseText : "Вариант ответа";
+            }
+            else if (targetNode is OptionNodeImageData)
+            {
+                optionText = "Изображение";
+            }
+            options.Add(new Option
+            {
+                Text = optionText,
+                NextNodeGuid = link.TargetNodeGuid
             });
         }
 
-        // Сохраняем данные узлов
-        foreach (var node in GetNodes())
+        // Показываем варианты ответа
+        if (options.Count > 0 && optionPanel != null)
         {
-            if (node.EntryPoint)
-            {
-                dialogueContainer.EntryNodeData = new EntryNodeData
-                {
-                    Guid = node.GUID,
-                    Position = node.GetPosition().position
-                };
-            }
-            else if (node is SpeechNodeText speechNodeText)
-            {
-                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
-                {
-                    Guid = speechNodeText.GUID,
-                    DialogueText = speechNodeText.DialogueText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = "",
-                    SpeakerGuid = speechNodeText.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeText.Speaker) : "",
-                    SpeakerName = speechNodeText.Speaker ? speechNodeText.Speaker.name : "",
-                    NodeType = "SpeechNodeText"
-                });
-            }
-            else if (node is SpeechNodeAudio speechNodeAudio)
-            {
-                dialogueContainer.SpeechNodeDatas.Add(new SpeechNodeData
-                {
-                    Guid = speechNodeAudio.GUID,
-                    DialogueText = "", // Аудио-ноды не используют текст
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = speechNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(speechNodeAudio.AudioClip)) : "",
-                    SpeakerGuid = speechNodeAudio.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeAudio.Speaker) : "",
-                    NodeType = "SpeechNodeAudio"
-                });
-            }
-            else if (node is SpeechNodeImage speechNodeImage)
-            {
-                dialogueContainer.SpeechNodeImageDatas.Add(new SpeechNodeImageData
-                {
-                    Guid = speechNodeImage.GUID,
-                    Position = node.GetPosition().position,
-                    ImageSpritePath = speechNodeImage.ImageSprite ? GetResourcePath(speechNodeImage.ImageSprite) : "",
-                    ImageSpriteGuid = speechNodeImage.ImageSprite ? AssetDatabase.GetAssetPath(speechNodeImage.ImageSprite) : "",
-                    SpeakerName = speechNodeImage.Speaker ? speechNodeImage.Speaker.name : "",
-                    SpeakerGuid = speechNodeImage.Speaker ? AssetDatabaseHelper.GetAssetGuid(speechNodeImage.Speaker) : "",
-                    NodeType = "SpeechNodeImage"
-                });
-            }
-            else if (node is OptionNodeText optionNodeText)
-            {
-                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
-                {
-                    Guid = optionNodeText.GUID,
-                    ResponseText = optionNodeText.ResponseText,
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = "",
-                    NodeType = "OptionNodeText"
-                });
-            }
-            else if (node is OptionNodeAudio optionNodeAudio)
-            {
-                dialogueContainer.OptionNodeDatas.Add(new OptionNodeData
-                {
-                    Guid = optionNodeAudio.GUID,
-                    ResponseText = "", // Аудио-опции не используют текст
-                    Position = node.GetPosition().position,
-                    AudioClipGuid = optionNodeAudio.AudioClip ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeAudio.AudioClip)) : "",
-                    NodeType = "OptionNodeAudio"
-                });
-            }
-            else if (node is OptionNodeImage optionNodeImage)
-            {
-                dialogueContainer.OptionNodeImageDatas.Add(new OptionNodeImageData
-                {
-                    Guid = optionNodeImage.GUID,
-                    Position = node.GetPosition().position,
-                    ImageSpriteGuid = optionNodeImage.ImageSprite ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(optionNodeImage.ImageSprite)) : "",
-                    NodeType = "OptionNodeImage"
-                });
-            }
-            else if (node is IntConditionNode intConditionNode)
-            {
-                dialogueContainer.IntConditionNodeDatas.Add(new IntConditionNodeData
-                {
-                    Guid = intConditionNode.GUID,
-                    Position = node.GetPosition().position,
-                    SelectedProperty = intConditionNode.SelectedProperty,
-                    Comparison = intConditionNode.Comparison,
-                    CompareValue = intConditionNode.CompareValue
-                });
-            }
-            else if (node is StringConditionNode stringConditionNode)
-            {
-                dialogueContainer.StringConditionNodeDatas.Add(new StringConditionNodeData
-                {
-                    Guid = stringConditionNode.GUID,
-                    Position = node.GetPosition().position,
-                    SelectedProperty = stringConditionNode.SelectedProperty,
-                    Comparison = (DialogueSystem.StringComparisonType)stringConditionNode.Comparison,
-                    CompareValue = stringConditionNode.CompareValue
-                });
-            }
-            else if (node is ModifyIntNode modifyIntNode)
-            {
-                dialogueContainer.ModifyIntNodeDatas.Add(new ModifyIntNodeData
-                {
-                    Guid = modifyIntNode.GUID,
-                    Position = node.GetPosition().position,
-                    SelectedProperty = modifyIntNode.SelectedProperty,
-                    Operator = modifyIntNode.Operator,
-                    Value = modifyIntNode.Value
-                });
-            }
-            else if (node is EndNode endNode)
-            {
-                dialogueContainer.EndNodeDatas.Add(new EndNodeData
-                {
-                    Guid = endNode.GUID,
-                    Position = node.GetPosition().position,
-                    NextDialogueName = endNode.GetNextDialoguePath()
-                });
-            }
-            else if (node is EventNode eventNode)
-            {
-                dialogueContainer.EventNodeDatas.Add(new EventNodeData
-                {
-                    Guid = eventNode.GUID,
-                    Position = node.GetPosition().position,
-                    Event = eventNode.RuntimeEvent
-                });
-            }
-            else if (node is CharacterIntConditionNode charIntCond)
-            {
-                dialogueContainer.CharacterIntConditionNodeDatas.Add(new CharacterIntConditionNodeData
-                {
-                    Guid = charIntCond.GUID,
-                    Position = node.GetPosition().position,
-                    CharacterName = charIntCond.CharacterName,
-                    SelectedVariable = charIntCond.SelectedVariable,
-                    Comparison = charIntCond.Comparison,
-                    CompareValue = charIntCond.CompareValue
-                });
-            }
-            else if (node is CharacterModifyIntNode charModify)
-            {
-                dialogueContainer.CharacterModifyIntNodeDatas.Add(new CharacterModifyIntNodeData
-                {
-                    Guid = charModify.GUID,
-                    Position = node.GetPosition().position,
-                    CharacterName = charModify.CharacterAsset ? charModify.CharacterAsset.name : "",
-                    SelectedVariable = charModify.SelectedVariable,
-                    Operator = charModify.Operator,
-                    Value = charModify.Value
-                });
-            }
-            else if (node is DebugLogNode debugLog)
-            {
-                dialogueContainer.DebugLogNodeDatas.Add(new DebugLogNodeData
-                {
-                    Guid = debugLog.GUID,
-                    Position = node.GetPosition().position,
-                    MessageText = debugLog.MessageText
-                });
-            }
-            else if (node is DebugWarningNode debugWarn)
-            {
-                dialogueContainer.DebugWarningNodeDatas.Add(new DebugWarningNodeData
-                {
-                    Guid = debugWarn.GUID,
-                    Position = node.GetPosition().position,
-                    MessageText = debugWarn.MessageText
-                });
-            }
-            else if (node is DebugErrorNode debugErr)
-            {
-                dialogueContainer.DebugErrorNodeDatas.Add(new DebugErrorNodeData
-                {
-                    Guid = debugErr.GUID,
-                    Position = node.GetPosition().position,
-                    MessageText = debugErr.MessageText
-                });
-            }
-            else if (node is SpeechNodeRandText speechRandNode)
-            {
-                dialogueContainer.SpeechRandNodeDatas.Add(new SpeechRandNodeData
-                {
-                    Guid = speechRandNode.GUID,
-                    Position = node.GetPosition().position,
-                    SpeakerName = speechRandNode.Speaker ? speechRandNode.Speaker.name : "",
-                    Variants = speechRandNode.GetVariants()
-                });
-            }
-            else if (node is RandomBranchNode randomBranchNode)
-            {
-                dialogueContainer.RandomBranchNodeDatas.Add(new RandomBranchNodeData
-                {
-                    Guid = randomBranchNode.GUID,
-                    Position = node.GetPosition().position,
-                    Variants = randomBranchNode.GetVariants()
-                });
-            }
-            else if (node is NoteNode noteNode)
-            {
-                dialogueContainer.NoteNodeDatas.Add(new NoteNodeData
-                {
-                    Guid = noteNode.GUID,
-                    Position = node.GetPosition().position,
-                    NoteText = noteNode.NoteText,
-                    BackgroundColor = noteNode.BackgroundColor,
-                    ConnectedNodeGuids = noteNode.ConnectedNodeGuids
-                });
-            }
-            else if (node is TimerNode timerNode)
-            {
-                dialogueContainer.TimerNodeDatas.Add(new TimerNodeData
-                {
-                    Guid = timerNode.GUID,
-                    Position = node.GetPosition().position,
-                    DurationSeconds = timerNode.DurationSeconds
-                });
-            }
-            else if (node is PauseNode pauseNode)
-            {
-                dialogueContainer.PauseNodeDatas.Add(new PauseNodeData
-                {
-                    Guid = pauseNode.GUID,
-                    Position = node.GetPosition().position,
-                    DurationSeconds = pauseNode.DurationSeconds
-                });
-            }
-            else if (node is WireNode wireNode)
-            {
-                dialogueContainer.WireNodeDatas.Add(new WireNodeData
-                {
-                    Guid = wireNode.GUID,
-                    Position = node.GetPosition().position
-                });
-            }
-            else if (node is CharacterButtonPressNode charButtonPressNode)
-            {
-                dialogueContainer.CharacterButtonPressNodeDatas.Add(new CharacterButtonPressNodeData
-                {
-                    Guid = charButtonPressNode.GUID,
-                    Position = node.GetPosition().position,
-                    CharacterName = charButtonPressNode.CharacterAsset ? charButtonPressNode.CharacterAsset.name : "",
-                    RequireButtonPress = charButtonPressNode.RequireButtonPress
-                });
-            }
-            else if (node is ChatSwitchNode chatSwitchNode)
-            {
-                dialogueContainer.ChatSwitchNodeDatas.Add(new ChatSwitchNodeData
-                {
-                    Guid = chatSwitchNode.GUID,
-                    Position = node.GetPosition().position,
-                    TargetChatIndex = chatSwitchNode.TargetChatIndex
-                });
-            }
+            optionPanel.ShowOptions(options);
+            currentNode = optionNode;
         }
-    }
-
-    private string GetResourcePath(Sprite sprite)
-    {
-        if (sprite == null) return "";
-        string path = AssetDatabase.GetAssetPath(sprite);
-        if (!path.StartsWith("Assets/Resources/"))
+        else
         {
-            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources!");
-            return "";
-        }
-        path = path.Substring("Assets/Resources/".Length);
-        if (path.LastIndexOf('.') > 0)
-            path = path.Substring(0, path.LastIndexOf('.'));
-        return path;
-    }
-
-    /// <summary>
-    /// Сохранение свойств черной доски
-    /// </summary>
-    private void SaveExposedProperties(DialogueContainer dialogueContainer)
-    {
-        // Очистка старых данных
-        dialogueContainer.ExposedProperties.Clear(); // для обратной совместимости, если используется
-        dialogueContainer.IntExposedProperties.Clear();
-        dialogueContainer.StringExposedProperties.Clear();
-
-        // Сохранение актуальных данных
-        dialogueContainer.IntExposedProperties.AddRange(targetGraphView.IntExposedProperties);
-        dialogueContainer.StringExposedProperties.AddRange(targetGraphView.StringExposedProperties);
-    }
-    #endregion
-
-    #region Loading
-    /// <summary>
-    /// Загрузка графа из файла
-    /// </summary>
-    public void LoadGraph(string fileName)
-    {
-        containerCache = Resources.Load<DialogueContainer>(fileName);
-        if (containerCache == null)
-        {
-            EditorUtility.DisplayDialog("File Not Found", "Target dialogue graph file does not exist", "OK");
-            return;
-        }
-
-        ClearGraph();
-        CreateNodes();
-        ConnectNodes();
-        CreateExposedProperties();
-
-        EditorUtility.DisplayDialog("Success", $"Graph {fileName} loaded", "OK");
-    }
-
-    /// <summary>
-    /// Создает узлы из загруженных данных
-    /// </summary>
-    private void CreateNodes()
-    {
-        // Восстанавливаем EntryNode
-        if (containerCache.EntryNodeData != null)
-        {
-            var entryNode = GetNodes().Find(x => x.EntryPoint);
-            if (entryNode != null)
+            Debug.LogWarning($"No options found for OptionNode {optionNode.Guid}");
+            // Пытаемся найти следующий узел
+            var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == optionNode.Guid);
+            if (nextLink != null)
             {
-                entryNode.GUID = containerCache.EntryNodeData.Guid;
-                entryNode.SetPosition(new Rect(containerCache.EntryNodeData.Position, targetGraphView.DefaultNodeSize));
-            }
-        }
-
-        // Создаем SpeechNode
-        foreach (var nodeData in containerCache.SpeechNodeDatas)
-        {
-            BaseNode tempNode = null;
-            switch (nodeData.NodeType)
-            {
-                case "SpeechNodeText":
-                    tempNode = NodeFactory.CreateSpeechNodeText(nodeData.Position);
-                    if (tempNode is SpeechNode speechNodeText)
-                    {
-                        speechNodeText.SetDialogueText(nodeData.DialogueText);
-                    }
-                    break;
-                case "SpeechNodeAudio":
-                    tempNode = NodeFactory.CreateSpeechNodeAudio(nodeData.Position);
-                    break;
-                default:
-                    tempNode = NodeFactory.CreateSpeechNode(nodeData.Position);
-                    if (tempNode is SpeechNode speechNode)
-                    {
-                        speechNode.SetDialogueText(nodeData.DialogueText);
-                    }
-                    break;
-            }
-            tempNode.GUID = nodeData.Guid;
-
-            // Восстанавливаем аудио клип по GUID
-            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
-            {
-                var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
-                if (tempNode is SpeechNode speechNode)
-                {
-                    speechNode.AudioClip = audioClip;
-                }
-            }
-
-            // Восстанавливаем спикера по GUID
-            if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
-            {
-                var speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
-                if (tempNode is SpeechNode speechNode)
-                {
-                    speechNode.SetSpeaker(speaker);
-                }
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // Создаем SpeechNodeImage
-        // Создаем SpeechNodeImage
-        foreach (var nodeData in containerCache.SpeechNodeImageDatas)
-        {
-            var tempNode = NodeFactory.CreateSpeechNodeImage(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-
-            if (tempNode is SpeechNodeImage speechNodeImage)
-            {
-                // Восстанавливаем спрайт
-                if (!string.IsNullOrEmpty(nodeData.ImageSpritePath))
-                {
-                    string fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}.sprite";
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
-                    if (sprite == null)
-                    {
-                        fullPath = $"Assets/Resources/{nodeData.ImageSpritePath}";
-                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
-                    }
-                    speechNodeImage.ImageSprite = sprite;
-                }
-
-                CharacterData speaker = null;
-                if (!string.IsNullOrEmpty(nodeData.SpeakerGuid))
-                {
-                    speaker = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(nodeData.SpeakerGuid);
-                }
-                else if (!string.IsNullOrEmpty(nodeData.SpeakerName))
-                {
-                    speaker = CharacterManager.Instance?.GetCharacter(nodeData.SpeakerName);
-                }
-                speechNodeImage.SetSpeaker(speaker);
-
-                // Восстанавливаем спикера
-                if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
-                {
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(nodeData.ImageSpriteGuid);
-                    speechNodeImage.ImageSprite = sprite;
-                    if (speechNodeImage.imageField != null)
-                        speechNodeImage.imageField.SetValueWithoutNotify(sprite);
-                }
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // Создаем OptionNode
-        foreach (var nodeData in containerCache.OptionNodeDatas)
-        {
-            BaseNode tempNode = null;
-            switch (nodeData.NodeType)
-            {
-                case "OptionNodeText":
-                    tempNode = NodeFactory.CreateOptionNodeText(nodeData.Position);
-                    if (tempNode is OptionNode optionNodeText)
-                    {
-                        optionNodeText.SetResponseText(nodeData.ResponseText);
-                    }
-                    break;
-                case "OptionNodeAudio":
-                    tempNode = NodeFactory.CreateOptionNodeAudio(nodeData.Position);
-                    break;
-                default:
-                    tempNode = NodeFactory.CreateOptionNode(nodeData.Position);
-                    if (tempNode is OptionNode optionNode)
-                    {
-                        optionNode.SetResponseText(nodeData.ResponseText);
-                    }
-                    break;
-            }
-            tempNode.GUID = nodeData.Guid;
-
-            // Восстанавливаем аудио клип по GUID
-            if (!string.IsNullOrEmpty(nodeData.AudioClipGuid))
-            {
-                var audioClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.AudioClipGuid));
-                if (tempNode is OptionNode optionNode)
-                {
-                    optionNode.AudioClip = audioClip;
-                }
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // Создаем OptionNodeImage
-        foreach (var nodeData in containerCache.OptionNodeImageDatas)
-        {
-            var tempNode = NodeFactory.CreateOptionNodeImage(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-
-            // Восстанавливаем изображение по GUID
-            if (!string.IsNullOrEmpty(nodeData.ImageSpriteGuid))
-            {
-                var imageSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
-                    AssetDatabase.GUIDToAssetPath(nodeData.ImageSpriteGuid));
-                if (tempNode is OptionNodeImage optionNodeImage)
-                {
-                    optionNodeImage.ImageSprite = imageSprite;
-                }
-            }
-
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // Создаем IntConditionNode
-        foreach (var nodeData in containerCache.IntConditionNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateIntConditionNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is IntConditionNode intConditionNode)
-            {
-                intConditionNode.SelectedProperty = nodeData.SelectedProperty;
-                intConditionNode.Comparison = nodeData.Comparison;
-                intConditionNode.CompareValue = nodeData.CompareValue;
-            }
-            targetGraphView.AddElement(tempNode);
-            // Обновляем UI после добавления в граф
-            if (tempNode is IntConditionNode icn)
-                icn.UpdateUIFromData();
-        }
-
-        // Создаем StringConditionNode
-        foreach (var nodeData in containerCache.StringConditionNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateStringConditionNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is StringConditionNode stringConditionNode)
-            {
-                stringConditionNode.SelectedProperty = nodeData.SelectedProperty;
-                stringConditionNode.Comparison = (StringConditionNode.StringComparisonType)nodeData.Comparison;
-                stringConditionNode.CompareValue = nodeData.CompareValue;
-            }
-            targetGraphView.AddElement(tempNode);
-            // Обновляем UI после добавления в граф
-            if (tempNode is StringConditionNode scn)
-                scn.UpdateUIFromData();
-        }
-
-        // Создаем ModifyIntNode
-        foreach (var nodeData in containerCache.ModifyIntNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateModifyIntNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is ModifyIntNode modifyIntNode)
-            {
-                modifyIntNode.SelectedProperty = nodeData.SelectedProperty;
-                modifyIntNode.Operator = nodeData.Operator;
-                modifyIntNode.Value = nodeData.Value;
-                modifyIntNode.UpdateUIFromData(); // ← добавлено
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        // Создаем EndNode
-        foreach (var nodeData in containerCache.EndNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateEndNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is EndNode endNodeEditor)
-            {
-                endNodeEditor.SetNextDialogueFromPath(nodeData.NextDialogueName);
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.EventNodeDatas)
-        {
-            var tempNode = new EventNode();
-            tempNode.Initialize(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            tempNode.RuntimeEvent = nodeData.Event;
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.CharacterIntConditionNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateCharacterIntConditionNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is CharacterIntConditionNode n)
-            {
-                n.SetInitialData(nodeData.CharacterName, nodeData.SelectedVariable, nodeData.Comparison, nodeData.CompareValue);
-                n.UpdateUIFromData();
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.CharacterModifyIntNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateCharacterModifyIntNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is CharacterModifyIntNode n)
-            {
-                n.CharacterAsset = CharacterManager.Instance?.GetCharacter(nodeData.CharacterName);
-                n.SelectedVariable = nodeData.SelectedVariable;
-                n.Operator = nodeData.Operator;
-                n.Value = nodeData.Value;
-                n.UpdateUIFromData();
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.DebugLogNodeDatas)
-        {
-            var node = new DebugLogNode();
-            node.Initialize(nodeData.Position);
-            node.GUID = nodeData.Guid;
-            node.MessageText = nodeData.MessageText;
-            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
-            targetGraphView.AddElement(node);
-        }
-
-        foreach (var nodeData in containerCache.DebugWarningNodeDatas)
-        {
-            var node = new DebugWarningNode();
-            node.Initialize(nodeData.Position);
-            node.GUID = nodeData.Guid;
-            node.MessageText = nodeData.MessageText;
-            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
-            targetGraphView.AddElement(node);
-        }
-
-        foreach (var nodeData in containerCache.DebugErrorNodeDatas)
-        {
-            var node = new DebugErrorNode();
-            node.Initialize(nodeData.Position);
-            node.GUID = nodeData.Guid;
-            node.MessageText = nodeData.MessageText;
-            if (node._previewLabel != null) node._previewLabel.text = nodeData.MessageText;
-            targetGraphView.AddElement(node);
-        }
-
-        foreach (var nodeData in containerCache.SpeechRandNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateSpeechNodeRandText(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (!string.IsNullOrEmpty(nodeData.SpeakerName))
-            {
-                var speaker = CharacterManager.Instance?.GetCharacter(nodeData.SpeakerName);
-                tempNode.SetSpeaker(speaker);
-            }
-            tempNode.LoadVariants(nodeData.Variants);
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.RandomBranchNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateRandomBranchNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is RandomBranchNode randomBranchNode)
-            {
-                randomBranchNode.LoadVariants(nodeData.Variants);
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.NoteNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateNoteNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is NoteNode noteNode)
-            {
-                noteNode.SetNoteText(nodeData.NoteText);
-                noteNode.SetBackgroundColor(nodeData.BackgroundColor);
-                noteNode.ConnectedNodeGuids = nodeData.ConnectedNodeGuids ?? new List<string>();
-            }
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.TimerNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            tempNode.SetDuration(nodeData.DurationSeconds);
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.TimerNodeDatas)
-        {
-            // Проверяем, существует ли уже узел с таким GUID
-            var existingNode = GetNodes().FirstOrDefault(n => n.GUID == nodeData.Guid);
-            BaseNode tempNode;
-            if (existingNode != null)
-            {
-                // Если существует — используем его
-                tempNode = existingNode;
-                // Обновляем позицию
-                tempNode.SetPosition(new Rect(nodeData.Position, targetGraphView.DefaultNodeSize));
+                currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+                ProcessNextNode();
             }
             else
             {
-                // Если не существует — создаём новый
-                tempNode = NodeFactory.CreateTimerNode(nodeData.Position);
-                tempNode.GUID = nodeData.Guid;
-                targetGraphView.AddElement(tempNode);
-            }
-            // Обновляем данные узла
-            if (tempNode is TimerNode timerNode)
-            {
-                timerNode.SetDuration(nodeData.DurationSeconds);
+                currentNode = null;
             }
         }
+    }
 
-        foreach (var nodeData in containerCache.PauseNodeDatas)
-        {
-            var tempNode = NodeFactory.CreatePauseNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            tempNode.SetDuration(nodeData.DurationSeconds);
-            targetGraphView.AddElement(tempNode);
-        }
+    /// <summary>
+    /// Обрабатывает OptionNodeImageData
+    /// </summary>
+    /// <param name="optionImageNode">Данные узла изображения вариантов ответа</param>
+    private void ProcessOptionImageNode(OptionNodeImageData optionImageNode)
+    {
+        // Получаем варианты ответов из узла
+        var options = new List<Option>();
+        // Получаем связанные OptionNodeData для всех выходов
+        var optionLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == optionImageNode.Guid)
+            .ToList();
 
-        foreach (var nodeData in containerCache.WireNodeDatas)
+        foreach (var link in optionLinks)
         {
-            var tempNode = NodeFactory.CreateWireNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            targetGraphView.AddElement(tempNode);
-        }
-
-        foreach (var nodeData in containerCache.CharacterButtonPressNodeDatas)
-        {
-            var tempNode = NodeFactory.CreateCharacterButtonPressNode(nodeData.Position);
-            tempNode.GUID = nodeData.Guid;
-            if (tempNode is CharacterButtonPressNode node)
+            var targetNode = GetNodeByGuid(link.TargetNodeGuid);
+            if (targetNode is OptionNodeData optionTarget)
             {
-                CharacterData character = null;
-
-                // 1. Сначала пытаемся загрузить через CharacterManager
-                if (CharacterManager.Instance != null && !string.IsNullOrEmpty(nodeData.CharacterName))
+                options.Add(new Option
                 {
-                    character = CharacterManager.Instance.GetCharacter(nodeData.CharacterName);
-                }
-
-                // 2. Если не получилось, ищем напрямую через AssetDatabase
-                if (character == null && !string.IsNullOrEmpty(nodeData.CharacterName))
-                {
-                    string[] characterGuids = AssetDatabase.FindAssets($"t:CharacterData {nodeData.CharacterName}");
-                    if (characterGuids.Length > 0)
-                    {
-                        string characterPath = AssetDatabase.GUIDToAssetPath(characterGuids[0]);
-                        character = AssetDatabase.LoadAssetAtPath<CharacterData>(characterPath);
-                    }
-                }
-
-                node.CharacterAsset = character;
-                node.RequireButtonPress = nodeData.RequireButtonPress;
-
-                // 3. Обновляем UI через метод UpdateUIFromData
-                if (node.characterField != null)
-                    node.characterField.SetValueWithoutNotify(character);
-                if (node.buttonPressToggle != null)
-                    node.buttonPressToggle.SetValueWithoutNotify(node.RequireButtonPress);
+                    Text = optionTarget.ResponseText,
+                    NextNodeGuid = link.TargetNodeGuid
+                });
             }
-            targetGraphView.AddElement(tempNode);
+            else if (targetNode is OptionNodeImageData optionImageTarget)
+            {
+                // Для изображений вариантов ответа
+                options.Add(new Option
+                {
+                    Text = "Изображение",
+                    NextNodeGuid = link.TargetNodeGuid
+                });
+            }
         }
 
-        foreach (var nodeData in containerCache.ChatSwitchNodeDatas.ToList())
-        {
-            // Проверяем, существует ли уже узел с таким GUID
-            var existingNode = targetGraphView.nodes.ToList().FirstOrDefault(n => n is BaseNode bn && bn.GUID == nodeData.Guid);
+        // Показываем панель вариантов ответов
+        optionPanel.ShowOptions(options);
+        // Устанавливаем текущий узел как OptionNode для последующей обработки выбора
+        currentNode = optionImageNode;
+    }
 
-            BaseNode tempNode;
-            if (existingNode != null)
+    /// <summary>
+    /// Обрабатывает IntConditionNodeData
+    /// </summary>
+    /// <param name="intCondition">Данные числового условия</param>
+    private void ProcessIntCondition(IntConditionNodeData intCondition)
+    {
+        // Проверяем условие
+        bool conditionResult = ConditionHandler.EvaluateIntCondition(
+            intCondition, intVariables);
+
+        // Определяем следующий узел в зависимости от результата
+        var nextLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == intCondition.Guid)
+            .ToList();
+
+        // Находим подходящий выход
+        foreach (var link in nextLinks)
+        {
+            if (link.PortName == "True" && conditionResult)
             {
-                // Если узел уже существует, используем его
-                tempNode = existingNode;
-                // Обновляем позицию
-                tempNode.SetPosition(new Rect(nodeData.Position, targetGraphView.DefaultNodeSize));
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+            else if (link.PortName == "False" && !conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
+
+        // Если подходящий выход не найден, завершаем диалог
+        Debug.LogWarning($"Не найден подходящий выход для условия IntConditionNode {intCondition.Guid}");
+        currentNode = null;
+    }
+
+    /// <summary>
+    /// Обрабатывает StringConditionNodeData
+    /// </summary>
+    /// <param name="stringCondition">Данные строкового условия</param>
+    private void ProcessStringCondition(StringConditionNodeData stringCondition)
+    {
+        // Проверяем условие
+        bool conditionResult = ConditionHandler.EvaluateStringCondition(
+            stringCondition, stringVariables);
+
+        // Определяем следующий узел в зависимости от результата
+        var nextLinks = currentDialogue.NodeLinks
+            .Where(l => l.BaseNodeGuid == stringCondition.Guid)
+            .ToList();
+
+        // Находим подходящий выход
+        foreach (var link in nextLinks)
+        {
+            if (link.PortName == "True" && conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+            else if (link.PortName == "False" && !conditionResult)
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
+
+        // Если подходящий выход не найден, завершаем диалог
+        Debug.LogWarning($"Не найден подходящий выход для условия StringConditionNode {stringCondition.Guid}");
+        currentNode = null;
+    }
+
+    /// <summary>
+    /// Обрабатывает ModifyIntNodeData
+    /// </summary>
+    /// <param name="modifyNode">Данные модификатора числа</param>
+    private void ProcessModifyIntNode(ModifyIntNodeData modifyNode)
+    {
+        // Проверяем наличие переменной
+        if (!intVariables.ContainsKey(modifyNode.SelectedProperty))
+        {
+            Debug.LogError($"Переменная {modifyNode.SelectedProperty} не найдена в intVariables");
+            currentNode = null;
+            return;
+        }
+
+        // Применяем операцию
+        switch (modifyNode.Operator)
+        {
+            case OperatorType.Set:
+                intVariables[modifyNode.SelectedProperty] = modifyNode.Value;
+                break;
+            case OperatorType.Add:
+                intVariables[modifyNode.SelectedProperty] += modifyNode.Value;
+                break;
+            case OperatorType.Subtract:
+                intVariables[modifyNode.SelectedProperty] -= modifyNode.Value;
+                break;
+            case OperatorType.Multiply:
+                intVariables[modifyNode.SelectedProperty] *= modifyNode.Value;
+                break;
+            case OperatorType.Divide:
+                if (modifyNode.Value != 0)
+                    intVariables[modifyNode.SelectedProperty] /= modifyNode.Value;
+                else
+                    Debug.LogWarning("Деление на ноль в ModifyIntNode");
+                break;
+            case OperatorType.Increment:
+                intVariables[modifyNode.SelectedProperty]++;
+                break;
+            case OperatorType.Decrement:
+                intVariables[modifyNode.SelectedProperty]--;
+                break;
+        }
+
+        // Находим следующий узел
+        var nextLink = currentDialogue.NodeLinks
+            .FirstOrDefault(l => l.BaseNodeGuid == modifyNode.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// Обрабатывает EndNodeData
+    /// </summary>
+    /// <param name="endNode">Данные конечного узла</param>
+    private void ProcessEndNode(EndNodeData endNode)
+    {
+        // Добавляем системное сообщение о завершении диалога
+        var message = new Message
+        {
+            Type = SenderType.System,
+            Text = "Диалог завершен"
+        };
+
+        chatPanel.AddMessage(message, MessageTypeDialogue.System);
+        chatPanel.ForceScrollToBottom();
+
+        // Если указан следующий диалог, запускаем его
+        if (!string.IsNullOrEmpty(endNode.NextDialogueName))
+        {
+            DialogueContainer nextDialogue = Resources.Load<DialogueContainer>(endNode.NextDialogueName);
+            if (nextDialogue != null)
+            {
+                StartDialogue(nextDialogue);
             }
             else
             {
-                // Если не существует — создаём новый
-                tempNode = NodeFactory.CreateChatSwitchNode(nodeData.Position);
-                tempNode.GUID = nodeData.Guid;
-                targetGraphView.AddElement(tempNode);
-            }
-
-            // Обновляем данные узла
-            if (tempNode is ChatSwitchNode chatSwitchNode)
-            {
-                chatSwitchNode.TargetChatIndex = nodeData.TargetChatIndex;
+                Debug.LogError($"Диалог {endNode.NextDialogueName} не найден в ресурсах");
             }
         }
-    }
-
-    /// <summary>
-    /// Восстановление связей между узлами
-    /// </summary>
-    /// <summary>
-    /// Восстановление связей между узлами
-    /// </summary>
-    private void ConnectNodes()
-    {
-        try
+        else
         {
-            var nodeList = this.targetGraphView.nodes.ToList().Cast<BaseNode>().ToList();
-            for (int i = 0; i < nodeList.Count; i++)
-            {
-                var connections = containerCache.NodeLinks.Where(x => x.BaseNodeGuid == nodeList[i].GUID).ToList();
-                foreach (var connection in connections)
-                {
-                    var targetNodeGuid = connection.TargetNodeGuid;
-                    var targetNode = nodeList.FirstOrDefault(x => x.GUID == targetNodeGuid);
-                    if (targetNode == null)
-                    {
-                        Debug.LogWarning($"Target node not found for GUID: {targetNodeGuid}");
-                        continue;
-                    }
-
-                    Port outputPort = null;
-
-                    // Определяем outputPort в зависимости от типа узла
-                    if (nodeList[i] is SpeechNode speechNode)
-                    {
-                        foreach (var port in speechNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            outputPort = speechNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName;
-                            speechNode.outputContainer.Add(outputPort);
-                            speechNode.RefreshPorts();
-                            speechNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (nodeList[i] is OptionNode optionNode)
-                    {
-                        outputPort = optionNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (nodeList[i] is EntryNode entryNode)
-                    {
-                        outputPort = entryNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (nodeList[i] is IntConditionNode || nodeList[i] is StringConditionNode)
-                    {
-                        foreach (var port in nodeList[i].outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            Debug.LogWarning($"Port '{connection.PortName}' not found on condition node {nodeList[i].GUID}");
-                        }
-                    }
-                    else if (nodeList[i] is TimerNode timerNode)
-                    {
-                        foreach (var port in timerNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            // Восстанавливаем порт, если его нет (например, после загрузки)
-                            outputPort = timerNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName;
-                            timerNode.outputContainer.Add(outputPort);
-                            timerNode.RefreshPorts();
-                            timerNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (nodeList[i] is PauseNode pauseNode)
-                    {
-                        foreach (var port in pauseNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            // Восстанавливаем порт, если его нет (например, после загрузки)
-                            outputPort = pauseNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName;
-                            pauseNode.outputContainer.Add(outputPort);
-                            pauseNode.RefreshPorts();
-                            pauseNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (nodeList[i] is ModifyIntNode modifyNode)
-                    {
-                        outputPort = modifyNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (nodeList[i] is EndNode endNode)
-                    {
-                        outputPort = endNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (nodeList[i] is EventNode eventNode)
-                    {
-                        outputPort = eventNode.outputContainer[0].Q<Port>();
-                    }
-                    else if (nodeList[i] is WireNode wireNode)
-                    {
-                        foreach (var port in wireNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            // Восстанавливаем порт, если его нет
-                            outputPort = wireNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName; // Должно быть "Output"
-                            wireNode.outputContainer.Add(outputPort);
-                            wireNode.RefreshPorts();
-                            wireNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (nodeList[i] is CharacterButtonPressNode charButtonPressNode)
-                    {
-                        foreach (var port in charButtonPressNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            // Восстанавливаем порт, если его нет
-                            outputPort = charButtonPressNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = connection.PortName; // Должно быть "Output"
-                            charButtonPressNode.outputContainer.Add(outputPort);
-                            charButtonPressNode.RefreshPorts();
-                            charButtonPressNode.RefreshExpandedState();
-                        }
-                    }
-                    else if (nodeList[i] is ChatSwitchNode chatSwitchNode)
-                    {
-                        foreach (var port in chatSwitchNode.outputContainer.Children())
-                        {
-                            if (port is Port portElement && portElement.portName == connection.PortName)
-                            {
-                                outputPort = portElement;
-                                break;
-                            }
-                        }
-                        if (outputPort == null)
-                        {
-                            // Восстанавливаем порт, если его нет
-                            outputPort = chatSwitchNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-                            outputPort.portName = "Output"; // ВСЕГДА используем "Output" для ChatSwitchNode
-                            chatSwitchNode.outputContainer.Add(outputPort);
-                            chatSwitchNode.RefreshPorts();
-                            chatSwitchNode.RefreshExpandedState();
-                        }
-                    }
-
-                    // Получаем inputPort у целевого узла
-                    Port inputPort = null;
-                    if (targetNode.inputContainer.childCount > 0)
-                    {
-                        inputPort = targetNode.inputContainer[0] as Port;
-                    }
-
-                    // Соединяем порты
-                    if (outputPort != null && inputPort != null)
-                    {
-                        LinkNodes(outputPort, inputPort);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Failed to connect {nodeList[i].GUID} -> {targetNodeGuid}. outputPort: {outputPort != null}, inputPort: {inputPort != null}");
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error connecting nodes: {e.Message}\n{e.StackTrace}");
+            // Завершаем текущий диалог
+            currentNode = null;
         }
     }
 
     /// <summary>
-    /// Связывание двух портов
+    /// Обработка выбора опции игроком с задержкой перед следующим сообщением
     /// </summary>
-    private void LinkNodes(Port output, Port input)
+    public void HandleOptionSelection(string nextNodeGuid)
     {
-        var tempEdge = new Edge { output = output, input = input };
-        tempEdge.input.Connect(tempEdge);
-        tempEdge.output.Connect(tempEdge);
-        targetGraphView.Add(tempEdge);
+        if (optionPanel != null)
+            optionPanel.Hide();
+
+        _timerDisplayController?.StopTimer();
+
+        currentNode = GetNodeByGuid(nextNodeGuid);
+        ProcessNextNode();
     }
 
     /// <summary>
-    /// Восстановление свойств черной доски
+    /// Получает узел по его GUID
     /// </summary>
-    private void CreateExposedProperties()
+    /// <param name="guid">GUID узла</param>
+    /// <returns>BaseNodeData или null</returns>
+    private object GetNodeByGuid(string guid)
     {
-        targetGraphView.ClearBlackBoardAndExposedProperties();
-        // Загружаем Int свойства
-        foreach (var prop in containerCache.IntExposedProperties)
-        {
-            var newProp = new IntExposedProperty
-            {
-                PropertyName = prop.PropertyName,
-                IntValue = prop.IntValue,
-                MinValue = prop.MinValue,
-                MaxValue = prop.MaxValue
-            };
-            // Заменяем на существующий метод для добавления Int свойства
-            targetGraphView.IntExposedProperties.Add(newProp);
-            targetGraphView.AddIntPropertyToBlackBoard(newProp);
-        }
-        // Загружаем String свойства
-        foreach (var prop in containerCache.StringExposedProperties)
-        {
-            var newProp = new StringExposedProperty
-            {
-                PropertyName = prop.PropertyName,
-                StringValue = prop.StringValue
-            };
-            // Заменяем на существующий метод для добавления String свойства
-            targetGraphView.StringExposedProperties.Add(newProp);
-            targetGraphView.AddStringPropertyToBlackBoard(newProp);
-        }
-        // Принудительно обновляем все выпадающие списки после загрузки свойств
-        var propertyNodes = targetGraphView.nodes.ToList().OfType<IPropertyNode>();
-        foreach (var node in propertyNodes)
-            node.RefreshPropertyDropdown();
-    }
-
-    /// <summary>
-    /// Очистка текущего графа перед загрузкой
-    /// </summary>
-    private void ClearGraph()
-    {
-        var nodesToRemove = this.nodes.ToList().Where(node => !(node is EntryNode)).ToList();
-        foreach (var node in nodesToRemove)
-        {
-            var edgesToRemove = this.edges
-                .Where(e => e.input.node == node || e.output.node == node)
-                .ToList();
-            foreach (var edge in edgesToRemove)
-                RemoveElement(edge);
-            RemoveElement(node);
-        }
-
-        // Добавляем очистку внутренних коллекций узлов
-        if (containerCache != null)
-        {
-            containerCache.ChatSwitchNodeDatas.Clear();
-            // Можно также очистить другие коллекции если необходимо
-        }
-
-        ClearBlackBoardAndExposedProperties();
-        BaseCharacterGuid = string.Empty;
-
-        // Очищаем все внутренние списки узлов в графе
-        targetGraphView?.nodes?.ToList().ForEach(n => {
-            if (!(n is EntryNode)) targetGraphView?.RemoveElement(n);
-        });
-    }
-    #endregion
-
-    /// <summary>
-    /// Загружает граф из уже загруженного DialogueContainer
-    /// </summary>
-    public void LoadGraphFromContainer(DialogueContainer container)
-    {
-        if (container == null)
-        {
-            Debug.LogError("Cannot load null container");
-            return;
-        }
-
-        // Сохраняем ссылку на контейнер
-        targetGraphView.containerCache = container;
-        containerCache = container;
-
-        // Очищаем стеки отмены
-        targetGraphView.ClearUndoRedoStacks();
-
-        // Полностью очищаем граф перед загрузкой
-        ClearGraph();
-
-        // Создаем узлы и связи
-        CreateNodes();
-        ConnectNodes();
-        CreateExposedProperties();
-
-        // Помечаем, что изменения сохранены
-        targetGraphView.MarkUnsavedChangeWithoutFile();
-    }
-
-    private void LoadDialogueFromFile(DialogueContainer container)
-    {
-        if (container == null) return;
-
-        // Проверка, не загружен ли уже этот контейнер
-        if (graphView.containerCache == container)
-        {
-            return;
-        }
-
-        var saveUtility = GraphSaveUtility.GetInstance(graphView);
-        saveUtility.LoadGraphFromContainer(container);
-
-        // Обновляем GUID базового персонажа в графе
-        graphView.BaseCharacterGuid = container.BaseCharacterGuid;
-
-        // Обновляем отображение Base Character в тулбаре
-        var baseCharField = rootVisualElement.Q<ObjectField>("Base Character");
-        if (baseCharField != null)
-        {
-            baseCharField.SetValueWithoutNotify(
-                AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(container.BaseCharacterGuid)
-            );
-        }
-
-        // Сбрасываем состояние "без файла"
-        graphView._hasUnsavedChangesWithoutFile = false;
-        graphView._unsavedChangesWarningShown = false;
-    }
-
-    private DialogueSettingsData LoadDialogueSettings()
-    {
-        string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
-        if (guids.Length > 0)
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);
-        }
+        if (string.IsNullOrEmpty(guid))
+            return null;
+        // Ищем в Speech
+        var speechNode = currentDialogue.SpeechNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechNode != null) return speechNode;
+        var speechImageNode = currentDialogue.SpeechNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechImageNode != null) return speechImageNode;
+        var optionNode = currentDialogue.OptionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (optionNode != null) return optionNode;
+        var optionImageNode = currentDialogue.OptionNodeImageDatas.FirstOrDefault(n => n.Guid == guid);
+        if (optionImageNode != null) return optionImageNode;
+        var intConditionNode = currentDialogue.IntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (intConditionNode != null) return intConditionNode;
+        var stringConditionNode = currentDialogue.StringConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (stringConditionNode != null) return stringConditionNode;
+        var modifyIntNode = currentDialogue.ModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (modifyIntNode != null) return modifyIntNode;
+        var endNode = currentDialogue.EndNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (endNode != null) return endNode;
+        var charIntConditionNode = currentDialogue.CharacterIntConditionNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charIntConditionNode != null) return charIntConditionNode;
+        var charModifyIntNode = currentDialogue.CharacterModifyIntNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charModifyIntNode != null) return charModifyIntNode;
+        var debugLogNode = currentDialogue.DebugLogNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugLogNode != null) return debugLogNode;
+        var debugWarnNode = currentDialogue.DebugWarningNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugWarnNode != null) return debugWarnNode;
+        var debugErrNode = currentDialogue.DebugErrorNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (debugErrNode != null) return debugErrNode;
+        // Поддержка SpeechRandNodeData
+        var speechRandNode = currentDialogue.SpeechRandNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (speechRandNode != null) return speechRandNode;
+        var timerNode = currentDialogue.TimerNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (timerNode != null) return timerNode;
+        var pauseNode = currentDialogue.PauseNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (pauseNode != null) return pauseNode;
+        var wireNode = currentDialogue.WireNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (wireNode != null) return wireNode;
+        var charButtonPressNode = currentDialogue.CharacterButtonPressNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (charButtonPressNode != null) return charButtonPressNode;
+        // Добавлено: обработка ChatSwitchNodeData
+        var chatSwitchNode = currentDialogue.ChatSwitchNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (chatSwitchNode != null) return chatSwitchNode;
+        // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
+        if (currentDialogue.EntryNodeData?.Guid == guid)
+            return currentDialogue.EntryNodeData;
+        // Если ничего не найдено — возвращаем null
         return null;
     }
 
-    /// <summary>
-    /// Сохраняет граф в существующий DialogueContainer
-    /// </summary>
-    public void SaveGraphToExistingContainer(DialogueContainer existingContainer)
+
+    private void GoToNextNode(string currentGuid)
     {
-        if (existingContainer == null)
+        var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == currentGuid);
+        if (nextLink != null)
         {
-            Debug.LogError("Cannot save to null container");
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else
+        {
+            currentNode = null;
+        }
+    }
+
+    /// <summary>
+    /// Воспроизводит аудио с задержкой после отображения текста
+    /// </summary>
+    /// <param name="audioClip">Аудио клип для воспроизведения</param>
+    /// <param name="delay">Задержка в секундах</param>
+    /// <returns>Корутину для воспроизведения аудио</returns>
+    private IEnumerator PlayAudioAfterDelay(AudioClip audioClip, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        AudioSource.PlayClipAtPoint(audioClip, Camera.main.transform.position);
+    }
+
+    /// <summary>
+    /// Сбрасывает текущий диалог
+    /// </summary>
+    public void ResetDialogue()
+    {
+        // Восстанавливаем исходные состояния персонажей
+        RestoreOriginalCharacterStates();
+
+        currentDialogue = null;
+        currentNode = null;
+        visitedNodes.Clear();
+        ResetVariables();
+    }
+
+    private void RestoreOriginalCharacterStates()
+    {
+        foreach (var kvp in _originalButtonPressStates)
+        {
+            var character = CharacterManager.Instance.GetCharacter(kvp.Key);
+            if (character != null)
+            {
+                character.RequireButtonPressForMessages = kvp.Value;
+            }
+        }
+
+        // Очищаем кэш после восстановления
+        _originalButtonPressStates.Clear();
+    }
+
+    /// <summary>
+    /// Получает персонажа по имени из Resources/Characters
+    /// </summary>
+    private CharacterData GetCharacterByName(string characterName)
+    {
+        if (string.IsNullOrEmpty(characterName))
+            return null;
+
+        // Ищем в кэше CharacterManager
+        var character = CharacterManager.Instance?.GetCharacter(characterName);
+        if (character != null)
+            return character;
+
+        // Fallback: загрузка напрямую из Resources
+        character = Resources.Load<CharacterData>($"Characters/{characterName}");
+        if (character == null)
+            Debug.LogError($"Character '{characterName}' not found in Resources/Characters");
+        return character;
+    }
+
+    /// <summary>
+    /// Вспомогательный класс для загрузки ассетов в runtime
+    /// </summary>
+    public static class AssetLoader
+    {
+        /// <summary>
+        /// Загружает аудио клип по GUID (заглушка для runtime)
+        /// </summary>
+        /// <param name="guid">GUID аудио</param>
+        /// <returns>AudioClip или null</returns>
+        public static AudioClip LoadAudioClip(string guid)
+        {
+            // В runtime нет AssetDatabase, поэтому используем заглушку
+            // В реальной системе нужно реализовать загрузку из Resources
+            return null;
+        }
+
+        /// <summary>
+        /// Загружает спрайт по GUID (заглушка для runtime)
+        /// </summary>
+        /// <param name="guid">GUID спрайта</param>
+        /// <returns>Sprite или null</returns>
+        public static Sprite LoadSprite(string guid)
+        {
+            // В runtime нет AssetDatabase, поэтому используем заглушку
+            // В реальной системе нужно реализовать загрузку из Resources
+            return null;
+        }
+    }
+
+    private void ProcessCharacterIntCondition(CharacterIntConditionNodeData condition)
+    {
+        var character = CharacterManager.Instance.GetCharacter(condition.CharacterName);
+        if (character == null)
+        {
+            Debug.LogError($"Character '{condition.CharacterName}' not found for condition node.");
+            currentNode = null;
             return;
         }
 
-        // === ОЧИЩАЕМ ВСЕ СПИСКИ, ВКЛЮЧАЯ TimerNodeDatas ===
-        existingContainer.NodeLinks.Clear();
-        existingContainer.SpeechNodeDatas.Clear();
-        existingContainer.OptionNodeDatas.Clear();
-        existingContainer.IntConditionNodeDatas.Clear();
-        existingContainer.StringConditionNodeDatas.Clear();
-        existingContainer.ModifyIntNodeDatas.Clear();
-        existingContainer.EndNodeDatas.Clear();
-        existingContainer.SpeechNodeImageDatas.Clear();
-        existingContainer.OptionNodeImageDatas.Clear();
-        existingContainer.TimerNodeDatas.Clear();
-        existingContainer.PauseNodeDatas.Clear();
-        existingContainer.WireNodeDatas.Clear();
-        existingContainer.IntExposedProperties.Clear();
-        existingContainer.StringExposedProperties.Clear();
-        existingContainer.SpeechRandNodeDatas.Clear();
-        existingContainer.NoteNodeDatas.Clear();
-        existingContainer.CharacterIntConditionNodeDatas.Clear();
-        existingContainer.RandomBranchNodeDatas.Clear();
-        existingContainer.CharacterModifyIntNodeDatas.Clear();
-        existingContainer.EventNodeDatas.Clear();
-        existingContainer.DebugLogNodeDatas.Clear();
-        existingContainer.DebugWarningNodeDatas.Clear();
-        existingContainer.DebugErrorNodeDatas.Clear();
-        existingContainer.CharacterButtonPressNodeDatas.Clear();
+        if (!character.TryGetVariable(condition.SelectedVariable, out var variable))
+        {
+            Debug.LogError($"Variable '{condition.SelectedVariable}' not found on character '{condition.CharacterName}'.");
+            currentNode = null;
+            return;
+        }
 
-        targetGraphView.ClearUndoRedoStacks();
+        bool result = false;
+        switch (condition.Comparison)
+        {
+            case ComparisonType.Equal: result = variable.Value == condition.CompareValue; break;
+            case ComparisonType.NotEqual: result = variable.Value != condition.CompareValue; break;
+            case ComparisonType.Greater: result = variable.Value > condition.CompareValue; break;
+            case ComparisonType.Less: result = variable.Value < condition.CompareValue; break;
+            case ComparisonType.GreaterOrEqual: result = variable.Value >= condition.CompareValue; break;
+            case ComparisonType.LessOrEqual: result = variable.Value <= condition.CompareValue; break;
+            default: result = false; break;
+        }
 
-        // === Сохраняем новые данные ===
-        SaveNodes(existingContainer);
-        SaveExposedProperties(existingContainer);
+        var nextLinks = currentDialogue.NodeLinks.Where(l => l.BaseNodeGuid == condition.Guid).ToList();
+        foreach (var link in nextLinks)
+        {
+            if ((link.PortName == "True" && result) || (link.PortName == "False" && !result))
+            {
+                currentNode = GetNodeByGuid(link.TargetNodeGuid);
+                ProcessNextNode();
+                return;
+            }
+        }
 
-        EditorUtility.SetDirty(existingContainer);
-        AssetDatabase.SaveAssets();
-        EditorUtility.SetDirty(existingContainer);
-        AssetDatabase.SaveAssets();
+        Debug.LogWarning($"No matching output port for CharacterIntConditionNode {condition.Guid}");
+        currentNode = null;
+    }
+
+    private void ProcessCharacterModifyInt(CharacterModifyIntNodeData modify)
+    {
+        var character = CharacterManager.Instance.GetCharacter(modify.CharacterName);
+        if (character == null)
+        {
+            Debug.LogError($"Character '{modify.CharacterName}' not found for modify node.");
+            currentNode = null;
+            return;
+        }
+
+        if (!character.TryGetVariable(modify.SelectedVariable, out var variable))
+        {
+            Debug.LogError($"Variable '{modify.SelectedVariable}' not found on character '{modify.CharacterName}'.");
+            currentNode = null;
+            return;
+        }
+
+        switch (modify.Operator)
+        {
+            case OperatorType.Set: variable.Value = modify.Value; break;
+            case OperatorType.Add: variable.Value += modify.Value; break;
+            case OperatorType.Subtract: variable.Value -= modify.Value; break;
+            case OperatorType.Multiply: variable.Value *= modify.Value; break;
+            case OperatorType.Divide:
+                if (modify.Value != 0) variable.Value /= modify.Value;
+                else Debug.LogWarning("Division by zero in CharacterModifyIntNode");
+                break;
+            case OperatorType.Increment: variable.Value++; break;
+            case OperatorType.Decrement: variable.Value--; break;
+        }
+
+        var nextLink = currentDialogue.NodeLinks.FirstOrDefault(l => l.BaseNodeGuid == modify.Guid);
+        if (nextLink != null)
+        {
+            currentNode = GetNodeByGuid(nextLink.TargetNodeGuid);
+            ProcessNextNode();
+        }
+        else currentNode = null;
+    }
+
+    private void OnDestroy()
+    {
+        RestoreOriginalCharacterStates();
+    }
+}
+
+//==== File 2 of 2: D:/Work/REDDialogSystemProject/Assets\Scripts/ChatHandler.cs ====
+using UnityEngine;
+
+/// <summary>
+/// ����������� ���������� ����, ������������ ��� ���������� ����������
+/// </summary>
+public class ChatHandler : MonoBehaviour
+{
+    [Header("������ �� ���������� ����")]
+    public ChatPanel chatPanel;
+    public OptionPanel optionPanel;
+    public TimerDisplayController timerDisplayController;
+
+    [Header("�������������� ���������")]
+    public bool isActiveByDefault = true;
+    public float fadeDuration = 0.2f;
+
+    private void Awake()
+    {
+        // �������������� ����������� ��� �������, ���� �� ������ ����
+        if (!isActiveByDefault)
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// ����������/������������ ��� ���������� ����� ����
+    /// </summary>
+    public void SetActive(bool isActive)
+    {
+        gameObject.SetActive(isActive);
+
+        // ������������� ����� �������� ������ �������� ���������/�������
+        if (isActive)
+        {
+            if (chatPanel != null) chatPanel.gameObject.SetActive(true);
+            if (optionPanel != null) optionPanel.gameObject.SetActive(true);
+            if (timerDisplayController != null) timerDisplayController.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (chatPanel != null) chatPanel.gameObject.SetActive(false);
+            if (optionPanel != null) optionPanel.gameObject.SetActive(false);
+            if (timerDisplayController != null) timerDisplayController.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// ��������� ������������ �������� �����������
+    /// </summary>
+    public bool ValidateSetup()
+    {
+        bool isValid = true;
+
+        if (chatPanel == null)
+        {
+            Debug.LogError($"ChatHandler '{name}' requires a ChatPanel component!", this);
+            isValid = false;
+        }
+
+        if (optionPanel == null)
+        {
+            Debug.LogWarning($"ChatHandler '{name}' has no OptionPanel. Option selection will not work.", this);
+        }
+
+        if (timerDisplayController == null)
+        {
+            Debug.LogWarning($"ChatHandler '{name}' has no TimerDisplayController. Timers will not display.", this);
+        }
+
+        return isValid;
     }
 }
 
 
 // ============ Statistics =============
-// Total Files: 1
-// Total Size: 55,70 KB
-// Total Lines: 1279
-// Classes: 1
-// Methods: 50
-// Comments: 114
+// Total Files: 2
+// Total Size: 62,70 KB
+// Total Lines: 1640
+// Classes: 4
+// Methods: 84
+// Comments: 170
 // =====================================

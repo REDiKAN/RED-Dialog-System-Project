@@ -663,6 +663,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 245914489}
+  - component: {fileID: 245914490}
   m_Layer: 0
   m_Name: Messenger App
   m_TagString: Untagged
@@ -694,6 +695,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &245914490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 245914488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd4b0fc46606eb84dba33f84fa838b68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chatPanel: {fileID: 808698045}
+  optionPanel: {fileID: 871629838}
+  timerDisplayController: {fileID: 1859932804}
+  isActiveByDefault: 1
+  fadeDuration: 0.2
 --- !u!1 &295669195
 GameObject:
   m_ObjectHideFlags: 0
@@ -1092,12 +1110,8 @@ MonoBehaviour:
   currentDialogue: {fileID: 11400000, guid: c3710028d1a705d4aac7b368382b2577, type: 2}
   _timerDisplayController: {fileID: 1859932804}
   chatConfigurations:
-  - chatPanel: {fileID: 808698045}
-    optionPanel: {fileID: 871629838}
-    timerDisplayController: {fileID: 1859932804}
-  - chatPanel: {fileID: 2114686459}
-    optionPanel: {fileID: 648273691}
-    timerDisplayController: {fileID: 924805882}
+  - chatHandler: {fileID: 245914490}
+  - chatHandler: {fileID: 2111429941}
 --- !u!4 &541927738
 Transform:
   m_ObjectHideFlags: 0
@@ -5086,6 +5100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2111429940}
+  - component: {fileID: 2111429941}
   m_Layer: 0
   m_Name: Messenger App (1)
   m_TagString: Untagged
@@ -5114,9 +5129,26 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 1117.8215, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2111429941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111429939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd4b0fc46606eb84dba33f84fa838b68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chatPanel: {fileID: 2114686459}
+  optionPanel: {fileID: 648273691}
+  timerDisplayController: {fileID: 924805882}
+  isActiveByDefault: 1
+  fadeDuration: 0.2
 --- !u!1 &2114686457
 GameObject:
   m_ObjectHideFlags: 0
