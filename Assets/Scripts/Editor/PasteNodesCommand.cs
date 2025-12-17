@@ -28,10 +28,10 @@ public class PasteNodesCommand : GraphCommand
     private List<BaseNode> pastedNodes = new List<BaseNode>();
     private List<Edge> createdEdges = new List<Edge>();
     private Vector2 pastePosition;
-    private DialogueGraphView.ClipboardData clipboardData;
+    private ClipboardData clipboardData;
     private Dictionary<string, string> guidMap = new Dictionary<string, string>();
 
-    public PasteNodesCommand(DialogueGraphView graphView, DialogueGraphView.ClipboardData clipboardData, Vector2 pastePosition)
+    public PasteNodesCommand(DialogueGraphView graphView, ClipboardData clipboardData, Vector2 pastePosition)
         : base(graphView)
     {
         this.clipboardData = clipboardData;
@@ -40,43 +40,46 @@ public class PasteNodesCommand : GraphCommand
 
     public override void Execute()
     {
-        // Создание узлов
+        // Создаем маппинг старых GUID на новые
         foreach (var serializedNode in clipboardData.nodes)
         {
-            // Генерация нового GUID
             string newGuid = Guid.NewGuid().ToString();
             guidMap[serializedNode.guid] = newGuid;
+        }
 
-            // Поиск типа узла
-            Type nodeType = Type.GetType($"DialogueSystem.{serializedNode.type}");
+        // Создаем узлы
+        foreach (var serializedNode in clipboardData.nodes)
+        {
+            // Находим тип узла по полному имени (включая namespace)
+            Type nodeType = Type.GetType(serializedNode.type);
             if (nodeType == null)
             {
-                // Пробуем без namespace
-                nodeType = Type.GetType(serializedNode.type);
-                if (nodeType == null)
-                {
-                    Debug.LogWarning($"Unknown node type: {serializedNode.type}");
-                    continue;
-                }
+                Debug.LogWarning($"Unknown node type: {serializedNode.type}");
+                continue;
             }
 
-            // Создание узла
+            // Позиция нового узла с учетом смещения относительно центра
             Vector2 nodePosition = new Vector2(
                 pastePosition.x + (serializedNode.position.x - clipboardData.center.x),
                 pastePosition.y + (serializedNode.position.y - clipboardData.center.y)
             );
 
+            // Создаем узел
             var newNode = NodeFactory.CreateNode(nodeType, nodePosition);
             if (newNode == null) continue;
 
-            newNode.GUID = newGuid;
+            // Устанавливаем новый GUID
+            newNode.GUID = guidMap[serializedNode.guid];
+
+            // Десериализуем данные узла
             newNode.DeserializeNodeData(serializedNode.nodeData);
 
+            // Добавляем узел в граф
             graphView.AddElement(newNode);
             pastedNodes.Add(newNode);
         }
 
-        // Создание связей
+        // Создаем связи между узлами
         foreach (var connection in clipboardData.connections)
         {
             if (guidMap.TryGetValue(connection.sourceGuid, out string newSourceGuid) &&
@@ -90,7 +93,7 @@ public class PasteNodesCommand : GraphCommand
                     Port outputPort = null;
                     Port inputPort = null;
 
-                    // Поиск output порта по имени
+                    // Находим output порт по имени
                     foreach (Port port in sourceNode.outputContainer.Children())
                     {
                         if (port is Port portElement && portElement.portName == connection.portName)
@@ -100,7 +103,7 @@ public class PasteNodesCommand : GraphCommand
                         }
                     }
 
-                    // Поиск первого input порта
+                    // Находим первый input порт
                     if (targetNode.inputContainer.childCount > 0)
                     {
                         inputPort = targetNode.inputContainer[0] as Port;
@@ -118,7 +121,7 @@ public class PasteNodesCommand : GraphCommand
             }
         }
 
-        // Выделение вставленных узлов
+        // Выделяем вставленные узлы
         graphView.ClearSelection();
         foreach (var node in pastedNodes)
         {
@@ -130,7 +133,7 @@ public class PasteNodesCommand : GraphCommand
 
     public override void Undo()
     {
-        // Удаление связей
+        // Удаляем связи
         foreach (var edge in createdEdges.ToList())
         {
             if (edge != null && edge.parent != null)
@@ -139,12 +142,12 @@ public class PasteNodesCommand : GraphCommand
             }
         }
 
-        // Удаление узлов
+        // Удаляем узлы
         foreach (var node in pastedNodes.ToList())
         {
             if (node != null && node.parent != null)
             {
-                // Удаление всех связей, связанных с этим узлом
+                // Удаляем также все связи, связанные с этим узлом
                 var edgesToRemove = graphView.edges
                     .Where(e => e.input.node == node || e.output.node == node)
                     .ToList();

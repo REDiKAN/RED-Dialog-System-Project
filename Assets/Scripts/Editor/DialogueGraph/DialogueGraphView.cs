@@ -270,7 +270,11 @@ public class DialogueGraphView : GraphView
         if (selectedNodes.Count == 0)
             return;
 
-        var command = new DuplicateNodesCommand(this, selectedNodes);
+        // Получаем позицию для вставки (относительно курсора)
+        Vector2 pastePosition = GetMousePositionInGraphSpace();
+
+        // Передаем pastePosition как третий параметр в конструктор
+        var command = new DuplicateNodesCommand(this, selectedNodes, pastePosition);
         undoManager.ExecuteCommand(command);
     }
 
@@ -341,10 +345,23 @@ public class DialogueGraphView : GraphView
             DeleteSelection();
             evt.StopPropagation();
         }
-        // Новое: обработка Ctrl+D для копирования
+        // Новое: обработка Ctrl+D для копирования в пределах файла
         else if (evt.ctrlKey && evt.keyCode == KeyCode.D)
         {
             DuplicateSelectedNodes();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+C для копирования в буфер обмена
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.C)
+        {
+            CopySelectedNodes();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+V для вставки из буфера обмена
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.V)
+        {
+            Vector2 pastePosition = GetMousePositionInGraphSpace();
+            PasteNodesAtPosition(pastePosition);
             evt.StopPropagation();
         }
     }
@@ -1157,17 +1174,19 @@ public class DialogueGraphView : GraphView
 
         var clipboardData = new ClipboardData();
 
+        // Копируем данные узлов
         foreach (var node in selectedNodes)
         {
             clipboardData.nodes.Add(new SerializedNode
             {
-                type = node.GetType().Name,
+                type = node.GetType().FullName,
                 guid = node.GUID,
                 position = node.GetPosition().position,
                 nodeData = node.SerializeNodeData()
             });
         }
 
+        // Копируем связи между узлами
         var edges = this.edges.ToList();
         foreach (var edge in edges)
         {
@@ -1185,6 +1204,7 @@ public class DialogueGraphView : GraphView
             }
         }
 
+        // Вычисляем центр выделения
         Vector2 minPos = new Vector2(float.MaxValue, float.MaxValue);
         Vector2 maxPos = new Vector2(float.MinValue, float.MinValue);
         foreach (var node in selectedNodes)
@@ -1197,8 +1217,10 @@ public class DialogueGraphView : GraphView
         clipboardData.center = (minPos + maxPos) / 2;
         clipboardData.size = maxPos - minPos;
 
+        // Сохраняем в системный буфер обмена
         string json = JsonUtility.ToJson(clipboardData);
         GUIUtility.systemCopyBuffer = json;
+
         Debug.Log($"Copied {selectedNodes.Count} nodes to clipboard");
     }
 
@@ -1208,6 +1230,7 @@ public class DialogueGraphView : GraphView
 
         try
         {
+            // Используем тип ClipboardData из PasteNodesCommand
             var clipboardData = JsonUtility.FromJson<ClipboardData>(GUIUtility.systemCopyBuffer);
             if (clipboardData.nodes.Count == 0) return;
 
@@ -1219,36 +1242,9 @@ public class DialogueGraphView : GraphView
             Debug.LogError($"Failed to paste nodes: {e.Message}");
         }
     }
-
     public void CreateNode(Type nodeType, Vector2 position)
     {
         var command = new CreateNodeCommand(this, nodeType, position);
         undoManager.ExecuteCommand(command);
-    }
-
-    [System.Serializable]
-    public class ClipboardData
-    {
-        public List<SerializedNode> nodes = new List<SerializedNode>();
-        public List<SerializedConnection> connections = new List<SerializedConnection>();
-        public Vector2 center;
-        public Vector2 size;
-    }
-
-    [System.Serializable]
-    public class SerializedNode
-    {
-        public string type;
-        public string guid;
-        public Vector2 position;
-        public string nodeData;
-    }
-
-    [System.Serializable]
-    public class SerializedConnection
-    {
-        public string sourceGuid;
-        public string targetGuid;
-        public string portName;
     }
 }

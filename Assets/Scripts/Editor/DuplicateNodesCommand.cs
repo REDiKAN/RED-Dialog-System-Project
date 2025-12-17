@@ -21,23 +21,12 @@ public class DuplicateNodesCommand : GraphCommand
     private List<BaseNode> originalNodes = new List<BaseNode>();
     private List<SerializedConnection> internalConnections = new List<SerializedConnection>();
 
-    public DuplicateNodesCommand(DialogueGraphView graphView, List<BaseNode> nodesToDuplicate)
+    public DuplicateNodesCommand(DialogueGraphView graphView, List<BaseNode> nodesToDuplicate, Vector2 pastePosition)
     : base(graphView)
     {
+        this.pastePosition = pastePosition;
         this.originalNodes = nodesToDuplicate;
-
-        // Расчет центра выделения
-        Vector2 selectionCenter = Vector2.zero;
-        foreach (var node in originalNodes)
-        {
-            selectionCenter += node.GetPosition().position;
-        }
-        selectionCenter /= originalNodes.Count;
-
-        // Позиция для вставки - центр выделения + смещение 50px вправо и вниз
-        this.pastePosition = selectionCenter + new Vector2(50, 50);
-
-        // Сохранение внутренних связей
+        // Сохранение внутренних связей (тот же код, что и в CopySelectedNodes)
         foreach (var edge in graphView.edges.ToList())
         {
             var outputNode = edge.output?.node as BaseNode;
