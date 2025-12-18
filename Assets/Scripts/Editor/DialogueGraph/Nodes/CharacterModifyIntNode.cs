@@ -126,18 +126,15 @@ public class CharacterModifyIntNode : BaseNode
     public override void DeserializeNodeData(string jsonData)
     {
         var data = JsonUtility.FromJson<CharacterModifyIntNodeSerializedData>(jsonData);
-
-        // Загрузка персонажа по GUID
+        // Загрузка персонажа из GUID
         if (!string.IsNullOrEmpty(data.CharacterAssetGuid))
         {
             CharacterAsset = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.CharacterAssetGuid);
         }
-
         SelectedVariable = data.SelectedVariable;
         Operator = (OperatorType)Enum.Parse(typeof(OperatorType), data.Operator);
         Value = data.Value;
-
-        // Восстановление UI
-        UpdateUIFromData();
+        // Обновление UI
+        UpdateUIFromData(); // Убедитесь, что этот метод вызывается
     }
 }

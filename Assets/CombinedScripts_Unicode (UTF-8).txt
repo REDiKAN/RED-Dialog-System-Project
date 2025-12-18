@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 17.12.2025 21:57:24
+// Generation Time: 18.12.2025 19:58:41
 // Total Files: 103
 // =================================
 
@@ -3210,17 +3210,15 @@ public class DuplicateNodesCommand : GraphCommand
     private List<SerializedConnection> internalConnections = new List<SerializedConnection>();
 
     public DuplicateNodesCommand(DialogueGraphView graphView, List<BaseNode> nodesToDuplicate, Vector2 pastePosition)
-        : base(graphView)
+    : base(graphView)
     {
         this.pastePosition = pastePosition;
         this.originalNodes = nodesToDuplicate;
-
-        // �������� ���������� ����� ����� ����������� ������
+        // ���������� ���������� ������ (��� �� ���, ��� � � CopySelectedNodes)
         foreach (var edge in graphView.edges.ToList())
         {
             var outputNode = edge.output?.node as BaseNode;
             var inputNode = edge.input?.node as BaseNode;
-
             if (outputNode != null && inputNode != null &&
                 nodesToDuplicate.Contains(outputNode) && nodesToDuplicate.Contains(inputNode))
             {
@@ -3483,10 +3481,10 @@ public class PasteNodesCommand : GraphCommand
     private List<BaseNode> pastedNodes = new List<BaseNode>();
     private List<Edge> createdEdges = new List<Edge>();
     private Vector2 pastePosition;
-    private DialogueGraphView.ClipboardData clipboardData;
+    private ClipboardData clipboardData;
     private Dictionary<string, string> guidMap = new Dictionary<string, string>();
 
-    public PasteNodesCommand(DialogueGraphView graphView, DialogueGraphView.ClipboardData clipboardData, Vector2 pastePosition)
+    public PasteNodesCommand(DialogueGraphView graphView, ClipboardData clipboardData, Vector2 pastePosition)
         : base(graphView)
     {
         this.clipboardData = clipboardData;
@@ -3495,43 +3493,46 @@ public class PasteNodesCommand : GraphCommand
 
     public override void Execute()
     {
-        // �������� �����
+        // ������� ������� ������ GUID �� �����
         foreach (var serializedNode in clipboardData.nodes)
         {
-            // ��������� ������ GUID
             string newGuid = Guid.NewGuid().ToString();
             guidMap[serializedNode.guid] = newGuid;
+        }
 
-            // ����� ���� ����
-            Type nodeType = Type.GetType($"DialogueSystem.{serializedNode.type}");
+        // ������� ����
+        foreach (var serializedNode in clipboardData.nodes)
+        {
+            // ������� ��� ���� �� ������� ����� (������� namespace)
+            Type nodeType = Type.GetType(serializedNode.type);
             if (nodeType == null)
             {
-                // ������� ��� namespace
-                nodeType = Type.GetType(serializedNode.type);
-                if (nodeType == null)
-                {
-                    Debug.LogWarning($"Unknown node type: {serializedNode.type}");
-                    continue;
-                }
+                Debug.LogWarning($"Unknown node type: {serializedNode.type}");
+                continue;
             }
 
-            // �������� ����
+            // ������� ������ ���� � ������ �������� ������������ ������
             Vector2 nodePosition = new Vector2(
                 pastePosition.x + (serializedNode.position.x - clipboardData.center.x),
                 pastePosition.y + (serializedNode.position.y - clipboardData.center.y)
             );
 
+            // ������� ����
             var newNode = NodeFactory.CreateNode(nodeType, nodePosition);
             if (newNode == null) continue;
 
-            newNode.GUID = newGuid;
+            // ������������� ����� GUID
+            newNode.GUID = guidMap[serializedNode.guid];
+
+            // ������������� ������ ����
             newNode.DeserializeNodeData(serializedNode.nodeData);
 
+            // ��������� ���� � ����
             graphView.AddElement(newNode);
             pastedNodes.Add(newNode);
         }
 
-        // �������� ������
+        // ������� ����� ����� ������
         foreach (var connection in clipboardData.connections)
         {
             if (guidMap.TryGetValue(connection.sourceGuid, out string newSourceGuid) &&
@@ -3545,7 +3546,7 @@ public class PasteNodesCommand : GraphCommand
                     Port outputPort = null;
                     Port inputPort = null;
 
-                    // ����� output ����� �� �����
+                    // ������� output ���� �� �����
                     foreach (Port port in sourceNode.outputContainer.Children())
                     {
                         if (port is Port portElement && portElement.portName == connection.portName)
@@ -3555,7 +3556,7 @@ public class PasteNodesCommand : GraphCommand
                         }
                     }
 
-                    // ����� ������� input �����
+                    // ������� ������ input ����
                     if (targetNode.inputContainer.childCount > 0)
                     {
                         inputPort = targetNode.inputContainer[0] as Port;
@@ -3573,7 +3574,7 @@ public class PasteNodesCommand : GraphCommand
             }
         }
 
-        // ��������� ����������� �����
+        // �������� ����������� ����
         graphView.ClearSelection();
         foreach (var node in pastedNodes)
         {
@@ -3585,7 +3586,7 @@ public class PasteNodesCommand : GraphCommand
 
     public override void Undo()
     {
-        // �������� ������
+        // ������� �����
         foreach (var edge in createdEdges.ToList())
         {
             if (edge != null && edge.parent != null)
@@ -3594,12 +3595,12 @@ public class PasteNodesCommand : GraphCommand
             }
         }
 
-        // �������� �����
+        // ������� ����
         foreach (var node in pastedNodes.ToList())
         {
             if (node != null && node.parent != null)
             {
-                // �������� ���� ������, ��������� � ���� �����
+                // ������� ����� ��� �����, ��������� � ���� �����
                 var edgesToRemove = graphView.edges
                     .Where(e => e.input.node == node || e.output.node == node)
                     .ToList();
@@ -4387,11 +4388,13 @@ public class DialogueGraphView : GraphView
         var selectedNodes = selection.OfType<BaseNode>()
             .Where(node => !node.EntryPoint)
             .ToList();
-
         if (selectedNodes.Count == 0)
             return;
 
+        // Получаем позицию для вставки (относительно курсора)
         Vector2 pastePosition = GetMousePositionInGraphSpace();
+
+        // Передаем pastePosition как третий параметр в конструктор
         var command = new DuplicateNodesCommand(this, selectedNodes, pastePosition);
         undoManager.ExecuteCommand(command);
     }
@@ -4459,14 +4462,27 @@ public class DialogueGraphView : GraphView
     {
         if (evt.keyCode == KeyCode.Delete)
         {
-            // Проверяем, есть ли в выделении EntryNode
-            if (selection.OfType<BaseNode>().Any(node => node.EntryPoint))
-            {
-                EditorUtility.DisplayDialog("Cannot Delete", "The entry point node cannot be deleted.", "OK");
-                evt.StopPropagation();
-                return;
-            }
+            // существующий код удаления
             DeleteSelection();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+D для копирования в пределах файла
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.D)
+        {
+            DuplicateSelectedNodes();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+C для копирования в буфер обмена
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.C)
+        {
+            CopySelectedNodes();
+            evt.StopPropagation();
+        }
+        // Новое: обработка Ctrl+V для вставки из буфера обмена
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.V)
+        {
+            Vector2 pastePosition = GetMousePositionInGraphSpace();
+            PasteNodesAtPosition(pastePosition);
             evt.StopPropagation();
         }
     }
@@ -5279,17 +5295,19 @@ public class DialogueGraphView : GraphView
 
         var clipboardData = new ClipboardData();
 
+        // Копируем данные узлов
         foreach (var node in selectedNodes)
         {
             clipboardData.nodes.Add(new SerializedNode
             {
-                type = node.GetType().Name,
+                type = node.GetType().FullName,
                 guid = node.GUID,
                 position = node.GetPosition().position,
                 nodeData = node.SerializeNodeData()
             });
         }
 
+        // Копируем связи между узлами
         var edges = this.edges.ToList();
         foreach (var edge in edges)
         {
@@ -5307,6 +5325,7 @@ public class DialogueGraphView : GraphView
             }
         }
 
+        // Вычисляем центр выделения
         Vector2 minPos = new Vector2(float.MaxValue, float.MaxValue);
         Vector2 maxPos = new Vector2(float.MinValue, float.MinValue);
         foreach (var node in selectedNodes)
@@ -5319,8 +5338,10 @@ public class DialogueGraphView : GraphView
         clipboardData.center = (minPos + maxPos) / 2;
         clipboardData.size = maxPos - minPos;
 
+        // Сохраняем в системный буфер обмена
         string json = JsonUtility.ToJson(clipboardData);
         GUIUtility.systemCopyBuffer = json;
+
         Debug.Log($"Copied {selectedNodes.Count} nodes to clipboard");
     }
 
@@ -5330,6 +5351,7 @@ public class DialogueGraphView : GraphView
 
         try
         {
+            // Используем тип ClipboardData из PasteNodesCommand
             var clipboardData = JsonUtility.FromJson<ClipboardData>(GUIUtility.systemCopyBuffer);
             if (clipboardData.nodes.Count == 0) return;
 
@@ -5341,37 +5363,10 @@ public class DialogueGraphView : GraphView
             Debug.LogError($"Failed to paste nodes: {e.Message}");
         }
     }
-
     public void CreateNode(Type nodeType, Vector2 position)
     {
         var command = new CreateNodeCommand(this, nodeType, position);
         undoManager.ExecuteCommand(command);
-    }
-
-    [System.Serializable]
-    public class ClipboardData
-    {
-        public List<SerializedNode> nodes = new List<SerializedNode>();
-        public List<SerializedConnection> connections = new List<SerializedConnection>();
-        public Vector2 center;
-        public Vector2 size;
-    }
-
-    [System.Serializable]
-    public class SerializedNode
-    {
-        public string type;
-        public string guid;
-        public Vector2 position;
-        public string nodeData;
-    }
-
-    [System.Serializable]
-    public class SerializedConnection
-    {
-        public string sourceGuid;
-        public string targetGuid;
-        public string portName;
     }
 }
 
@@ -6564,15 +6559,16 @@ using UnityEngine;
 using DialogueSystem;
 using UnityEditor;
 using System;
+using UnityEditor.Search;
 
 public class CharacterIntConditionNode : BaseConditionNode
 {
-    public string CharacterName = "";
+    public CharacterData CharacterAsset;
     public string SelectedVariable = "";
     public ComparisonType Comparison;
     public int CompareValue;
 
-    private TextField characterNameField;
+    private ObjectField characterField;
     private DropdownField variableDropdown;
     private DropdownField comparisonDropdown;
     private IntegerField valueField;
@@ -6582,13 +6578,17 @@ public class CharacterIntConditionNode : BaseConditionNode
         base.Initialize(position);
         title = "Character Condition (Int)";
 
-        characterNameField = new TextField("Character Name");
-        characterNameField.RegisterValueChangedCallback(evt =>
+        // Character field (ObjectField ������ TextField)
+        characterField = new ObjectField("Character")
         {
-            CharacterName = evt.newValue;
+            objectType = typeof(CharacterData)
+        };
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            CharacterAsset = evt.newValue as CharacterData;
             RefreshVariableDropdown();
         });
-        mainContainer.Add(characterNameField);
+        mainContainer.Add(characterField);
 
         variableDropdown = new DropdownField("Variable") { choices = new List<string>() };
         variableDropdown.RegisterValueChangedCallback(evt => SelectedVariable = evt.newValue);
@@ -6597,7 +6597,6 @@ public class CharacterIntConditionNode : BaseConditionNode
         var choices = System.Enum.GetNames(typeof(ComparisonType));
         comparisonDropdown = new DropdownField(choices.ToList(), choices[0]); // "Equal"
         comparisonDropdown.label = "Comparison";
-
         comparisonDropdown.RegisterValueChangedCallback(evt =>
             Comparison = (ComparisonType)System.Enum.Parse(typeof(ComparisonType), evt.newValue));
         mainContainer.Add(comparisonDropdown);
@@ -6610,17 +6609,9 @@ public class CharacterIntConditionNode : BaseConditionNode
         RefreshPorts();
     }
 
-    public void SetInitialData(string characterName, string variable, ComparisonType comp, int value)
-    {
-        CharacterName = characterName;
-        SelectedVariable = variable;
-        Comparison = comp;
-        CompareValue = value;
-    }
-
     public void UpdateUIFromData()
     {
-        characterNameField?.SetValueWithoutNotify(CharacterName);
+        characterField?.SetValueWithoutNotify(CharacterAsset);
         RefreshVariableDropdown();
         variableDropdown?.SetValueWithoutNotify(SelectedVariable);
         comparisonDropdown?.SetValueWithoutNotify(Comparison.ToString());
@@ -6630,18 +6621,9 @@ public class CharacterIntConditionNode : BaseConditionNode
     private void RefreshVariableDropdown()
     {
         var choices = new List<string>();
-        if (!string.IsNullOrEmpty(CharacterName))
+        if (CharacterAsset != null)
         {
-#if UNITY_EDITOR
-            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:CharacterData {CharacterName}");
-            if (guids.Length > 0)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                var charData = UnityEditor.AssetDatabase.LoadAssetAtPath<CharacterData>(path);
-                if (charData != null)
-                    choices = charData.Variables.Select(v => v.VariableName).ToList();
-            }
-#endif
+            choices = CharacterAsset.Variables.Select(v => v.VariableName).ToList();
         }
         variableDropdown.choices = choices;
         if (!string.IsNullOrEmpty(SelectedVariable) && choices.Contains(SelectedVariable))
@@ -6653,7 +6635,7 @@ public class CharacterIntConditionNode : BaseConditionNode
     [System.Serializable]
     private class CharacterIntConditionNodeSerializedData
     {
-        public string CharacterName;
+        public string CharacterAssetGuid;
         public string SelectedVariable;
         public string Comparison;
         public int CompareValue;
@@ -6661,9 +6643,14 @@ public class CharacterIntConditionNode : BaseConditionNode
 
     public override string SerializeNodeData()
     {
+        string characterGuid = string.Empty;
+        if (CharacterAsset != null)
+        {
+            characterGuid = AssetDatabaseHelper.GetAssetGuid(CharacterAsset);
+        }
         var data = new CharacterIntConditionNodeSerializedData
         {
-            CharacterName = CharacterName,
+            CharacterAssetGuid = characterGuid,
             SelectedVariable = SelectedVariable,
             Comparison = Comparison.ToString(),
             CompareValue = CompareValue
@@ -6674,12 +6661,15 @@ public class CharacterIntConditionNode : BaseConditionNode
     public override void DeserializeNodeData(string jsonData)
     {
         var data = JsonUtility.FromJson<CharacterIntConditionNodeSerializedData>(jsonData);
-        CharacterName = data.CharacterName;
+        // Load character from GUID
+        if (!string.IsNullOrEmpty(data.CharacterAssetGuid))
+        {
+            CharacterAsset = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.CharacterAssetGuid);
+        }
         SelectedVariable = data.SelectedVariable;
         Comparison = (ComparisonType)Enum.Parse(typeof(ComparisonType), data.Comparison);
         CompareValue = data.CompareValue;
-
-        // �������������� UI
+        // Update UI
         RefreshVariableDropdown();
         UpdateUIFromData();
     }
@@ -6814,19 +6804,16 @@ public class CharacterModifyIntNode : BaseNode
     public override void DeserializeNodeData(string jsonData)
     {
         var data = JsonUtility.FromJson<CharacterModifyIntNodeSerializedData>(jsonData);
-
         // �������� ��������� �� GUID
         if (!string.IsNullOrEmpty(data.CharacterAssetGuid))
         {
             CharacterAsset = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.CharacterAssetGuid);
         }
-
         SelectedVariable = data.SelectedVariable;
         Operator = (OperatorType)Enum.Parse(typeof(OperatorType), data.Operator);
         Value = data.Value;
-
-        // �������������� UI
-        UpdateUIFromData();
+        // ���������� UI
+        UpdateUIFromData(); // ���������, ��� ���� ����� ����������
     }
 }
 
@@ -10879,7 +10866,7 @@ public class GraphSaveUtility
                 {
                     Guid = charIntCond.GUID,
                     Position = node.GetPosition().position,
-                    CharacterName = charIntCond.CharacterName,
+                    CharacterName = charIntCond.name,
                     SelectedVariable = charIntCond.SelectedVariable,
                     Comparison = charIntCond.Comparison,
                     CompareValue = charIntCond.CompareValue
@@ -11273,7 +11260,10 @@ public class GraphSaveUtility
             tempNode.GUID = nodeData.Guid;
             if (tempNode is CharacterIntConditionNode n)
             {
-                n.SetInitialData(nodeData.CharacterName, nodeData.SelectedVariable, nodeData.Comparison, nodeData.CompareValue);
+                n.name = nodeData.CharacterName;
+                n.SelectedVariable = nodeData.SelectedVariable;
+                n.Comparison = nodeData.Comparison;
+                n.CompareValue = nodeData.CompareValue;
                 n.UpdateUIFromData();
             }
             targetGraphView.AddElement(tempNode);
@@ -12550,9 +12540,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 103
-// Total Size: 444,09 KB
-// Total Lines: 12338
-// Classes: 134
-// Methods: 745
-// Comments: 1010
+// Total Size: 445,47 KB
+// Total Lines: 12328
+// Classes: 131
+// Methods: 741
+// Comments: 1025
 // =====================================

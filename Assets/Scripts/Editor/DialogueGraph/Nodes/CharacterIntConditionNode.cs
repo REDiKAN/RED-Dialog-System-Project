@@ -5,15 +5,16 @@ using UnityEngine;
 using DialogueSystem;
 using UnityEditor;
 using System;
+using UnityEditor.Search;
 
 public class CharacterIntConditionNode : BaseConditionNode
 {
-    public string CharacterName = "";
+    public CharacterData CharacterAsset;
     public string SelectedVariable = "";
     public ComparisonType Comparison;
     public int CompareValue;
 
-    private TextField characterNameField;
+    private ObjectField characterField;
     private DropdownField variableDropdown;
     private DropdownField comparisonDropdown;
     private IntegerField valueField;
@@ -23,13 +24,17 @@ public class CharacterIntConditionNode : BaseConditionNode
         base.Initialize(position);
         title = "Character Condition (Int)";
 
-        characterNameField = new TextField("Character Name");
-        characterNameField.RegisterValueChangedCallback(evt =>
+        // Character field (ObjectField вместо TextField)
+        characterField = new ObjectField("Character")
         {
-            CharacterName = evt.newValue;
+            objectType = typeof(CharacterData)
+        };
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            CharacterAsset = evt.newValue as CharacterData;
             RefreshVariableDropdown();
         });
-        mainContainer.Add(characterNameField);
+        mainContainer.Add(characterField);
 
         variableDropdown = new DropdownField("Variable") { choices = new List<string>() };
         variableDropdown.RegisterValueChangedCallback(evt => SelectedVariable = evt.newValue);
@@ -38,7 +43,6 @@ public class CharacterIntConditionNode : BaseConditionNode
         var choices = System.Enum.GetNames(typeof(ComparisonType));
         comparisonDropdown = new DropdownField(choices.ToList(), choices[0]); // "Equal"
         comparisonDropdown.label = "Comparison";
-
         comparisonDropdown.RegisterValueChangedCallback(evt =>
             Comparison = (ComparisonType)System.Enum.Parse(typeof(ComparisonType), evt.newValue));
         mainContainer.Add(comparisonDropdown);
@@ -51,17 +55,9 @@ public class CharacterIntConditionNode : BaseConditionNode
         RefreshPorts();
     }
 
-    public void SetInitialData(string characterName, string variable, ComparisonType comp, int value)
-    {
-        CharacterName = characterName;
-        SelectedVariable = variable;
-        Comparison = comp;
-        CompareValue = value;
-    }
-
     public void UpdateUIFromData()
     {
-        characterNameField?.SetValueWithoutNotify(CharacterName);
+        characterField?.SetValueWithoutNotify(CharacterAsset);
         RefreshVariableDropdown();
         variableDropdown?.SetValueWithoutNotify(SelectedVariable);
         comparisonDropdown?.SetValueWithoutNotify(Comparison.ToString());
@@ -71,18 +67,9 @@ public class CharacterIntConditionNode : BaseConditionNode
     private void RefreshVariableDropdown()
     {
         var choices = new List<string>();
-        if (!string.IsNullOrEmpty(CharacterName))
+        if (CharacterAsset != null)
         {
-#if UNITY_EDITOR
-            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:CharacterData {CharacterName}");
-            if (guids.Length > 0)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                var charData = UnityEditor.AssetDatabase.LoadAssetAtPath<CharacterData>(path);
-                if (charData != null)
-                    choices = charData.Variables.Select(v => v.VariableName).ToList();
-            }
-#endif
+            choices = CharacterAsset.Variables.Select(v => v.VariableName).ToList();
         }
         variableDropdown.choices = choices;
         if (!string.IsNullOrEmpty(SelectedVariable) && choices.Contains(SelectedVariable))
@@ -94,7 +81,7 @@ public class CharacterIntConditionNode : BaseConditionNode
     [System.Serializable]
     private class CharacterIntConditionNodeSerializedData
     {
-        public string CharacterName;
+        public string CharacterAssetGuid;
         public string SelectedVariable;
         public string Comparison;
         public int CompareValue;
@@ -102,9 +89,14 @@ public class CharacterIntConditionNode : BaseConditionNode
 
     public override string SerializeNodeData()
     {
+        string characterGuid = string.Empty;
+        if (CharacterAsset != null)
+        {
+            characterGuid = AssetDatabaseHelper.GetAssetGuid(CharacterAsset);
+        }
         var data = new CharacterIntConditionNodeSerializedData
         {
-            CharacterName = CharacterName,
+            CharacterAssetGuid = characterGuid,
             SelectedVariable = SelectedVariable,
             Comparison = Comparison.ToString(),
             CompareValue = CompareValue
@@ -115,12 +107,15 @@ public class CharacterIntConditionNode : BaseConditionNode
     public override void DeserializeNodeData(string jsonData)
     {
         var data = JsonUtility.FromJson<CharacterIntConditionNodeSerializedData>(jsonData);
-        CharacterName = data.CharacterName;
+        // Load character from GUID
+        if (!string.IsNullOrEmpty(data.CharacterAssetGuid))
+        {
+            CharacterAsset = AssetDatabaseHelper.LoadAssetFromGuid<CharacterData>(data.CharacterAssetGuid);
+        }
         SelectedVariable = data.SelectedVariable;
         Comparison = (ComparisonType)Enum.Parse(typeof(ComparisonType), data.Comparison);
         CompareValue = data.CompareValue;
-
-        // Восстановление UI
+        // Update UI
         RefreshVariableDropdown();
         UpdateUIFromData();
     }

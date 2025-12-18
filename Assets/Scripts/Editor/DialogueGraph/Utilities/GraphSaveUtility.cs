@@ -228,7 +228,7 @@ public class GraphSaveUtility
                 {
                     Guid = charIntCond.GUID,
                     Position = node.GetPosition().position,
-                    CharacterName = charIntCond.CharacterName,
+                    CharacterName = charIntCond.name,
                     SelectedVariable = charIntCond.SelectedVariable,
                     Comparison = charIntCond.Comparison,
                     CompareValue = charIntCond.CompareValue
@@ -622,7 +622,10 @@ public class GraphSaveUtility
             tempNode.GUID = nodeData.Guid;
             if (tempNode is CharacterIntConditionNode n)
             {
-                n.SetInitialData(nodeData.CharacterName, nodeData.SelectedVariable, nodeData.Comparison, nodeData.CompareValue);
+                n.name = nodeData.CharacterName;
+                n.SelectedVariable = nodeData.SelectedVariable;
+                n.Comparison = nodeData.Comparison;
+                n.CompareValue = nodeData.CompareValue;
                 n.UpdateUIFromData();
             }
             targetGraphView.AddElement(tempNode);
