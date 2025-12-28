@@ -120,26 +120,12 @@ public class DialogueSettingsWindow : EditorWindow
         }
         });
 
-        // Контейнер для кнопок Select All и Deselect All
-        var buttonContainer = new VisualElement();
-        buttonContainer.style.flexDirection = FlexDirection.Row;
-        buttonContainer.style.marginBottom = 10;
-
-        var selectAllButton = new Button(() => SetAllFavorites(true)) { text = "Select All" };
-        selectAllButton.style.marginRight = 5;
-        var deselectAllButton = new Button(() => SetAllFavorites(false)) { text = "Deselect All" };
-
-        buttonContainer.Add(selectAllButton);
-        buttonContainer.Add(deselectAllButton);
-
-        _rightPanel.Add(buttonContainer);
-
-        // ScrollView для списка узлов
+        // ScrollView для списка узлов (без кнопок Select/Deselect All)
         var scrollView = new ScrollView();
         scrollView.style.maxHeight = 400;
         scrollView.style.marginBottom = 10;
 
-        // Сгруппированные категории узлов - ИСПРАВЛЕНО: используем только имена классов без пространства имен
+        // Сгруппированные категории узлов
         AddNodeCategoryToPanel(scrollView, "Speech Nodes", new[] {
         "SpeechNodeText", "SpeechNodeAudio", "SpeechNodeImage", "SpeechNodeRandText"
     });
