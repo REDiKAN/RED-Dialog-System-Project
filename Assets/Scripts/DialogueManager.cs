@@ -207,6 +207,83 @@ public class DialogueManager : MonoBehaviour
         Debug.Log($"Switched to chat configuration index: {currentChatIndex}, handler: {newConfig.chatHandler?.name}");
     }
 
+    private void ProcessChangeChatIconNode(ChangeChatIconNodeData nodeData)
+    {
+        // Получаем активный ChatHandler
+        if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
+        {
+            var chatConfig = chatConfigurations[currentChatIndex];
+            if (chatConfig != null && chatConfig.chatHandler != null)
+            {
+                var chatHandler = chatConfig.chatHandler;
+                if (chatHandler.iconChatPanel != null)
+                {
+                    // Загружаем спрайт из Resources
+                    if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
+                    {
+                        var sprite = Resources.Load<Sprite>(nodeData.IconSpritePath);
+                        if (sprite != null)
+                        {
+                            chatHandler.iconChatPanel.sprite = sprite;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Sprite not found in Resources for path: {nodeData.IconSpritePath}");
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("iconChatPanel is null in active ChatHandler");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Chat configuration or ChatHandler is null");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
+        }
+
+        // Переходим к следующему узлу
+        GoToNextNode(nodeData.Guid);
+    }
+
+    private void ProcessChangeChatNameNode(ChangeChatNameNodeData nodeData)
+    {
+        // Получаем активный ChatHandler
+        if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
+        {
+            var chatConfig = chatConfigurations[currentChatIndex];
+            if (chatConfig != null && chatConfig.chatHandler != null)
+            {
+                var chatHandler = chatConfig.chatHandler;
+                if (chatHandler.nameChatPanel != null)
+                {
+                    // Устанавливаем новое название
+                    chatHandler.nameChatPanel.text = nodeData.NewChatName;
+                }
+                else
+                {
+                    Debug.LogWarning("nameChatPanel is null in active ChatHandler");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Chat configuration or ChatHandler is null");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
+        }
+
+        // Переходим к следующему узлу
+        GoToNextNode(nodeData.Guid);
+    }
+
     private void SaveOriginalCharacterStates()
     {
         _originalButtonPressStates.Clear();
@@ -321,6 +398,13 @@ public class DialogueManager : MonoBehaviour
             case ChatSwitchNodeData chatSwitchNode:
                 SwitchChat(chatSwitchNode.TargetChatIndex);
                 GoToNextNode(chatSwitchNode.Guid);
+                break;
+            case ChangeChatIconNodeData changeChatIconNode:
+                ProcessChangeChatIconNode(changeChatIconNode);
+                break;
+
+            case ChangeChatNameNodeData changeChatNameNode:
+                ProcessChangeChatNameNode(changeChatNameNode);
                 break;
             default:
                 Debug.LogWarning($"Неизвестный тип узла: {currentNode?.GetType().Name}");
@@ -1362,6 +1446,12 @@ public class DialogueManager : MonoBehaviour
         // Добавлено: обработка ChatSwitchNodeData
         var chatSwitchNode = currentDialogue.ChatSwitchNodeDatas.FirstOrDefault(n => n.Guid == guid);
         if (chatSwitchNode != null) return chatSwitchNode;
+
+        var changeChatIconNode = currentDialogue.ChangeChatIconNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (changeChatIconNode != null) return changeChatIconNode;
+
+        var changeChatNameNode = currentDialogue.ChangeChatNameNodeDatas.FirstOrDefault(n => n.Guid == guid);
+        if (changeChatNameNode != null) return changeChatNameNode;
         // EntryNode ищем ОТДЕЛЬНО и ТОЛЬКО если guid совпадает
         if (currentDialogue.EntryNodeData?.Guid == guid)
             return currentDialogue.EntryNodeData;

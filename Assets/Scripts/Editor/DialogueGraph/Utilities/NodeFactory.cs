@@ -61,11 +61,29 @@ public static class NodeFactory
             return CreateCharacterButtonPressNode(position);
         else if (nodeType == typeof(ChatSwitchNode))
             return CreateChatSwitchNode(position);
+        else if (nodeType == typeof(ChangeChatIconNode))
+            return CreateChangeChatIconNode(position);
+        else if (nodeType == typeof(ChangeChatNameNode))
+            return CreateChangeChatNameNode(position);
         else
         {
             Debug.LogError($"NodeFactory: Unknown node type {nodeType}");
             return null;
         }
+    }
+
+    public static BaseNode CreateChangeChatIconNode(Vector2 position)
+    {
+        var node = new ChangeChatIconNode();
+        node.Initialize(position);
+        return node;
+    }
+
+    public static BaseNode CreateChangeChatNameNode(Vector2 position)
+    {
+        var node = new ChangeChatNameNode();
+        node.Initialize(position);
+        return node;
     }
 
     public static ChatSwitchNode CreateChatSwitchNode(Vector2 position)

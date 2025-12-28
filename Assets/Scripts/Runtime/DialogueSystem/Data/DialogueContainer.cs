@@ -82,4 +82,8 @@ public class DialogueContainer : ScriptableObject
 
     [Header("Chat Switch Nodes")]
     public List<ChatSwitchNodeData> ChatSwitchNodeDatas = new List<ChatSwitchNodeData>();
+
+    [Header("Change Chat Design Nodes")]
+    public List<ChangeChatIconNodeData> ChangeChatIconNodeDatas = new List<ChangeChatIconNodeData>();
+    public List<ChangeChatNameNodeData> ChangeChatNameNodeDatas = new List<ChangeChatNameNodeData>();
 }

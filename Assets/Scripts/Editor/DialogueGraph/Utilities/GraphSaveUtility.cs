@@ -348,6 +348,24 @@ public class GraphSaveUtility
                     TargetChatIndex = chatSwitchNode.TargetChatIndex
                 });
             }
+            else if (node is ChangeChatIconNode changeChatIconNode)
+            {
+                dialogueContainer.ChangeChatIconNodeDatas.Add(new ChangeChatIconNodeData
+                {
+                    Guid = changeChatIconNode.GUID,
+                    Position = node.GetPosition().position,
+                    IconSpritePath = changeChatIconNode.ChatIconSprite ? GetResourcePath(changeChatIconNode.ChatIconSprite) : ""
+                });
+            }
+            else if (node is ChangeChatNameNode changeChatNameNode)
+            {
+                dialogueContainer.ChangeChatNameNodeDatas.Add(new ChangeChatNameNodeData
+                {
+                    Guid = changeChatNameNode.GUID,
+                    Position = node.GetPosition().position,
+                    NewChatName = changeChatNameNode.NewChatName
+                });
+            }
         }
     }
     private string GetResourcePath(Sprite sprite)
@@ -787,6 +805,45 @@ public class GraphSaveUtility
                 }
             }
         }
+
+        foreach (var nodeData in containerCache.ChangeChatIconNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateChangeChatIconNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+
+            if (tempNode is ChangeChatIconNode iconNode)
+            {
+                if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
+                {
+                    string fullPath = $"Assets/Resources/{nodeData.IconSpritePath}";
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    if (sprite == null)
+                    {
+                        fullPath = $"Assets/Resources/{nodeData.IconSpritePath}.sprite";
+                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    }
+
+                    iconNode.ChatIconSprite = sprite;
+                    iconNode.UpdateUI();
+                }
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
+
+        foreach (var nodeData in containerCache.ChangeChatNameNodeDatas)
+        {
+            var tempNode = NodeFactory.CreateChangeChatNameNode(nodeData.Position);
+            tempNode.GUID = nodeData.Guid;
+
+            if (tempNode is ChangeChatNameNode nameNode)
+            {
+                nameNode.NewChatName = string.IsNullOrEmpty(nodeData.NewChatName) ? "New Chat Name" : nodeData.NewChatName;
+                nameNode.UpdateUI();
+            }
+
+            targetGraphView.AddElement(tempNode);
+        }
     }
     /// <summary>
     /// Восстановление связей между узлами
@@ -964,6 +1021,46 @@ public class GraphSaveUtility
                             chatSwitchNode.RefreshExpandedState();
                         }
                     }
+                    else if (nodeList[i] is ChangeChatIconNode changeChatIconNode)
+                    {
+                        foreach (var port in changeChatIconNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет
+                            outputPort = changeChatIconNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = "Next"; // ВСЕГДА используем "Next" как имя порта
+                            changeChatIconNode.outputContainer.Add(outputPort);
+                            changeChatIconNode.RefreshPorts();
+                            changeChatIconNode.RefreshExpandedState();
+                        }
+                    }
+                    else if (nodeList[i] is ChangeChatNameNode changeChatNameNode)
+                    {
+                        foreach (var port in changeChatNameNode.outputContainer.Children())
+                        {
+                            if (port is Port portElement && portElement.portName == connection.PortName)
+                            {
+                                outputPort = portElement;
+                                break;
+                            }
+                        }
+                        if (outputPort == null)
+                        {
+                            // Восстанавливаем порт, если его нет
+                            outputPort = changeChatNameNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+                            outputPort.portName = "Next"; // ВСЕГДА используем "Next" как имя порта
+                            changeChatNameNode.outputContainer.Add(outputPort);
+                            changeChatNameNode.RefreshPorts();
+                            changeChatNameNode.RefreshExpandedState();
+                        }
+                    }
                     // Получаем inputPort у целевого узла
                     Port inputPort = null;
                     if (targetNode.inputContainer.childCount > 0)
@@ -1091,6 +1188,7 @@ public class GraphSaveUtility
             Debug.LogError("Cannot save to null container");
             return;
         }
+
         // === ОЧИЩАЕМ ВСЕ СПИСКИ ===
         existingContainer.NodeLinks.Clear();
         existingContainer.SpeechNodeDatas.Clear();
@@ -1099,29 +1197,22 @@ public class GraphSaveUtility
         existingContainer.StringConditionNodeDatas.Clear();
         existingContainer.ModifyIntNodeDatas.Clear();
         existingContainer.EndNodeDatas.Clear();
-        existingContainer.SpeechNodeImageDatas.Clear();
-        existingContainer.OptionNodeImageDatas.Clear();
-        existingContainer.TimerNodeDatas.Clear();
-        existingContainer.PauseNodeDatas.Clear();
-        existingContainer.WireNodeDatas.Clear();
-        existingContainer.IntExposedProperties.Clear();
-        existingContainer.StringExposedProperties.Clear();
-        existingContainer.SpeechRandNodeDatas.Clear();
-        existingContainer.NoteNodeDatas.Clear();
-        existingContainer.CharacterIntConditionNodeDatas.Clear();
-        existingContainer.RandomBranchNodeDatas.Clear();
-        existingContainer.CharacterModifyIntNodeDatas.Clear();
         existingContainer.EventNodeDatas.Clear();
         existingContainer.DebugLogNodeDatas.Clear();
         existingContainer.DebugWarningNodeDatas.Clear();
         existingContainer.DebugErrorNodeDatas.Clear();
         existingContainer.CharacterButtonPressNodeDatas.Clear();
         existingContainer.ChatSwitchNodeDatas.Clear();
+        // ДОБАВЛЯЕМ ОЧИСТКУ НОВЫХ НОД
+        existingContainer.ChangeChatIconNodeDatas.Clear();
+        existingContainer.ChangeChatNameNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
+
         // === Сохраняем новые данные ===
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
+
         EditorUtility.SetDirty(existingContainer);
         AssetDatabase.SaveAssets();
     }

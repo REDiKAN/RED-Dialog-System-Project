@@ -58,7 +58,10 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
             (typeof(TimerNode), "Timer"),
             (typeof(PauseNode), "Pause"),
             (typeof(RandomBranchNode), "Random Branch"),
-            (typeof(WireNode), "Wire")
+            (typeof(WireNode), "Wire"),
+            (typeof(ChangeChatIconNode), "ChangeChatIcon"),
+            (typeof(ChangeChatNameNode), "ChangeChatName")
+
         }, allowedTypes);
 
         AddGroupIfHasEntries(entries, "Action Nodes", 1, new[]

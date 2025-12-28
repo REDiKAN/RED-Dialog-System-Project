@@ -1,4 +1,6 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Центральный обработчик чата, объединяющий все компоненты интерфейса
@@ -13,6 +15,9 @@ public class ChatHandler : MonoBehaviour
     [Header("Дополнительные настройки")]
     public bool isActiveByDefault = true;
     public float fadeDuration = 0.2f;
+
+    public TMP_Text nameChatPanel;
+    public Image iconChatPanel;
 
     private void Awake()
     {

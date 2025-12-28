@@ -712,6 +712,8 @@ MonoBehaviour:
   timerDisplayController: {fileID: 1859932804}
   isActiveByDefault: 1
   fadeDuration: 0.2
+  nameChatPanel: {fileID: 1401059845}
+  iconChatPanel: {fileID: 1366324239}
 --- !u!1 &295669195
 GameObject:
   m_ObjectHideFlags: 0
@@ -5149,6 +5151,8 @@ MonoBehaviour:
   timerDisplayController: {fileID: 924805882}
   isActiveByDefault: 1
   fadeDuration: 0.2
+  nameChatPanel: {fileID: 0}
+  iconChatPanel: {fileID: 0}
 --- !u!1 &2114686457
 GameObject:
   m_ObjectHideFlags: 0

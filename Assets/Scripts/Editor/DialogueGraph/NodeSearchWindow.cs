@@ -40,7 +40,9 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         {"DebugLogNode", "Debug Log"},
         {"DebugWarningNode", "Debug Warning"},
         {"DebugErrorNode", "Debug Error"},
-        {"ChatSwitchNode", "Chat Switch"}
+        {"ChatSwitchNode", "Chat Switch"},
+        {"ChangeChatIconNode", "Change Chat Icon"},
+        {"ChangeChatNameNode", "Change Chat Name"}
     };
 
     /// <summary>
@@ -126,6 +128,9 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         AddNodeEntry(entries, "RandomBranchNode", 2);
         AddNodeEntry(entries, "WireNode", 2);
         AddNodeEntry(entries, "ChatSwitchNode", 2);
+        AddNodeEntry(entries, "ChangeChatIconNode", 2);
+        AddNodeEntry(entries, "ChangeChatNameNode", 2);
+
 
         entries.Add(new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1));
         AddNodeEntry(entries, "ModifyIntNode", 2);
