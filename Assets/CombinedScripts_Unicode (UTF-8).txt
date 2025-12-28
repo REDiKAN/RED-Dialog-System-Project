@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.12.2025 16:43:51
+// Generation Time: 28.12.2025 17:14:58
 // Total Files: 107
 // =================================
 
@@ -567,14 +567,20 @@ public class DialogueManager : MonoBehaviour
                     // Загружаем спрайт из Resources
                     if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
                     {
-                        var sprite = Resources.Load<Sprite>(nodeData.IconSpritePath);
+                        // Убираем возможные расширения в пути
+                        string cleanPath = nodeData.IconSpritePath;
+                        if (cleanPath.EndsWith(".sprite"))
+                            cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
+
+                        var sprite = Resources.Load<Sprite>(cleanPath);
                         if (sprite != null)
                         {
                             chatHandler.iconChatPanel.sprite = sprite;
                         }
                         else
                         {
-                            Debug.LogWarning($"Sprite not found in Resources for path: {nodeData.IconSpritePath}");
+                            Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
+                                $"Make sure the sprite is in Assets/Resources folder with correct path.");
                         }
                     }
                 }
@@ -6603,6 +6609,7 @@ public class ChangeChatIconNode : BaseNode
             // ���������, ��������� �� ������ � ����� Resources
             if (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/Resources/"))
             {
+                // ������� "Assets/Resources/" � ���������� �����
                 spritePath = path.Substring("Assets/Resources/".Length);
                 int dotIndex = spritePath.LastIndexOf('.');
                 if (dotIndex > 0)
@@ -6628,17 +6635,35 @@ public class ChangeChatIconNode : BaseNode
     {
         var data = JsonUtility.FromJson<ChangeChatIconNodeSerializedData>(jsonData);
 
+        ChatIconSprite = null;
         if (!string.IsNullOrEmpty(data.SpritePath))
         {
-            // ������� ������� ��������� ��� ������
-            string fullPath = $"Assets/Resources/{data.SpritePath}.sprite";
+            // ������� ������� ��������� ������ ��������
+            string fullPath = $"Assets/Resources/{data.SpritePath}.asset";
             ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
 
-            // ���� �� ����������, ������� ��������� ��� ������� �����
+            // ���� �� ����������, ������� ��� ����������
             if (ChatIconSprite == null)
             {
                 fullPath = $"Assets/Resources/{data.SpritePath}";
+                // ������� ������� ��� ������� ������
                 ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+
+                // ���� ��� ��� �� ����������, ������� �������� ���������� ��� �����������
+                if (ChatIconSprite == null)
+                {
+                    string[] extensions = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+                    foreach (var ext in extensions)
+                    {
+                        ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath + ext);
+                        if (ChatIconSprite != null) break;
+                    }
+                }
+            }
+
+            if (ChatIconSprite == null)
+            {
+                Debug.LogWarning($"Could not load sprite from path: Assets/Resources/{data.SpritePath}");
             }
         }
 
@@ -11294,14 +11319,20 @@ public class GraphSaveUtility
     {
         if (sprite == null) return "";
         string path = AssetDatabase.GetAssetPath(sprite);
-        if (!path.StartsWith("Assets/Resources/"))
+        if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/Resources/"))
         {
-            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources!");
+            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources folder to be loaded at runtime!");
             return "";
         }
+
+        // Убираем "Assets/Resources/" и расширение файла
         path = path.Substring("Assets/Resources/".Length);
-        if (path.LastIndexOf('.') > 0)
-            path = path.Substring(0, path.LastIndexOf('.'));
+        int dotIndex = path.LastIndexOf('.');
+        if (dotIndex > 0)
+        {
+            path = path.Substring(0, dotIndex);
+        }
+
         return path;
     }
     /// <summary>
@@ -11737,13 +11768,31 @@ public class GraphSaveUtility
             // Восстанавливаем спрайт
             if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
             {
-                string fullPath = $"Assets/Resources/{nodeData.IconSpritePath}";
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                string resourcePath = nodeData.IconSpritePath;
+
+                // Убираем возможные расширения в пути
+                if (resourcePath.EndsWith(".sprite"))
+                    resourcePath = resourcePath.Substring(0, resourcePath.Length - 7);
+
+                // Загружаем спрайт из Resources
+                var sprite = Resources.Load<Sprite>(resourcePath);
+
+                // Если не получилось через Resources, пробуем через AssetDatabase
                 if (sprite == null)
                 {
-                    // Пробуем с расширением .sprite
-                    fullPath = $"Assets/Resources/{nodeData.IconSpritePath}.sprite";
+                    string fullPath = $"Assets/Resources/{resourcePath}";
                     sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+
+                    // Попытка с расширениями изображений
+                    if (sprite == null)
+                    {
+                        string[] extensions = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+                        foreach (var ext in extensions)
+                        {
+                            sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath + ext);
+                            if (sprite != null) break;
+                        }
+                    }
                 }
 
                 if (tempNode is ChangeChatIconNode iconNode)
@@ -11754,7 +11803,7 @@ public class GraphSaveUtility
 
                 if (sprite == null)
                 {
-                    Debug.LogWarning($"Sprite not found at path: {fullPath}");
+                    Debug.LogWarning($"Sprite not found at path: {resourcePath}");
                 }
             }
 
@@ -11763,8 +11812,7 @@ public class GraphSaveUtility
 
         foreach (var nodeData in containerCache.ChangeChatNameNodeDatas)
         {
-            var tempNode = new ChangeChatNameNode();
-            tempNode.Initialize(nodeData.Position);
+            var tempNode = NodeFactory.CreateChangeChatNameNode(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
 
             if (tempNode is ChangeChatNameNode nameNode)
@@ -12119,6 +12167,7 @@ public class GraphSaveUtility
             Debug.LogError("Cannot save to null container");
             return;
         }
+
         // === ОЧИЩАЕМ ВСЕ СПИСКИ ===
         existingContainer.NodeLinks.Clear();
         existingContainer.SpeechNodeDatas.Clear();
@@ -12127,29 +12176,22 @@ public class GraphSaveUtility
         existingContainer.StringConditionNodeDatas.Clear();
         existingContainer.ModifyIntNodeDatas.Clear();
         existingContainer.EndNodeDatas.Clear();
-        existingContainer.SpeechNodeImageDatas.Clear();
-        existingContainer.OptionNodeImageDatas.Clear();
-        existingContainer.TimerNodeDatas.Clear();
-        existingContainer.PauseNodeDatas.Clear();
-        existingContainer.WireNodeDatas.Clear();
-        existingContainer.IntExposedProperties.Clear();
-        existingContainer.StringExposedProperties.Clear();
-        existingContainer.SpeechRandNodeDatas.Clear();
-        existingContainer.NoteNodeDatas.Clear();
-        existingContainer.CharacterIntConditionNodeDatas.Clear();
-        existingContainer.RandomBranchNodeDatas.Clear();
-        existingContainer.CharacterModifyIntNodeDatas.Clear();
         existingContainer.EventNodeDatas.Clear();
         existingContainer.DebugLogNodeDatas.Clear();
         existingContainer.DebugWarningNodeDatas.Clear();
         existingContainer.DebugErrorNodeDatas.Clear();
         existingContainer.CharacterButtonPressNodeDatas.Clear();
         existingContainer.ChatSwitchNodeDatas.Clear();
+        // ДОБАВЛЯЕМ ОЧИСТКУ НОВЫХ НОД
+        existingContainer.ChangeChatIconNodeDatas.Clear();
+        existingContainer.ChangeChatNameNodeDatas.Clear();
 
         targetGraphView.ClearUndoRedoStacks();
+
         // === Сохраняем новые данные ===
         SaveNodes(existingContainer);
         SaveExposedProperties(existingContainer);
+
         EditorUtility.SetDirty(existingContainer);
         AssetDatabase.SaveAssets();
     }
@@ -12973,9 +13015,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 107
-// Total Size: 461,41 KB
-// Total Lines: 12753
+// Total Size: 463,17 KB
+// Total Lines: 12795
 // Classes: 137
-// Methods: 769
-// Comments: 1049
+// Methods: 773
+// Comments: 1058
 // =====================================
