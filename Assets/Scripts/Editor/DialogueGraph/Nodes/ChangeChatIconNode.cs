@@ -53,6 +53,7 @@ public class ChangeChatIconNode : BaseNode
             // Проверяем, находится ли спрайт в папке Resources
             if (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/Resources/"))
             {
+                // Убираем "Assets/Resources/" и расширение файла
                 spritePath = path.Substring("Assets/Resources/".Length);
                 int dotIndex = spritePath.LastIndexOf('.');
                 if (dotIndex > 0)
@@ -78,17 +79,35 @@ public class ChangeChatIconNode : BaseNode
     {
         var data = JsonUtility.FromJson<ChangeChatIconNodeSerializedData>(jsonData);
 
+        ChatIconSprite = null;
         if (!string.IsNullOrEmpty(data.SpritePath))
         {
-            // Сначала пробуем загрузить как спрайт
-            string fullPath = $"Assets/Resources/{data.SpritePath}.sprite";
+            // Сначала пробуем загрузить спрайт напрямую
+            string fullPath = $"Assets/Resources/{data.SpritePath}.asset";
             ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
 
-            // Если не получилось, пробуем загрузить как обычный ассет
+            // Если не получилось, пробуем без расширения
             if (ChatIconSprite == null)
             {
                 fullPath = $"Assets/Resources/{data.SpritePath}";
+                // Сначала пробуем как обычный спрайт
                 ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+
+                // Если все еще не получается, пробуем добавить расширения для изображений
+                if (ChatIconSprite == null)
+                {
+                    string[] extensions = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+                    foreach (var ext in extensions)
+                    {
+                        ChatIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath + ext);
+                        if (ChatIconSprite != null) break;
+                    }
+                }
+            }
+
+            if (ChatIconSprite == null)
+            {
+                Debug.LogWarning($"Could not load sprite from path: Assets/Resources/{data.SpritePath}");
             }
         }
 

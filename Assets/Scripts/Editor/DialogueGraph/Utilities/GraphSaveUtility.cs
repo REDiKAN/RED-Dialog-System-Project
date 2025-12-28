@@ -372,14 +372,20 @@ public class GraphSaveUtility
     {
         if (sprite == null) return "";
         string path = AssetDatabase.GetAssetPath(sprite);
-        if (!path.StartsWith("Assets/Resources/"))
+        if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/Resources/"))
         {
-            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources!");
+            Debug.LogError($"Sprite {sprite.name} must be in Assets/Resources folder to be loaded at runtime!");
             return "";
         }
+
+        // Убираем "Assets/Resources/" и расширение файла
         path = path.Substring("Assets/Resources/".Length);
-        if (path.LastIndexOf('.') > 0)
-            path = path.Substring(0, path.LastIndexOf('.'));
+        int dotIndex = path.LastIndexOf('.');
+        if (dotIndex > 0)
+        {
+            path = path.Substring(0, dotIndex);
+        }
+
         return path;
     }
     /// <summary>
@@ -808,23 +814,49 @@ public class GraphSaveUtility
 
         foreach (var nodeData in containerCache.ChangeChatIconNodeDatas)
         {
-            var tempNode = NodeFactory.CreateChangeChatIconNode(nodeData.Position);
+            var tempNode = new ChangeChatIconNode();
+            tempNode.Initialize(nodeData.Position);
             tempNode.GUID = nodeData.Guid;
 
-            if (tempNode is ChangeChatIconNode iconNode)
+            // Восстанавливаем спрайт
+            if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
             {
-                if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
+                string resourcePath = nodeData.IconSpritePath;
+
+                // Убираем возможные расширения в пути
+                if (resourcePath.EndsWith(".sprite"))
+                    resourcePath = resourcePath.Substring(0, resourcePath.Length - 7);
+
+                // Загружаем спрайт из Resources
+                var sprite = Resources.Load<Sprite>(resourcePath);
+
+                // Если не получилось через Resources, пробуем через AssetDatabase
+                if (sprite == null)
                 {
-                    string fullPath = $"Assets/Resources/{nodeData.IconSpritePath}";
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                    string fullPath = $"Assets/Resources/{resourcePath}";
+                    sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+
+                    // Попытка с расширениями изображений
                     if (sprite == null)
                     {
-                        fullPath = $"Assets/Resources/{nodeData.IconSpritePath}.sprite";
-                        sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath);
+                        string[] extensions = { ".png", ".jpg", ".jpeg", ".tga", ".bmp" };
+                        foreach (var ext in extensions)
+                        {
+                            sprite = AssetDatabase.LoadAssetAtPath<Sprite>(fullPath + ext);
+                            if (sprite != null) break;
+                        }
                     }
+                }
 
+                if (tempNode is ChangeChatIconNode iconNode)
+                {
                     iconNode.ChatIconSprite = sprite;
                     iconNode.UpdateUI();
+                }
+
+                if (sprite == null)
+                {
+                    Debug.LogWarning($"Sprite not found at path: {resourcePath}");
                 }
             }
 

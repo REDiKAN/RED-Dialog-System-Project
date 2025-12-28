@@ -221,14 +221,20 @@ public class DialogueManager : MonoBehaviour
                     // Загружаем спрайт из Resources
                     if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
                     {
-                        var sprite = Resources.Load<Sprite>(nodeData.IconSpritePath);
+                        // Убираем возможные расширения в пути
+                        string cleanPath = nodeData.IconSpritePath;
+                        if (cleanPath.EndsWith(".sprite"))
+                            cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
+
+                        var sprite = Resources.Load<Sprite>(cleanPath);
                         if (sprite != null)
                         {
                             chatHandler.iconChatPanel.sprite = sprite;
                         }
                         else
                         {
-                            Debug.LogWarning($"Sprite not found in Resources for path: {nodeData.IconSpritePath}");
+                            Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
+                                $"Make sure the sprite is in Assets/Resources folder with correct path.");
                         }
                     }
                 }
