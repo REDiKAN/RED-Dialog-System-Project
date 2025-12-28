@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3c1b7d161973994bb4a4c82890c04da, type: 3}
+  m_Script: {fileID: 11500000, guid: db32e58191a1e764d83d67b436d879cb, type: 3}
   m_Name: DialogueSettings
   m_EditorClassIdentifier: 
   EnableHotkeyUndoRedo: 0
@@ -20,13 +20,12 @@ MonoBehaviour:
     EnableHotkeyUndoRedo: 1
     AutoSaveOnUnityClose: 1
     enableAutoSaveLocation: 0
-    autoSaveFolderPath: Resources/Dialogue
-    EnableEntryNodeMovement: 0
+    autoSaveFolderPath: 
+    EnableEntryNodeMovement: 1
   UI:
     UseCustomBackgroundColor: 0
-    CustomBackgroundColor: {r: 0.4245283, g: 0.3984959, b: 0.3984959, a: 1}
+    CustomBackgroundColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
   _favoriteNodeTypes:
-  - SpeechNodeText
-  - OptionNodeText
-  - IntConditionNode
-  - EndNode
+  - DebugLogNode
+  - DebugWarningNode
+  - DebugErrorNode

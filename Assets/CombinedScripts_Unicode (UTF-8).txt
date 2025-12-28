@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 28.12.2025 17:14:58
+// Generation Time: 28.12.2025 17:34:17
 // Total Files: 107
 // =================================
 
@@ -2654,17 +2654,6 @@ public class DialogueGraph : EditorWindow
         toolbar.Add(new Button(CreateNewDialogue) { text = "Create New..." });
         // Кнопка сохранения
         toolbar.Add(new Button(SaveCurrentDialogue) { text = "Save" });
-
-        // Добавляем кнопки Undo/Redo
-        var undoButton = new Button(() => graphView.undoManager.Undo()) { text = "Undo (Ctrl+Z)" };
-
-        // Обновляем состояние кнопки в реальном времени
-        graphView.RegisterCallback<GeometryChangedEvent>(_ =>
-        {
-            undoButton.SetEnabled(graphView.undoManager.CanUndo());
-        });
-
-        toolbar.Add(undoButton);
 
         // Base Character field (в конце)
         var baseCharacterField = new ObjectField("Base Character")
@@ -13015,9 +13004,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 107
-// Total Size: 463,17 KB
-// Total Lines: 12795
+// Total Size: 462,73 KB
+// Total Lines: 12784
 // Classes: 137
 // Methods: 773
-// Comments: 1058
+// Comments: 1056
 // =====================================
