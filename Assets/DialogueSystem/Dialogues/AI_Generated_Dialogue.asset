@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   EntryNodeData:
     Guid: entry-001
-    Position: {x: 0, y: 0}
+    Position: {x: 100, y: 200}
   NodeLinks:
   - BaseNodeGuid: entry-001
     PortName: Next
@@ -22,115 +22,115 @@ MonoBehaviour:
   - BaseNodeGuid: speech-001
     PortName: Next
     TargetNodeGuid: option-001
-  - BaseNodeGuid: speech-003
-    PortName: Next
-    TargetNodeGuid: action-002
-  - BaseNodeGuid: speech-008
-    PortName: Next
-    TargetNodeGuid: end-003
-  - BaseNodeGuid: speech-004
-    PortName: Next
-    TargetNodeGuid: action-001
-  - BaseNodeGuid: speech-006
-    PortName: Next
-    TargetNodeGuid: end-001
+  - BaseNodeGuid: option-001
+    PortName: Option1
+    TargetNodeGuid: speech-002
+  - BaseNodeGuid: option-001
+    PortName: Option2
+    TargetNodeGuid: speech-003
   - BaseNodeGuid: speech-002
     PortName: Next
     TargetNodeGuid: condition-001
-  - BaseNodeGuid: speech-005
-    PortName: Next
-    TargetNodeGuid: speech-007
-  - BaseNodeGuid: speech-007
-    PortName: Next
-    TargetNodeGuid: end-002
-  - BaseNodeGuid: option-001
-    PortName: Next
-    TargetNodeGuid: speech-002
-  - BaseNodeGuid: option-001
-    PortName: Next
-    TargetNodeGuid: speech-003
   - BaseNodeGuid: condition-001
     PortName: True
     TargetNodeGuid: speech-004
   - BaseNodeGuid: condition-001
     PortName: False
     TargetNodeGuid: speech-005
-  - BaseNodeGuid: action-002
-    PortName: Output
-    TargetNodeGuid: speech-008
+  - BaseNodeGuid: speech-004
+    PortName: Next
+    TargetNodeGuid: action-001
   - BaseNodeGuid: action-001
-    PortName: Output
+    PortName: Next
     TargetNodeGuid: speech-006
+  - BaseNodeGuid: speech-006
+    PortName: Next
+    TargetNodeGuid: end-001
+  - BaseNodeGuid: speech-005
+    PortName: Next
+    TargetNodeGuid: speech-007
+  - BaseNodeGuid: speech-007
+    PortName: Next
+    TargetNodeGuid: end-002
+  - BaseNodeGuid: speech-003
+    PortName: Next
+    TargetNodeGuid: action-002
+  - BaseNodeGuid: action-002
+    PortName: Next
+    TargetNodeGuid: speech-008
+  - BaseNodeGuid: speech-008
+    PortName: Next
+    TargetNodeGuid: end-003
   SpeechNodeDatas:
   - Guid: speech-001
-    Position: {x: 227, y: -5}
+    Position: {x: 350, y: 200}
     DialogueText: Welcome to my shop, adventurer! I have rare potions and magical
       artifacts. What can I help you with today?
     AudioClipGuid: 
-    SpeakerGuid: 9c350932098057440a0ccc790af5da30
-    SpeakerName: Alise
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
+    NodeType: SpeechNodeText
+  - Guid: speech-002
+    Position: {x: 850, y: 125}
+    DialogueText: Ah, the Phoenix Elixir! It can revive fallen companions. It costs
+      50 gold pieces. Do you have enough to purchase it?
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
     NodeType: SpeechNodeText
   - Guid: speech-003
-    Position: {x: 962, y: -5}
+    Position: {x: 850, y: 275}
     DialogueText: A dangerous beast has been terrorizing the nearby forest. If you
       defeat it, I'll reward you with 30 gold and a healing potion. Are you up for
       the challenge?
     AudioClipGuid: 
-    SpeakerGuid: 9c350932098057440a0ccc790af5da30
-    SpeakerName: Alise
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
+    NodeType: SpeechNodeText
+  - Guid: speech-004
+    Position: {x: 0, y: 0}
+    DialogueText: Excellent! Here's your Phoenix Elixir. May it serve you well in
+      your adventures. Come back anytime!
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
+    NodeType: SpeechNodeText
+  - Guid: speech-005
+    Position: {x: 0, y: 0}
+    DialogueText: I see you're a bit short on gold. Perhaps you'd like to earn some
+      by taking on a quest instead?
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
+    NodeType: SpeechNodeText
+  - Guid: speech-006
+    Position: {x: 0, y: 0}
+    DialogueText: '*You received Phoenix Elixir*'
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: 
+    NodeType: SpeechNodeText
+  - Guid: speech-007
+    Position: {x: 0, y: 0}
+    DialogueText: Visit the town notice board for available quests, or come back
+      when you have more gold.
+    AudioClipGuid: 
+    SpeakerGuid: 
+    SpeakerName: Shopkeeper
     NodeType: SpeechNodeText
   - Guid: speech-008
-    Position: {x: 1587, y: -5}
+    Position: {x: 1350, y: 200}
     DialogueText: '*Quest accepted: Slay the Forest Beast*
 
       The beast lurks
       near the old oak tree at the edge of the Darkwood Forest.'
     AudioClipGuid: 
-    SpeakerGuid: 9c350932098057440a0ccc790af5da30
-    SpeakerName: Alise
-    NodeType: SpeechNodeText
-  - Guid: speech-004
-    Position: {x: 1728, y: 230}
-    DialogueText: Excellent! Here's your Phoenix Elixir. May it serve you well in
-      your adventures. Come back anytime!
-    AudioClipGuid: 
-    SpeakerGuid: f5cf4f5b00c5aa54c9f9edae2407a0c7
-    SpeakerName: System
-    NodeType: SpeechNodeText
-  - Guid: speech-006
-    Position: {x: 2446, y: 230}
-    DialogueText: '*You received Phoenix Elixir*'
-    AudioClipGuid: 
-    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
-    SpeakerName: Player
-    NodeType: SpeechNodeText
-  - Guid: speech-002
-    Position: {x: 962, y: 245}
-    DialogueText: Ah, the Phoenix Elixir! It can revive fallen companions. It costs
-      50 gold pieces. Do you have enough to purchase it?
-    AudioClipGuid: 
-    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
-    SpeakerName: Player
-    NodeType: SpeechNodeText
-  - Guid: speech-005
-    Position: {x: 1697, y: 429}
-    DialogueText: I see you're a bit short on gold. Perhaps you'd like to earn some
-      by taking on a quest instead?
-    AudioClipGuid: 
-    SpeakerGuid: c8b7b23c754dff644b78362fc82d0095
-    SpeakerName: Player
-    NodeType: SpeechNodeText
-  - Guid: speech-007
-    Position: {x: 2103, y: 429}
-    DialogueText: Visit the town notice board for available quests, or come back
-      when you have more gold.
-    AudioClipGuid: 
-    SpeakerGuid: 9c350932098057440a0ccc790af5da30
-    SpeakerName: Alise
+    SpeakerGuid: 
+    SpeakerName: 
     NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: option-001
-    Position: {x: 646, y: -9}
+    Position: {x: 600, y: 200}
     ResponseText: 'I''d like to buy the Phoenix Elixir
 
       Tell me about any quests
@@ -150,31 +150,31 @@ MonoBehaviour:
   StringExposedProperties: []
   IntConditionNodeDatas:
   - Guid: condition-001
-    Position: {x: 1332, y: 236}
+    Position: {x: 0, y: 0}
     SelectedProperty: Gold
     Comparison: 0
     CompareValue: 50
   StringConditionNodeDatas: []
   ModifyIntNodeDatas:
-  - Guid: action-002
-    Position: {x: 1332, y: -5}
-    SelectedProperty: Gold
-    Operator: 0
-    Value: 1
   - Guid: action-001
-    Position: {x: 2174, y: 245}
+    Position: {x: 0, y: 0}
     SelectedProperty: Gold
     Operator: 0
     Value: 50
+  - Guid: action-002
+    Position: {x: 1100, y: 200}
+    SelectedProperty: Quest_ForestBeast
+    Operator: 0
+    Value: 1
   EndNodeDatas:
   - Guid: end-001
-    Position: {x: 3055, y: 230}
-    NextDialogueName: 
-  - Guid: end-003
-    Position: {x: 1979, y: -5}
+    Position: {x: 0, y: 0}
     NextDialogueName: 
   - Guid: end-002
-    Position: {x: 2446, y: 429}
+    Position: {x: 0, y: 0}
+    NextDialogueName: 
+  - Guid: end-003
+    Position: {x: 1600, y: 200}
     NextDialogueName: 
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []

@@ -1,10 +1,11 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.IO;
-using System.Collections.Generic;
+﻿using DialogueSystem;
 using System;
-using DialogueSystem;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace DialogueSystem.Editor
@@ -317,8 +318,11 @@ namespace DialogueSystem.Editor
                     return;
                 }
 
+                AutoArrangeNodes(newDialogue);
+
                 // Автоматическое формирование имени файла
                 string defaultName = "AI_Generated_Dialogue";
+
                 int counter = 1;
                 string finalName = defaultName;
 
@@ -355,6 +359,134 @@ namespace DialogueSystem.Editor
                 ShowStatus($"Import failed: {e.Message}", MessageType.Error);
                 Debug.LogError($"AI Dialogue Import Error: {e}");
             }
+        }
+
+        // Добавьте этот метод в класс AIDialogueImporter
+        private void AutoArrangeNodes(DialogueContainer dialogue)
+        {
+            // Сначала собираем все узлы в словарь для быстрого доступа по GUID
+            Dictionary<string, BaseNodeData> allNodes = new Dictionary<string, BaseNodeData>();
+
+            // Добавляем EntryNode
+            if (dialogue.EntryNodeData != null)
+            {
+                allNodes[dialogue.EntryNodeData.Guid] = dialogue.EntryNodeData;
+            }
+
+            // Добавляем все типы узлов
+            AddNodesToDictionary(dialogue.SpeechNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.SpeechNodeImageDatas, allNodes);
+            AddNodesToDictionary(dialogue.SpeechRandNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.OptionNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.OptionNodeImageDatas, allNodes);
+            //AddNodesToDictionary(dialogue.IntConditionNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.StringConditionNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.ModifyIntNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.EndNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.EventNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.CharacterIntConditionNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.CharacterModifyIntNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.DebugLogNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.DebugWarningNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.DebugErrorNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.TimerNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.PauseNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.WireNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.CharacterButtonPressNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.ChatSwitchNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.ChangeChatIconNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.ChangeChatNameNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.NoteNodeDatas, allNodes);
+            AddNodesToDictionary(dialogue.RandomBranchNodeDatas, allNodes);
+
+            // Определяем начальную позицию и шаг
+            float startX = 100;
+            float startY = 200;
+            float horizontalStep = 250; // Расстояние между узлами по горизонтали
+            float verticalStep = 150;  // Расстояние между ответвлениями по вертикали
+
+            // Создаем очередь для обхода узлов в порядке следования
+            Queue<string> nodeQueue = new Queue<string>();
+            HashSet<string> visitedNodes = new HashSet<string>();
+
+            // Начинаем с EntryNode
+            if (dialogue.EntryNodeData != null)
+            {
+                nodeQueue.Enqueue(dialogue.EntryNodeData.Guid);
+                visitedNodes.Add(dialogue.EntryNodeData.Guid);
+
+                // Располагаем EntryNode
+                SetNodePosition(dialogue.EntryNodeData, new Vector2(startX, startY));
+                startX += horizontalStep;
+            }
+
+            // Обходим узлы в порядке следования
+            while (nodeQueue.Count > 0)
+            {
+                string currentNodeGuid = nodeQueue.Dequeue();
+
+                // Находим все связи, исходящие из текущего узла
+                var outgoingLinks = dialogue.NodeLinks
+                    .Where(link => link.BaseNodeGuid == currentNodeGuid)
+                    .ToList();
+
+                // Если есть несколько исходящих связей (развилка), распределяем их вертикально
+                if (outgoingLinks.Count > 1)
+                {
+                    float branchStartY = startY - ((outgoingLinks.Count - 1) * verticalStep / 2);
+
+                    for (int i = 0; i < outgoingLinks.Count; i++)
+                    {
+                        string targetGuid = outgoingLinks[i].TargetNodeGuid;
+
+                        if (allNodes.TryGetValue(targetGuid, out BaseNodeData targetNode) &&
+                            !visitedNodes.Contains(targetGuid))
+                        {
+                            // Располагаем узел ветки
+                            float branchY = branchStartY + (i * verticalStep);
+                            SetNodePosition(targetNode, new Vector2(startX, branchY));
+
+                            visitedNodes.Add(targetGuid);
+                            nodeQueue.Enqueue(targetGuid);
+                        }
+                    }
+
+                    startX += horizontalStep;
+                }
+                // Если одна исходящая связь - просто продолжаем горизонтально
+                else if (outgoingLinks.Count == 1)
+                {
+                    string targetGuid = outgoingLinks[0].TargetNodeGuid;
+
+                    if (allNodes.TryGetValue(targetGuid, out BaseNodeData targetNode) &&
+                        !visitedNodes.Contains(targetGuid))
+                    {
+                        // Располагаем узел
+                        SetNodePosition(targetNode, new Vector2(startX, startY));
+
+                        visitedNodes.Add(targetGuid);
+                        nodeQueue.Enqueue(targetGuid);
+                        startX += horizontalStep;
+                    }
+                }
+            }
+        }
+
+        private void AddNodesToDictionary<T>(List<T> nodeList, Dictionary<string, BaseNodeData> dictionary) where T : BaseNodeData
+        {
+            foreach (var node in nodeList)
+            {
+                if (!dictionary.ContainsKey(node.Guid))
+                {
+                    dictionary.Add(node.Guid, node);
+                }
+            }
+        }
+
+        private void SetNodePosition(BaseNodeData node, Vector2 position)
+        {
+            // Преобразуем Vector2 в строку в формате "(x,y)" как требуется в системе
+            node.Position = new Vector2(position.x, position.y);
         }
 
         private bool IsValidJson(string json)
