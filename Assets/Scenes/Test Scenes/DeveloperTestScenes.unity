@@ -1109,7 +1109,7 @@ MonoBehaviour:
   optionPanel: {fileID: 871629838}
   _continueButton: {fileID: 1665971559}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: e4bfcb4ebcb74a241841e8b323409001, type: 2}
+  currentDialogue: {fileID: 11400000, guid: 66333657ae4e28142abeec33caa2f216, type: 2}
   _timerDisplayController: {fileID: 1859932804}
   chatConfigurations:
   - chatHandler: {fileID: 245914490}

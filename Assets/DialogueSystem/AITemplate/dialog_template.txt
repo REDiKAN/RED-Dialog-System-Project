@@ -1,0 +1,167 @@
+# AI-GENERATED DIALOGUE TEMPLATE FOR UNITY
+# Follow these rules precisely when generating dialogue structures
+
+## GLOBAL RULES
+1. NEVER use EventNode
+2. ALWAYS start with an EntryNode
+3. Each node must have a unique GUID in format "node-type-number"
+4. All position coordinates must be in format "(x,y)" with x and y as numbers
+5. All connections must be properly defined between nodes
+6. JSON structure must EXACTLY match the DialogueContainer class structure
+7. All string values must be properly escaped for JSON
+
+## AVAILABLE NODE TYPES
+
+### SPEECH NODES
+- SpeechNodeText: For text-only dialogue
+  Required: Guid, Position, DialogueText, SpeakerName (can be empty), NodeType="SpeechNodeText"
+- SpeechNodeImage: For showing images
+  Required: Guid, Position, ImageSpritePath (Resources path), SpeakerName, NodeType="SpeechNodeImage"
+- SpeechNodeRandText: For random dialogue variants
+  Required: Guid, Position, SpeakerName, Variants (array of {Text, WeightPercent})
+
+### OPTION NODES
+- OptionNodeText: For player text choices
+  Required: Guid, Position, ResponseText, NodeType="OptionNodeText"
+- OptionNodeImage: For player image choices
+  Required: Guid, Position, ImageSpriteGuid (empty if not used), NodeType="OptionNodeImage"
+
+### CONDITION NODES
+- IntConditionNode: For checking integer variables
+  Required: Guid, Position, SelectedProperty, Comparison (Equal/NotEqual/Greater/Less/GreaterOrEqual/LessOrEqual), CompareValue
+- StringConditionNode: For checking string variables
+  Required: Guid, Position, SelectedProperty, Comparison (Equal/NotEqual/IsNullOrEmpty), CompareValue
+- CharacterIntConditionNode: For checking character variables
+  Required: Guid, Position, CharacterName, SelectedVariable, Comparison, CompareValue
+
+### ACTION NODES
+- ModifyIntNode: For modifying global integer variables
+  Required: Guid, Position, SelectedProperty, Operator (Set/Add/Subtract/Multiply/Divide/Increment/Decrement), Value
+- CharacterModifyIntNode: For modifying character integer variables
+  Required: Guid, Position, CharacterName, SelectedVariable, Operator, Value
+- CharacterButtonPressNode: For changing character button press requirements
+  Required: Guid, Position, CharacterName, RequireButtonPress (true/false)
+
+### UTILITY NODES
+- EndNode: For ending the dialogue
+  Required: Guid, Position, NextDialogueName (can be empty)
+- NoteNode: For visual notes in the graph
+  Required: Guid, Position, NoteText, BackgroundColor (RGBA values)
+- TimerNode: For timed options
+  Required: Guid, Position, DurationSeconds
+- PauseNode: For pausing dialogue flow
+  Required: Guid, Position, DurationSeconds
+- RandomBranchNode: For random branching
+  Required: Guid, Position, Variants (array of {PortName, WeightPercent})
+- WireNode: For visual connection routing
+  Required: Guid, Position
+- ChatSwitchNode: For switching between chat panels
+  Required: Guid, Position, TargetChatIndex (integer)
+- ChangeChatIconNode: For changing chat panel icon
+  Required: Guid, Position, IconSpritePath (Resources path)
+- ChangeChatNameNode: For changing chat panel name
+  Required: Guid, Position, NewChatName
+
+## EXAMPLE DIALOGUE STRUCTURE
+{
+  "EntryNodeData": {
+    "Guid": "entry-001",
+    "Position": "(100,200)"
+  },
+  "NodeLinks": [
+    {
+      "BaseNodeGuid": "entry-001",
+      "PortName": "Next",
+      "TargetNodeGuid": "speech-001"
+    },
+    {
+      "BaseNodeGuid": "speech-001",
+      "PortName": "Next",
+      "TargetNodeGuid": "option-001"
+    },
+    {
+      "BaseNodeGuid": "option-001",
+      "PortName": "Option1",
+      "TargetNodeGuid": "speech-002"
+    },
+    {
+      "BaseNodeGuid": "option-001",
+      "PortName": "Option2",
+      "TargetNodeGuid": "speech-003"
+    },
+    {
+      "BaseNodeGuid": "speech-002",
+      "PortName": "Next",
+      "TargetNodeGuid": "end-001"
+    },
+    {
+      "BaseNodeGuid": "speech-003",
+      "PortName": "Next",
+      "TargetNodeGuid": "end-001"
+    }
+  ],
+  "SpeechNodeDatas": [
+    {
+      "Guid": "speech-001",
+      "Position": "(200,200)",
+      "DialogueText": "Hello traveler! Welcome to our village. How can I help you today?",
+      "SpeakerName": "Villager",
+      "NodeType": "SpeechNodeText"
+    },
+    {
+      "Guid": "speech-002",
+      "Position": "(400,150)",
+      "DialogueText": "Great! We have many jobs available. Come see me tomorrow morning.",
+      "SpeakerName": "Villager",
+      "NodeType": "SpeechNodeText"
+    },
+    {
+      "Guid": "speech-003",
+      "Position": "(400,250)",
+      "DialogueText": "Of course! The inn is just down the street to your left.",
+      "SpeakerName": "Villager",
+      "NodeType": "SpeechNodeText"
+    }
+  ],
+  "OptionNodeDatas": [
+    {
+      "Guid": "option-001",
+      "Position": "(300,200)",
+      "ResponseText": "I'm looking for work.\nI just want to rest.",
+      "NodeType": "OptionNodeText"
+    }
+  ],
+  "EndNodeDatas": [
+    {
+      "Guid": "end-001",
+      "Position": "(500,200)",
+      "NextDialogueName": ""
+    }
+  ],
+  "IntExposedProperties": [
+    {
+      "PropertyName": "PlayerReputation",
+      "IntValue": 0,
+      "MinValue": -100,
+      "MaxValue": 100
+    }
+  ],
+  "StringExposedProperties": [],
+  "BaseCharacterGuid": ""
+}
+
+## OUTPUT INSTRUCTIONS
+1. Generate ONLY valid JSON in the EXACT format shown above
+2. NEVER include EventNode
+3. Each node type must be placed in the correct array in the JSON
+4. Position values MUST be in format "(x,y)"
+5. For SpeakerName in speech nodes: use character name or leave empty
+6. For ImageSpritePath: use path relative to Resources folder (no file extension)
+7. For NoteNode BackgroundColor: use format [R,G,B,A] with values from 0 to 1
+8. For NodeLinks PortName:
+   - Regular connections: "Next"
+   - Option connections: "Option1", "Option2", etc.
+   - Condition connections: "True", "False"
+   - Timer connections: "Options", "Timeout"
+   - RandomBranch connections: "Variant1", "Variant2", etc.
+9. DO NOT include any additional fields not mentioned in this template
