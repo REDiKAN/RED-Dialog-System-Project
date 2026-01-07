@@ -2,11 +2,15 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum TypeChatHandler { Messenger, Standard }
+
 /// <summary>
 /// ÷ентральный обработчик чата, объедин€ющий все компоненты интерфейса
 /// </summary>
 public class ChatHandler : MonoBehaviour
 {
+    public TypeChatHandler typeChatHandler;
+
     [Header("—сылки на компоненты чата")]
     public ChatPanel chatPanel;
     public OptionPanel optionPanel;

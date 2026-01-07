@@ -4,54 +4,11 @@ using System.Collections.Generic;
 
 public class ChatPanel : MonoBehaviour
 {
-    [SerializeField] private ScrollRect scrollRect;
-    [SerializeField] private Transform contentContainer;
-
     private Dictionary<(CharacterData, MessageTypeDialogue), bool> _prefabValidationCache = new();
 
-    public void AddMessage(Message message, MessageTypeDialogue messageType)
-    {
-        if (contentContainer == null)
-        {
-            Debug.LogError("Content container not assigned in ChatPanel");
-            return;
-        }
-        if (scrollRect == null)
-        {
-            Debug.LogError("ScrollRect not assigned in ChatPanel");
-            return;
-        }
-        // Определяем нужный префаб по типу сообщения и отправителю
-        GameObject prefabToInstantiate = GetPrefabForMessage(message, messageType);
-        if (prefabToInstantiate == null)
-            return; // ошибка уже залогирована в GetPrefabForMessage
+    public virtual void AddMessage(Message message, MessageTypeDialogue messageType) { }
 
-        // Инстанциируем и настраиваем
-        GameObject messageGO = Instantiate(prefabToInstantiate, contentContainer);
-        messageGO.transform.SetAsLastSibling();
-
-        if (messageGO.TryGetComponent(out IMessageObject messageObject))
-        {
-            messageObject.InitializationContent(message);
-            messageObject.SetCharacterAvatar(message.Sender);
-            messageObject.SetCharacterName(message.Sender);
-        }
-
-        // Прокрутка вниз с принудительным обновлением UI
-        ScrollToBottom();
-    }
-
-    private void ScrollToBottom()
-    {
-        // Принудительно обновляем холст, чтобы убедиться, что размеры контента актуальны
-        Canvas.ForceUpdateCanvases();
-
-        // Устанавливаем позицию прокрутки в самый низ
-        if (scrollRect.content != null)
-            scrollRect.verticalNormalizedPosition = 0f; // Unity использует 0 для "самого низа"
-    }
-
-    private GameObject GetPrefabForMessage(Message message, MessageTypeDialogue messageType)
+    public GameObject GetPrefabForMessage(Message message, MessageTypeDialogue messageType)
     {
         if (message.Sender == null)
         {
@@ -108,14 +65,5 @@ public class ChatPanel : MonoBehaviour
         }
 
         return (prefab as GameObject);
-    }
-
-    public void ForceScrollToBottom()
-    {
-        // Принудительно обновляем холст, чтобы убедиться, что размеры контента актуальны
-        Canvas.ForceUpdateCanvases();
-        // Устанавливаем позицию прокрутки в самый низ
-        if (scrollRect.content != null)
-            scrollRect.verticalNormalizedPosition = 0f; // Unity использует 0 для "самого низа"
     }
 }

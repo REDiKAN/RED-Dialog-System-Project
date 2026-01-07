@@ -22,61 +22,53 @@ MonoBehaviour:
   - BaseNodeGuid: speech-001
     PortName: Next
     TargetNodeGuid: option-001
-  - BaseNodeGuid: option-001
-    PortName: Option1
-    TargetNodeGuid: speech-002
-  - BaseNodeGuid: option-001
-    PortName: Option2
-    TargetNodeGuid: speech-003
   - BaseNodeGuid: speech-002
     PortName: Next
     TargetNodeGuid: condition-001
+  - BaseNodeGuid: speech-003
+    PortName: Next
+    TargetNodeGuid: action-002
+  - BaseNodeGuid: speech-004
+    PortName: Next
+    TargetNodeGuid: action-001
+  - BaseNodeGuid: speech-005
+    PortName: Next
+    TargetNodeGuid: speech-007
+  - BaseNodeGuid: speech-006
+    PortName: Next
+    TargetNodeGuid: end-001
+  - BaseNodeGuid: speech-007
+    PortName: Next
+    TargetNodeGuid: end-002
+  - BaseNodeGuid: speech-008
+    PortName: Next
+    TargetNodeGuid: end-003
+  - BaseNodeGuid: option-001
+    PortName: Next
+    TargetNodeGuid: speech-002
+  - BaseNodeGuid: option-001
+    PortName: Next
+    TargetNodeGuid: speech-003
   - BaseNodeGuid: condition-001
     PortName: True
     TargetNodeGuid: speech-004
   - BaseNodeGuid: condition-001
     PortName: False
     TargetNodeGuid: speech-005
-  - BaseNodeGuid: speech-004
-    PortName: Next
-    TargetNodeGuid: action-001
   - BaseNodeGuid: action-001
-    PortName: Next
+    PortName: Output
     TargetNodeGuid: speech-006
-  - BaseNodeGuid: speech-006
-    PortName: Next
-    TargetNodeGuid: end-001
-  - BaseNodeGuid: speech-005
-    PortName: Next
-    TargetNodeGuid: speech-007
-  - BaseNodeGuid: speech-007
-    PortName: Next
-    TargetNodeGuid: end-002
-  - BaseNodeGuid: speech-003
-    PortName: Next
-    TargetNodeGuid: action-002
   - BaseNodeGuid: action-002
-    PortName: Next
+    PortName: Output
     TargetNodeGuid: speech-008
-  - BaseNodeGuid: speech-008
-    PortName: Next
-    TargetNodeGuid: end-003
   SpeechNodeDatas:
-  - Guid: speech-001
-    Position: {x: 350, y: 200}
-    DialogueText: Welcome to my shop, adventurer! I have rare potions and magical
-      artifacts. What can I help you with today?
-    AudioClipGuid: 
-    SpeakerGuid: 
-    SpeakerName: Shopkeeper
-    NodeType: SpeechNodeText
   - Guid: speech-002
     Position: {x: 850, y: 125}
     DialogueText: Ah, the Phoenix Elixir! It can revive fallen companions. It costs
       50 gold pieces. Do you have enough to purchase it?
     AudioClipGuid: 
-    SpeakerGuid: 
-    SpeakerName: Shopkeeper
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
     NodeType: SpeechNodeText
   - Guid: speech-003
     Position: {x: 850, y: 275}
@@ -84,8 +76,8 @@ MonoBehaviour:
       defeat it, I'll reward you with 30 gold and a healing potion. Are you up for
       the challenge?
     AudioClipGuid: 
-    SpeakerGuid: 
-    SpeakerName: Shopkeeper
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
     NodeType: SpeechNodeText
   - Guid: speech-004
     Position: {x: 0, y: 0}
@@ -93,7 +85,7 @@ MonoBehaviour:
       your adventures. Come back anytime!
     AudioClipGuid: 
     SpeakerGuid: 
-    SpeakerName: Shopkeeper
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: speech-005
     Position: {x: 0, y: 0}
@@ -101,7 +93,7 @@ MonoBehaviour:
       by taking on a quest instead?
     AudioClipGuid: 
     SpeakerGuid: 
-    SpeakerName: Shopkeeper
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: speech-006
     Position: {x: 0, y: 0}
@@ -116,7 +108,7 @@ MonoBehaviour:
       when you have more gold.
     AudioClipGuid: 
     SpeakerGuid: 
-    SpeakerName: Shopkeeper
+    SpeakerName: 
     NodeType: SpeechNodeText
   - Guid: speech-008
     Position: {x: 1350, y: 200}
@@ -125,12 +117,20 @@ MonoBehaviour:
       The beast lurks
       near the old oak tree at the edge of the Darkwood Forest.'
     AudioClipGuid: 
-    SpeakerGuid: 
-    SpeakerName: 
+    SpeakerGuid: 4266fcbe8edfd0e4fa4d59c18bf217cd
+    SpeakerName: StoryTeller
+    NodeType: SpeechNodeText
+  - Guid: speech-001
+    Position: {x: 300, y: 200}
+    DialogueText: Welcome to my shop, adventurer! I have rare potions and magical
+      artifacts. What can I help you with today?
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
     NodeType: SpeechNodeText
   OptionNodeDatas:
   - Guid: option-001
-    Position: {x: 600, y: 200}
+    Position: {x: 591, y: 200}
     ResponseText: 'I''d like to buy the Phoenix Elixir
 
       Tell me about any quests
@@ -162,8 +162,8 @@ MonoBehaviour:
     Operator: 0
     Value: 50
   - Guid: action-002
-    Position: {x: 1100, y: 200}
-    SelectedProperty: Quest_ForestBeast
+    Position: {x: 1143, y: 208}
+    SelectedProperty: Gold
     Operator: 0
     Value: 1
   EndNodeDatas:
@@ -174,7 +174,7 @@ MonoBehaviour:
     Position: {x: 0, y: 0}
     NextDialogueName: 
   - Guid: end-003
-    Position: {x: 1600, y: 200}
+    Position: {x: 1677, y: 200}
     NextDialogueName: 
   SpeechNodeImageDatas: []
   OptionNodeImageDatas: []

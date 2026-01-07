@@ -1,6 +1,4 @@
-﻿// Assets/Scripts/DialogueManager.cs
-
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
@@ -17,10 +15,10 @@ public class DialogueManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private ChatPanel chatPanel;
     [SerializeField] private OptionPanel optionPanel;
-    [SerializeField] private Button _continueButton; // Кнопка продолжения диалога
+    [SerializeField] private Button _continueButton;
 
     [Header("Dialogue Settings")]
-    [SerializeField] private float messageDelay = 0.5f; // Задержка между сообщениями
+    [SerializeField] private float messageDelay = 0.5f;
     [SerializeField] private DialogueContainer currentDialogue;
 
     private object currentNode;
@@ -651,7 +649,6 @@ public class DialogueManager : MonoBehaviour
         };
 
         chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
-        chatPanel.ForceScrollToBottom();
 
         // Если персонаж требует нажатия кнопки для продолжения
         if (speaker != null && speaker.RequireButtonPressForMessages)
@@ -782,7 +779,6 @@ public class DialogueManager : MonoBehaviour
         };
 
         chatPanel.AddMessage(message, MessageTypeDialogue.Speech);
-        chatPanel.ForceScrollToBottom();
 
         // Если персонаж требует нажатия кнопки для продолжения
         if (speaker.RequireButtonPressForMessages)
@@ -906,7 +902,6 @@ public class DialogueManager : MonoBehaviour
         };
 
         chatPanel.AddMessage(message, MessageTypeDialogue.SpeechImage);
-        chatPanel.ForceScrollToBottom();
 
         // Если персонаж требует нажатия кнопки для продолжения
         if (speaker.RequireButtonPressForMessages)
@@ -1366,7 +1361,6 @@ public class DialogueManager : MonoBehaviour
         };
 
         chatPanel.AddMessage(message, MessageTypeDialogue.System);
-        chatPanel.ForceScrollToBottom();
 
         // Если указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
