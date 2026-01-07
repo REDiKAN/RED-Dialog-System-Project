@@ -39,6 +39,10 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private List<ChatConfiguration> chatConfigurations = new List<ChatConfiguration>();
     private int currentChatIndex = 0;
 
+    [Header("Events")]
+    [SerializeField] private UnityEvent startDialogueEvent;
+    [SerializeField] private UnityEvent endDialogueEvent;
+
     [System.Serializable]
     public class ChatConfiguration
     {
@@ -131,7 +135,6 @@ public class DialogueManager : MonoBehaviour
         currentDialogue = dialogueContainer;
         ResetVariables();
         visitedNodes.Clear();
-
         // Сохраняем исходные состояния всех персонажей перед запуском диалога
         SaveOriginalCharacterStates();
 
@@ -144,8 +147,13 @@ public class DialogueManager : MonoBehaviour
         {
             stringVariables[prop.PropertyName] = prop.StringValue;
         }
+
         // Начинаем диалог с EntryNode
         currentNode = currentDialogue.EntryNodeData;
+
+        // ВЫЗОВ СОБЫТИЯ ЗАПУСКА ДИАЛОГА
+        startDialogueEvent?.Invoke();
+
         ProcessNextNode();
     }
     private void SwitchChat(int targetChatIndex)
@@ -1353,28 +1361,15 @@ public class DialogueManager : MonoBehaviour
     /// <param name="endNode">Данные конечного узла</param>
     private void ProcessEndNode(EndNodeData endNode)
     {
-        // Проверяем, нужно ли завершить диалог
-        if (endNode.ShouldEndDialogue)
+        // Добавляем системное сообщение о завершении диалога
+        var message = new Message
         {
-            // Выводим сообщение в консоль вместо чата
-            Debug.Log("[Dialogue System] Диалог завершен");
+            Type = SenderType.System,
+            Text = "Диалог завершен"
+        };
+        chatPanel.AddMessage(message, MessageTypeDialogue.System);
 
-            // Добавляем опциональное системное сообщение в чат
-            var message = new Message
-            {
-                Type = SenderType.System,
-                Text = "Диалог завершен"
-            };
-            chatPanel.AddMessage(message, MessageTypeDialogue.System);
-
-            // Завершаем текущий диалог
-            currentNode = null;
-
-            // Не запускаем следующий диалог, так как диалог завершен
-            return;
-        }
-
-        // Если диалог не завершен и указан следующий диалог, запускаем его
+        // Если указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
         {
             DialogueContainer nextDialogue = Resources.Load<DialogueContainer>(endNode.NextDialogueName);
@@ -1385,16 +1380,21 @@ public class DialogueManager : MonoBehaviour
             else
             {
                 Debug.LogError($"Диалог {endNode.NextDialogueName} не найден в ресурсах");
+                // Явное завершение текущего диалога при ошибке
                 currentNode = null;
+                endDialogueEvent?.Invoke();
             }
         }
         else
         {
-            // Если нет следующего диалога и диалог не помечен для завершения,
-            // просто завершаем текущий диалог
+            // Завершаем текущий диалог
             currentNode = null;
+
+            // ВЫЗОВ СОБЫТИЯ ЗАВЕРШЕНИЯ ДИАЛОГА
+            endDialogueEvent?.Invoke();
         }
     }
+
 
     /// <summary>
     /// Обработка выбора опции игроком с задержкой перед следующим сообщением
@@ -1507,11 +1507,13 @@ public class DialogueManager : MonoBehaviour
     {
         // Восстанавливаем исходные состояния персонажей
         RestoreOriginalCharacterStates();
-
         currentDialogue = null;
         currentNode = null;
         visitedNodes.Clear();
         ResetVariables();
+
+        // ВЫЗОВ СОБЫТИЯ ЗАВЕРШЕНИЯ ДИАЛОГА ПРИ СБРОСЕ
+        endDialogueEvent?.Invoke();
     }
 
     private void RestoreOriginalCharacterStates()
@@ -1665,6 +1667,11 @@ public class DialogueManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        // Гарантируем вызов события завершения при уничтожении объекта
+        if (currentNode != null)
+        {
+            endDialogueEvent?.Invoke();
+        }
         RestoreOriginalCharacterStates();
     }
 }
