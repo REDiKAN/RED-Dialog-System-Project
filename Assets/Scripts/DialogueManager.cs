@@ -1353,16 +1353,28 @@ public class DialogueManager : MonoBehaviour
     /// <param name="endNode">Данные конечного узла</param>
     private void ProcessEndNode(EndNodeData endNode)
     {
-        // Добавляем системное сообщение о завершении диалога
-        var message = new Message
+        // Проверяем, нужно ли завершить диалог
+        if (endNode.ShouldEndDialogue)
         {
-            Type = SenderType.System,
-            Text = "Диалог завершен"
-        };
+            // Выводим сообщение в консоль вместо чата
+            Debug.Log("[Dialogue System] Диалог завершен");
 
-        chatPanel.AddMessage(message, MessageTypeDialogue.System);
+            // Добавляем опциональное системное сообщение в чат
+            var message = new Message
+            {
+                Type = SenderType.System,
+                Text = "Диалог завершен"
+            };
+            chatPanel.AddMessage(message, MessageTypeDialogue.System);
 
-        // Если указан следующий диалог, запускаем его
+            // Завершаем текущий диалог
+            currentNode = null;
+
+            // Не запускаем следующий диалог, так как диалог завершен
+            return;
+        }
+
+        // Если диалог не завершен и указан следующий диалог, запускаем его
         if (!string.IsNullOrEmpty(endNode.NextDialogueName))
         {
             DialogueContainer nextDialogue = Resources.Load<DialogueContainer>(endNode.NextDialogueName);
@@ -1373,11 +1385,13 @@ public class DialogueManager : MonoBehaviour
             else
             {
                 Debug.LogError($"Диалог {endNode.NextDialogueName} не найден в ресурсах");
+                currentNode = null;
             }
         }
         else
         {
-            // Завершаем текущий диалог
+            // Если нет следующего диалога и диалог не помечен для завершения,
+            // просто завершаем текущий диалог
             currentNode = null;
         }
     }

@@ -11,14 +11,12 @@ public class ChatStandardPanel : ChatPanel
 
     public override void AddMessage(Message message, MessageTypeDialogue messageType)
     {
-        // Определяем нужный префаб по типу сообщения и отправителю
-        GameObject prefabToInstantiate = GetPrefabForMessage(message, messageType);
-        if (prefabToInstantiate == null)
-            return;
-
         messageContent.text = message.Text;
-        characterName.text = message.Sender.FirstName;
-        characterIcon.sprite = message.Sender.Icon;
+
+        if (characterName != null)
+            characterName.text = message.Sender.FirstName;
+        if (characterIcon != null)
+            characterIcon.sprite = message.Sender.Icon;
 
         Canvas.ForceUpdateCanvases();
     }

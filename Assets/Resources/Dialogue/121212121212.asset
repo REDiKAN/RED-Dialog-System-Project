@@ -16,6 +16,9 @@ MonoBehaviour:
     Guid: 89ca41e3-cd22-4ccc-a680-8c2f9bec1d10
     Position: {x: 100, y: 200}
   NodeLinks:
+  - BaseNodeGuid: 89ca41e3-cd22-4ccc-a680-8c2f9bec1d10
+    PortName: Next
+    TargetNodeGuid: a5ba3af1-38f9-4166-8e40-8801e2067014
   - BaseNodeGuid: 3cacebac-afaa-4653-a571-3819f00b8d34
     PortName: Next
     TargetNodeGuid: 0957335c-899b-4a94-b643-cb14d936bfb3
@@ -49,15 +52,6 @@ MonoBehaviour:
   - BaseNodeGuid: 43fb39ab-dcb8-4f70-a941-8df5c561c06c
     PortName: Next
     TargetNodeGuid: 90cd79c2-fbf6-4188-a7f7-3a46863d1547
-  - BaseNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
-    PortName: Next
-    TargetNodeGuid: 5a678be6-5abc-40a6-aaaa-dc00e7527ed5
-  - BaseNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
-    PortName: Next
-    TargetNodeGuid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
-  - BaseNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
-    PortName: Next
-    TargetNodeGuid: 7da82e66-d609-4c1f-ad20-4e44c54e9a90
   - BaseNodeGuid: ba3bdfcd-3d74-469f-8bd5-25b6b3bc8eeb
     PortName: Next
     TargetNodeGuid: 19e42e72-b52f-4e5f-8c01-236d5611c825
@@ -106,12 +100,12 @@ MonoBehaviour:
   - BaseNodeGuid: 58da9ca8-0a4a-45e8-915d-df7f7ea505b7
     PortName: Next
     TargetNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
-  - BaseNodeGuid: 89ca41e3-cd22-4ccc-a680-8c2f9bec1d10
-    PortName: Next
-    TargetNodeGuid: a5ba3af1-38f9-4166-8e40-8801e2067014
   - BaseNodeGuid: a5ba3af1-38f9-4166-8e40-8801e2067014
     PortName: Output
     TargetNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
+  - BaseNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
+    PortName: Next
+    TargetNodeGuid: c144ccf5-8ca3-4c8e-b88a-cd7d88ae6f88
   SpeechNodeDatas:
   - Guid: 3cacebac-afaa-4653-a571-3819f00b8d34
     Position: {x: 2966, y: 127}
@@ -230,7 +224,7 @@ MonoBehaviour:
     SpeakerName: Lora
     NodeType: SpeechNodeText
   - Guid: 2310d678-541b-4f9e-a929-214f5cfa595b
-    Position: {x: 218, y: 432}
+    Position: {x: 424, y: 456}
     DialogueText: "\u0448\u0430\u043C\u0430\u043D, \u0434\u0430\u0439 \u043C\u043D\u0435 "
     AudioClipGuid: 
     SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
@@ -245,12 +239,6 @@ MonoBehaviour:
   - Guid: d2431bbc-8369-4db4-8b80-67498cbc61c2
     Position: {x: 2685, y: 86}
     ResponseText: 1
-    AudioClipGuid: 
-    NodeType: OptionNodeText
-  - Guid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
-    Position: {x: 533, y: 247}
-    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E/ sdfgs/ ihybasdhyifdsauihdfs/d
-      sfisd ifhsdf asd asd asd asda sd asd asd asd asd as asd asd asd asd asd asd "
     AudioClipGuid: 
     NodeType: OptionNodeText
   - Guid: 5a678be6-5abc-40a6-aaaa-dc00e7527ed5
@@ -284,14 +272,135 @@ MonoBehaviour:
     ResponseText: 1
     AudioClipGuid: 
     NodeType: OptionNodeText
+  - Guid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
+    Position: {x: 533, y: 247}
+    ResponseText: "\u0425\u043E\u0440\u043E\u0448\u043E/ sdfgs/ ihybasdhyifdsauihdfs/d
+      sfisd ifhsdf asd asd asd asda sd asd asd asd asd as asd asd asd asd asd asd "
+    AudioClipGuid: 
+    NodeType: OptionNodeText
   ExposedProperties: []
   IntExposedProperties: []
   StringExposedProperties: []
   IntConditionNodeDatas: []
   StringConditionNodeDatas: []
   ModifyIntNodeDatas: []
-  EndNodeDatas: []
+  EndNodeDatas:
+  - Guid: c144ccf5-8ca3-4c8e-b88a-cd7d88ae6f88
+    Position: {x: 774, y: 456}
+    NextDialogueName: 
   SpeechNodeImageDatas:
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
   - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
     Position: {x: 2355, y: 8}
     ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
@@ -421,7 +530,7 @@ MonoBehaviour:
   CharacterButtonPressNodeDatas: []
   ChatSwitchNodeDatas:
   - Guid: a5ba3af1-38f9-4166-8e40-8801e2067014
-    Position: {x: 118, y: 321}
+    Position: {x: 218, y: 199}
     TargetChatIndex: 2
   ChangeChatIconNodeDatas:
   - Guid: 7da82e66-d609-4c1f-ad20-4e44c54e9a90

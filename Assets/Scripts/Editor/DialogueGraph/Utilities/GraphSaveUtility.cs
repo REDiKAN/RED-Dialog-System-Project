@@ -210,7 +210,8 @@ public class GraphSaveUtility
                 {
                     Guid = endNode.GUID,
                     Position = node.GetPosition().position,
-                    NextDialogueName = endNode.GetNextDialoguePath()
+                    NextDialogueName = endNode.GetNextDialoguePath(),
+                    ShouldEndDialogue = endNode.ShouldEndDialogue
                 });
             }
             else if (node is EventNode eventNode)
@@ -629,6 +630,7 @@ public class GraphSaveUtility
             if (tempNode is EndNode endNodeEditor)
             {
                 endNodeEditor.SetNextDialogueFromPath(nodeData.NextDialogueName);
+                endNodeEditor.ShouldEndDialogue = nodeData.ShouldEndDialogue; // Восстанавливаем новое поле
             }
             targetGraphView.AddElement(tempNode);
         }

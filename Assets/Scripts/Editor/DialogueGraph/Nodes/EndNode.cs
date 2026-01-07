@@ -6,10 +6,11 @@ using UnityEditor.Search;
 
 public class EndNode : BaseNode
 {
-    // Ссылка на следующий диалог для drag-and-drop
     public DialogueContainer NextDialogueAsset { get; set; }
-    private ObjectField nextDialogueField;
+    public bool ShouldEndDialogue = true;
 
+    private ObjectField nextDialogueField;
+    private Toggle endDialogueToggle;
     public override void Initialize(Vector2 position)
     {
         base.Initialize(position);
@@ -19,6 +20,18 @@ public class EndNode : BaseNode
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
+
+        // Toggle для управления завершением диалога
+        endDialogueToggle = new Toggle("End Dialogue")
+        {
+            value = ShouldEndDialogue,
+            tooltip = "When enabled, the dialogue will end and a message will be printed to console"
+        };
+        endDialogueToggle.RegisterValueChangedCallback(evt =>
+        {
+            ShouldEndDialogue = evt.newValue;
+        });
+        mainContainer.Add(endDialogueToggle);
 
         // ObjectField для drag-and-drop следующего диалога
         nextDialogueField = new ObjectField("Next Dialogue")
@@ -34,6 +47,35 @@ public class EndNode : BaseNode
         RefreshExpandedState();
         RefreshPorts();
         styleSheets.Add(Resources.Load<StyleSheet>("EndNode"));
+    }
+
+    [System.Serializable]
+    private class EndNodeSerializedData
+    {
+        public string NextDialoguePath;
+        public bool ShouldEndDialogue;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new EndNodeSerializedData
+        {
+            NextDialoguePath = GetNextDialoguePath(),
+            ShouldEndDialogue = ShouldEndDialogue
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<EndNodeSerializedData>(jsonData);
+        SetNextDialogueFromPath(data.NextDialoguePath);
+        ShouldEndDialogue = data.ShouldEndDialogue;
+        // Обновление UI
+        if (endDialogueToggle != null)
+        {
+            endDialogueToggle.SetValueWithoutNotify(ShouldEndDialogue);
+        }
     }
 
     /// <summary>
