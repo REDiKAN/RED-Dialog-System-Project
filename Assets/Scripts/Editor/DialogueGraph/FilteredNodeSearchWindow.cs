@@ -1,9 +1,9 @@
-﻿using System;
+﻿using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using System;
 
 public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
 {
@@ -22,63 +22,60 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
 
     public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
     {
-        var allowedTypes = GetAllowedNodeTypes(_sourceNode);
-        var entries = new List<SearchTreeEntry>
-        {
-            new SearchTreeGroupEntry(new GUIContent("Create Node"), 0)
-        };
+        List<SearchTreeEntry> tree = new List<SearchTreeEntry>();
 
-        // Вручную формируем группы и фильтруем по allowedTypes
-        AddGroupIfHasEntries(entries, "Speech Nodes", 1, new[]
-        {
-            (typeof(SpeechNodeText), "Speech (Text)"),
-            (typeof(SpeechNodeAudio), "Speech (Audio)"),
-            (typeof(SpeechNodeImage), "Speech (Image)"),
-            (typeof(SpeechNodeRandText), "Speech Rand (Text)")
-        }, allowedTypes);
+        // Корневая папка
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 0));
 
-        AddGroupIfHasEntries(entries, "Option Nodes", 1, new[]
-        {
-            (typeof(OptionNodeText), "Option (Text)"),
-            (typeof(OptionNodeAudio), "Option (Audio)"),
-            (typeof(OptionNodeImage), "Option (Image)")
-        }, allowedTypes);
+        // ===== Group 1: Flow Control (Управление потоком) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Flow Control"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Entry Node")) { level = 2, userData = typeof(EntryNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("End Node")) { level = 2, userData = typeof(EndNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Wire Node")) { level = 2, userData = typeof(WireNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Random Branch Node")) { level = 2, userData = typeof(RandomBranchNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Pause Node")) { level = 2, userData = typeof(PauseNode) });
 
-        AddGroupIfHasEntries(entries, "Condition Nodes", 1, new[]
-        {
-            (typeof(IntConditionNode), "Condition (Int)"),
-            (typeof(StringConditionNode), "Condition (String)"),
-            (typeof(CharacterIntConditionNode), "Character Condition (Int)")
-        }, allowedTypes);
+        // ===== Group 2: Dialogue Content (Контент диалога) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Content"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Node")) { level = 2, userData = typeof(SpeechNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Image Node")) { level = 2, userData = typeof(SpeechNodeImage) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Random Node")) { level = 2, userData = typeof(SpeechNodeRandText) });
 
-        AddGroupIfHasEntries(entries, "Utility Nodes", 1, new[]
-        {
-            (typeof(EndNode), "End Node"),
-            (typeof(NoteNode), "Note Node"),
-            (typeof(TimerNode), "Timer"),
-            (typeof(PauseNode), "Pause"),
-            (typeof(RandomBranchNode), "Random Branch"),
-            (typeof(WireNode), "Wire"),
-            (typeof(ChangeChatIconNode), "ChangeChatIcon"),
-            (typeof(ChangeChatNameNode), "ChangeChatName")
+        // ===== Group 3: Player Choice (Выбор игрока) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Player Choice"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Option Node")) { level = 2, userData = typeof(OptionNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Option Image Node")) { level = 2, userData = typeof(OptionNodeImage) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Timer Node")) { level = 2, userData = typeof(TimerNode) });
 
-        }, allowedTypes);
+        // ===== Group 4: Conditions & Logic (Условия и Логика) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Conditions & Logic"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Int Condition Node")) { level = 2, userData = typeof(IntConditionNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("String Condition Node")) { level = 2, userData = typeof(StringConditionNode) });
 
-        AddGroupIfHasEntries(entries, "Action Nodes", 1, new[]
-        {
-            (typeof(ModifyIntNode), "Modify Int"),
-            (typeof(CharacterModifyIntNode), "Character Modify Int"),
-            (typeof(EventNode), "Event")
-        }, allowedTypes);
+        // ===== Group 5: Variables (Переменные) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Variables"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Modify Int Node")) { level = 2, userData = typeof(ModifyIntNode) });
 
-        AddGroupIfHasEntries(entries, "Debug Nodes", 1, new[]
-        {
-            (typeof(DebugLogNode), "Debug Log"),
-            (typeof(DebugWarningNode), "Debug Warning"),
-            (typeof(DebugErrorNode), "Debug Error")
-        }, allowedTypes);
+        // ===== Group 6: Characters (Персонажи) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Characters"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Int Condition Node")) { level = 2, userData = typeof(CharacterIntConditionNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Modify Int Node")) { level = 2, userData = typeof(CharacterModifyIntNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Button Press Node")) { level = 2, userData = typeof(CharacterButtonPressNode) });
 
-        return entries;
+        // ===== Group 7: UI & Chat Control (Управление интерфейсом) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("UI & Chat Control"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Chat Switch Node")) { level = 2, userData = typeof(ChatSwitchNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Change Chat Name Node")) { level = 2, userData = typeof(ChangeChatNameNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Change Chat Icon Node")) { level = 2, userData = typeof(ChangeChatIconNode) });
+
+        // ===== Group 8: System & Events (Система и События) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("System & Events"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Event Node")) { level = 2, userData = typeof(EventNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Log Node")) { level = 2, userData = typeof(DebugLogNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Warning Node")) { level = 2, userData = typeof(DebugWarningNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Error Node")) { level = 2, userData = typeof(DebugErrorNode) });
+
+        return tree;
     }
 
     private void AddGroupIfHasEntries(

@@ -1,23 +1,28 @@
-using TMPro;
-using UnityEngine;
 using UnityEngine.UI;
-
-public enum TypeChatHandler { Messenger, Standard }
+using UnityEngine;
+using TMPro;
 
 /// <summary>
 /// Центральный обработчик чата, объединяющий все компоненты интерфейса
 /// </summary>
 public class ChatHandler : MonoBehaviour
 {
-    public TypeChatHandler typeChatHandler;
-
     [Header("Ссылки на компоненты чата")]
     public ChatPanel chatPanel;
     public OptionPanel optionPanel;
     public TimerDisplayController timerDisplayController;
 
+    [Header("Optional UI Elements Settings")]
+    [Tooltip("If disabled, the 'Change Chat Name' node will be ignored for this handler.")]
+    public bool useNamePanel = true;
+
+    [Tooltip("If disabled, the 'Change Chat Icon' node will be ignored for this handler.")]
+    public bool useIconPanel = true;
+
     [Header("Дополнительные настройки")]
     public bool isActiveByDefault = true;
+
+    [Range(0, 1)]
     public float fadeDuration = 0.2f;
 
     public TMP_Text nameChatPanel;
@@ -80,3 +85,4 @@ public class ChatHandler : MonoBehaviour
         return isValid;
     }
 }
+

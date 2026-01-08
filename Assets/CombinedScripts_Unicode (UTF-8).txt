@@ -1,5 +1,5 @@
 ﻿// ===== Combined Scripts Header =====
-// Generation Time: 07.01.2026 17:34:13
+// Generation Time: 08.01.2026 20:05:12
 // Encoding: Unicode (UTF-8)
 // Total Files: 109
 // =================================
@@ -83,22 +83,27 @@ public class CharacterManager : MonoBehaviour
 
 
 //==== File 3 of 109: F:/Project Repositories/REDDialogSystemProject/RED-Dialog-System-Project/Assets\Scripts\ChatHandler.cs ====
-public enum TypeChatHandler { Messenger, Standard }
-
 /// <summary>
 /// ����������� ���������� ����, ������������ ��� ���������� ����������
 /// </summary>
 public class ChatHandler : MonoBehaviour
 {
-    public TypeChatHandler typeChatHandler;
-
     [Header("������ �� ���������� ����")]
     public ChatPanel chatPanel;
     public OptionPanel optionPanel;
     public TimerDisplayController timerDisplayController;
 
+    [Header("Optional UI Elements Settings")]
+    [Tooltip("If disabled, the 'Change Chat Name' node will be ignored for this handler.")]
+    public bool useNamePanel = true;
+
+    [Tooltip("If disabled, the 'Change Chat Icon' node will be ignored for this handler.")]
+    public bool useIconPanel = true;
+
     [Header("�������������� ���������")]
     public bool isActiveByDefault = true;
+
+    [Range(0, 1)]
     public float fadeDuration = 0.2f;
 
     public TMP_Text nameChatPanel;
@@ -161,6 +166,7 @@ public class ChatHandler : MonoBehaviour
         return isValid;
     }
 }
+
 
 
 //==== File 4 of 109: F:/Project Repositories/REDDialogSystemProject/RED-Dialog-System-Project/Assets\Scripts\ChatMessengerPanel.cs ====
@@ -303,11 +309,15 @@ public class ChatStandardPanel : ChatPanel
 
     public override void AddMessage(Message message, MessageTypeDialogue messageType)
     {
-        messageContent.text = message.Text;
+        if (messageContent != null)
+            messageContent.text = message.Text;
+        else
+            Debug.LogError("messageContent �� �������� � ���������� ChatStandardPanel!", this);
 
-        if (characterName != null)
+        if (characterName != null && message.Sender != null && !string.IsNullOrEmpty(message.Sender.FirstName))
             characterName.text = message.Sender.FirstName;
-        if (characterIcon != null)
+
+        if (characterIcon != null && message.Sender != null && message.Sender.Icon != null)
             characterIcon.sprite = message.Sender.Icon;
 
         Canvas.ForceUpdateCanvases();
@@ -393,6 +403,7 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private ChatPanel chatPanel;
     [SerializeField] private OptionPanel optionPanel;
     [SerializeField] private Button _continueButton;
+    [SerializeField] private TimerDisplayController _timerDisplayController;
 
     [Header("Dialogue Settings")]
     [SerializeField] private float messageDelay = 0.5f;
@@ -403,7 +414,6 @@ public class DialogueManager : MonoBehaviour
     private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
     private List<object> visitedNodes = new List<object>();
     private readonly System.Random random = new System.Random();
-    [SerializeField] private TimerDisplayController _timerDisplayController;
 
     private Dictionary<string, bool> _originalButtonPressStates = new Dictionary<string, bool>();
 
@@ -416,6 +426,10 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private List<ChatConfiguration> chatConfigurations = new List<ChatConfiguration>();
     private int currentChatIndex = 0;
 
+    [Header("Events")]
+    [SerializeField] private UnityEvent startDialogueEvent;
+    [SerializeField] private UnityEvent endDialogueEvent;
+
     [System.Serializable]
     public class ChatConfiguration
     {
@@ -423,6 +437,7 @@ public class DialogueManager : MonoBehaviour
     }
     private void Awake()
     {
+
         // Гарантируем создание CharacterManager при запуске
         if (CharacterManager.Instance == null)
         {
@@ -508,7 +523,6 @@ public class DialogueManager : MonoBehaviour
         currentDialogue = dialogueContainer;
         ResetVariables();
         visitedNodes.Clear();
-
         // Сохраняем исходные состояния всех персонажей перед запуском диалога
         SaveOriginalCharacterStates();
 
@@ -521,8 +535,13 @@ public class DialogueManager : MonoBehaviour
         {
             stringVariables[prop.PropertyName] = prop.StringValue;
         }
+
         // Начинаем диалог с EntryNode
         currentNode = currentDialogue.EntryNodeData;
+
+        // ВЫЗОВ СОБЫТИЯ ЗАПУСКА ДИАЛОГА
+        startDialogueEvent?.Invoke();
+
         ProcessNextNode();
     }
     private void SwitchChat(int targetChatIndex)
@@ -560,9 +579,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         if (!newConfig.chatHandler.ValidateSetup())
-        {
             Debug.LogWarning($"ChatHandler at index {targetChatIndex} has invalid setup but will continue.");
-        }
 
         newConfig.chatHandler.SetActive(true);
 
@@ -588,34 +605,40 @@ public class DialogueManager : MonoBehaviour
         if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
         {
             var chatConfig = chatConfigurations[currentChatIndex];
+
             if (chatConfig != null && chatConfig.chatHandler != null)
             {
                 var chatHandler = chatConfig.chatHandler;
-                if (chatHandler.iconChatPanel != null)
-                {
-                    // Загружаем спрайт из Resources
-                    if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
-                    {
-                        // Убираем возможные расширения в пути
-                        string cleanPath = nodeData.IconSpritePath;
-                        if (cleanPath.EndsWith(".sprite"))
-                            cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
 
-                        var sprite = Resources.Load<Sprite>(cleanPath);
-                        if (sprite != null)
+                // ПРОВЕРКА: Используется ли иконка в этом хандлере?
+                if (chatHandler.useIconPanel)
+                {
+                    if (chatHandler.iconChatPanel != null)
+                    {
+                        // Загружаем спрайт из Resources
+                        if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
                         {
-                            chatHandler.iconChatPanel.sprite = sprite;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
-                                $"Make sure the sprite is in Assets/Resources folder with correct path.");
+                            // Убираем возможные расширения в пути
+                            string cleanPath = nodeData.IconSpritePath;
+                            if (cleanPath.EndsWith(".sprite"))
+                                cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
+
+                            var sprite = Resources.Load<Sprite>(cleanPath);
+                            if (sprite != null)
+                            {
+                                chatHandler.iconChatPanel.sprite = sprite;
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
+                                    $"Make sure the sprite is in Assets/Resources folder with correct path.");
+                            }
                         }
                     }
-                }
-                else
-                {
-                    Debug.LogWarning("iconChatPanel is null in active ChatHandler");
+                    else
+                    {
+                        Debug.LogWarning("Icon Chat Panel is not assigned, but 'Use Icon Panel' is enabled.", chatHandler);
+                    }
                 }
             }
             else
@@ -628,7 +651,7 @@ public class DialogueManager : MonoBehaviour
             Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
         }
 
-        // Переходим к следующему узлу
+        // Всегда переходим к следующему узлу, даже если иконка не была обновлена
         GoToNextNode(nodeData.Guid);
     }
 
@@ -641,14 +664,19 @@ public class DialogueManager : MonoBehaviour
             if (chatConfig != null && chatConfig.chatHandler != null)
             {
                 var chatHandler = chatConfig.chatHandler;
-                if (chatHandler.nameChatPanel != null)
+
+                // ПРОВЕРКА: Используется ли название в этом хандлере?
+                if (chatHandler.useNamePanel)
                 {
-                    // Устанавливаем новое название
-                    chatHandler.nameChatPanel.text = nodeData.NewChatName;
-                }
-                else
-                {
-                    Debug.LogWarning("nameChatPanel is null in active ChatHandler");
+                    if (chatHandler.nameChatPanel != null)
+                    {
+                        // Устанавливаем новое название
+                        chatHandler.nameChatPanel.text = nodeData.NewChatName;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Name Chat Panel is not assigned, but 'Use Name Panel' is enabled.", chatHandler);
+                    }
                 }
             }
             else
@@ -661,7 +689,7 @@ public class DialogueManager : MonoBehaviour
             Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
         }
 
-        // Переходим к следующему узлу
+        // Всегда переходим к следующему узлу, даже если название не было обновлено
         GoToNextNode(nodeData.Guid);
     }
 
@@ -1736,7 +1764,6 @@ public class DialogueManager : MonoBehaviour
             Type = SenderType.System,
             Text = "Диалог завершен"
         };
-
         chatPanel.AddMessage(message, MessageTypeDialogue.System);
 
         // Если указан следующий диалог, запускаем его
@@ -1750,14 +1777,21 @@ public class DialogueManager : MonoBehaviour
             else
             {
                 Debug.LogError($"Диалог {endNode.NextDialogueName} не найден в ресурсах");
+                // Явное завершение текущего диалога при ошибке
+                currentNode = null;
+                endDialogueEvent?.Invoke();
             }
         }
         else
         {
             // Завершаем текущий диалог
             currentNode = null;
+
+            // ВЫЗОВ СОБЫТИЯ ЗАВЕРШЕНИЯ ДИАЛОГА
+            endDialogueEvent?.Invoke();
         }
     }
+
 
     /// <summary>
     /// Обработка выбора опции игроком с задержкой перед следующим сообщением
@@ -1870,11 +1904,13 @@ public class DialogueManager : MonoBehaviour
     {
         // Восстанавливаем исходные состояния персонажей
         RestoreOriginalCharacterStates();
-
         currentDialogue = null;
         currentNode = null;
         visitedNodes.Clear();
         ResetVariables();
+
+        // ВЫЗОВ СОБЫТИЯ ЗАВЕРШЕНИЯ ДИАЛОГА ПРИ СБРОСЕ
+        endDialogueEvent?.Invoke();
     }
 
     private void RestoreOriginalCharacterStates()
@@ -2028,6 +2064,11 @@ public class DialogueManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        // Гарантируем вызов события завершения при уничтожении объекта
+        if (currentNode != null)
+        {
+            endDialogueEvent?.Invoke();
+        }
         RestoreOriginalCharacterStates();
     }
 }
@@ -4445,6 +4486,7 @@ public class DialogueGraphView : GraphView
                 Insert(1, _gridBackground); // Вставляем после кастомного фона
                 _gridBackground.StretchToParentSize();
             }
+
         }
     }
 
@@ -5655,63 +5697,60 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
 
     public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
     {
-        var allowedTypes = GetAllowedNodeTypes(_sourceNode);
-        var entries = new List<SearchTreeEntry>
-        {
-            new SearchTreeGroupEntry(new GUIContent("Create Node"), 0)
-        };
+        List<SearchTreeEntry> tree = new List<SearchTreeEntry>();
 
-        // Вручную формируем группы и фильтруем по allowedTypes
-        AddGroupIfHasEntries(entries, "Speech Nodes", 1, new[]
-        {
-            (typeof(SpeechNodeText), "Speech (Text)"),
-            (typeof(SpeechNodeAudio), "Speech (Audio)"),
-            (typeof(SpeechNodeImage), "Speech (Image)"),
-            (typeof(SpeechNodeRandText), "Speech Rand (Text)")
-        }, allowedTypes);
+        // Корневая папка
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Nodes"), 0));
 
-        AddGroupIfHasEntries(entries, "Option Nodes", 1, new[]
-        {
-            (typeof(OptionNodeText), "Option (Text)"),
-            (typeof(OptionNodeAudio), "Option (Audio)"),
-            (typeof(OptionNodeImage), "Option (Image)")
-        }, allowedTypes);
+        // ===== Group 1: Flow Control (Управление потоком) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Flow Control"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Entry Node")) { level = 2, userData = typeof(EntryNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("End Node")) { level = 2, userData = typeof(EndNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Wire Node")) { level = 2, userData = typeof(WireNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Random Branch Node")) { level = 2, userData = typeof(RandomBranchNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Pause Node")) { level = 2, userData = typeof(PauseNodeData) });
 
-        AddGroupIfHasEntries(entries, "Condition Nodes", 1, new[]
-        {
-            (typeof(IntConditionNode), "Condition (Int)"),
-            (typeof(StringConditionNode), "Condition (String)"),
-            (typeof(CharacterIntConditionNode), "Character Condition (Int)")
-        }, allowedTypes);
+        // ===== Group 2: Dialogue Content (Контент диалога) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Content"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Node")) { level = 2, userData = typeof(SpeechNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Image Node")) { level = 2, userData = typeof(SpeechNodeImageData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Random Node")) { level = 2, userData = typeof(SpeechRandNodeData) });
 
-        AddGroupIfHasEntries(entries, "Utility Nodes", 1, new[]
-        {
-            (typeof(EndNode), "End Node"),
-            (typeof(NoteNode), "Note Node"),
-            (typeof(TimerNode), "Timer"),
-            (typeof(PauseNode), "Pause"),
-            (typeof(RandomBranchNode), "Random Branch"),
-            (typeof(WireNode), "Wire"),
-            (typeof(ChangeChatIconNode), "ChangeChatIcon"),
-            (typeof(ChangeChatNameNode), "ChangeChatName")
+        // ===== Group 3: Player Choice (Выбор игрока) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Player Choice"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Option Node")) { level = 2, userData = typeof(OptionNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Option Image Node")) { level = 2, userData = typeof(OptionNodeImageData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Timer Node")) { level = 2, userData = typeof(TimerNodeData) });
 
-        }, allowedTypes);
+        // ===== Group 4: Conditions & Logic (Условия и Логика) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Conditions & Logic"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Int Condition Node")) { level = 2, userData = typeof(IntConditionNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("String Condition Node")) { level = 2, userData = typeof(StringConditionNodeData) });
 
-        AddGroupIfHasEntries(entries, "Action Nodes", 1, new[]
-        {
-            (typeof(ModifyIntNode), "Modify Int"),
-            (typeof(CharacterModifyIntNode), "Character Modify Int"),
-            (typeof(EventNode), "Event")
-        }, allowedTypes);
+        // ===== Group 5: Variables (Переменные) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Variables"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Modify Int Node")) { level = 2, userData = typeof(ModifyIntNodeData) });
 
-        AddGroupIfHasEntries(entries, "Debug Nodes", 1, new[]
-        {
-            (typeof(DebugLogNode), "Debug Log"),
-            (typeof(DebugWarningNode), "Debug Warning"),
-            (typeof(DebugErrorNode), "Debug Error")
-        }, allowedTypes);
+        // ===== Group 6: Characters (Персонажи) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("Characters"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Int Condition Node")) { level = 2, userData = typeof(CharacterIntConditionNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Modify Int Node")) { level = 2, userData = typeof(CharacterModifyIntNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Character Button Press Node")) { level = 2, userData = typeof(CharacterButtonPressNodeData) });
 
-        return entries;
+        // ===== Group 7: UI & Chat Control (Управление интерфейсом) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("UI & Chat Control"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Chat Switch Node")) { level = 2, userData = typeof(ChatSwitchNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Change Chat Name Node")) { level = 2, userData = typeof(ChangeChatNameNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Change Chat Icon Node")) { level = 2, userData = typeof(ChangeChatIconNodeData) });
+
+        // ===== Group 8: System & Events (Система и События) =====
+        tree.Add(new SearchTreeGroupEntry(new GUIContent("System & Events"), 1));
+        tree.Add(new SearchTreeEntry(new GUIContent("Event Node")) { level = 2, userData = typeof(EventNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Log Node")) { level = 2, userData = typeof(DebugLogNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Warning Node")) { level = 2, userData = typeof(DebugWarningNodeData) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Debug Error Node")) { level = 2, userData = typeof(DebugErrorNodeData) });
+
+        return tree;
     }
 
     private void AddGroupIfHasEntries(
@@ -7614,10 +7653,11 @@ public class DebugWarningNode : BaseNode
 //==== File 45 of 109: F:/Project Repositories/REDDialogSystemProject/RED-Dialog-System-Project/Assets\Scripts\Editor\DialogueGraph\Nodes\EndNode.cs ====
 public class EndNode : BaseNode
 {
-    // ������ �� ��������� ������ ��� drag-and-drop
     public DialogueContainer NextDialogueAsset { get; set; }
-    private ObjectField nextDialogueField;
+    public bool ShouldEndDialogue = true;
 
+    private ObjectField nextDialogueField;
+    private Toggle endDialogueToggle;
     public override void Initialize(Vector2 position)
     {
         base.Initialize(position);
@@ -7627,6 +7667,18 @@ public class EndNode : BaseNode
         var inputPort = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float));
         inputPort.portName = "Input";
         inputContainer.Add(inputPort);
+
+        // Toggle ��� ���������� ����������� �������
+        endDialogueToggle = new Toggle("End Dialogue")
+        {
+            value = ShouldEndDialogue,
+            tooltip = "When enabled, the dialogue will end and a message will be printed to console"
+        };
+        endDialogueToggle.RegisterValueChangedCallback(evt =>
+        {
+            ShouldEndDialogue = evt.newValue;
+        });
+        mainContainer.Add(endDialogueToggle);
 
         // ObjectField ��� drag-and-drop ���������� �������
         nextDialogueField = new ObjectField("Next Dialogue")
@@ -7642,6 +7694,35 @@ public class EndNode : BaseNode
         RefreshExpandedState();
         RefreshPorts();
         styleSheets.Add(Resources.Load<StyleSheet>("EndNode"));
+    }
+
+    [System.Serializable]
+    private class EndNodeSerializedData
+    {
+        public string NextDialoguePath;
+        public bool ShouldEndDialogue;
+    }
+
+    public override string SerializeNodeData()
+    {
+        var data = new EndNodeSerializedData
+        {
+            NextDialoguePath = GetNextDialoguePath(),
+            ShouldEndDialogue = ShouldEndDialogue
+        };
+        return JsonUtility.ToJson(data);
+    }
+
+    public override void DeserializeNodeData(string jsonData)
+    {
+        var data = JsonUtility.FromJson<EndNodeSerializedData>(jsonData);
+        SetNextDialogueFromPath(data.NextDialoguePath);
+        ShouldEndDialogue = data.ShouldEndDialogue;
+        // ���������� UI
+        if (endDialogueToggle != null)
+        {
+            endDialogueToggle.SetValueWithoutNotify(ShouldEndDialogue);
+        }
     }
 
     /// <summary>
@@ -11081,7 +11162,8 @@ public class GraphSaveUtility
                 {
                     Guid = endNode.GUID,
                     Position = node.GetPosition().position,
-                    NextDialogueName = endNode.GetNextDialoguePath()
+                    NextDialogueName = endNode.GetNextDialoguePath(),
+                    ShouldEndDialogue = endNode.ShouldEndDialogue
                 });
             }
             else if (node is EventNode eventNode)
@@ -11500,6 +11582,7 @@ public class GraphSaveUtility
             if (tempNode is EndNode endNodeEditor)
             {
                 endNodeEditor.SetNextDialogueFromPath(nodeData.NextDialogueName);
+                endNodeEditor.ShouldEndDialogue = nodeData.ShouldEndDialogue; // Восстанавливаем новое поле
             }
             targetGraphView.AddElement(tempNode);
         }
@@ -12707,10 +12790,14 @@ public class DebugWarningNodeData : BaseNodeData
 
 
 //==== File 96 of 109: F:/Project Repositories/REDDialogSystemProject/RED-Dialog-System-Project/Assets\Scripts\Runtime\DialogueSystem\Data\Node Data\EndNodeData.cs ====
+/// <summary>
+/// ������ ��������� ����
+/// </summary>
 [Serializable]
 public class EndNodeData : BaseNodeData
 {
     public string NextDialogueName;
+    public bool ShouldEndDialogue = true;
 }
 
 
@@ -12869,9 +12956,9 @@ public class WireNodeData : BaseNodeData
 
 // ============ Statistics =============
 // Total Files: 109
-// Total Size: 470,17 KB
-// Total Lines: 13013
-// Classes: 139
-// Methods: 786
-// Comments (Blocks): 1065
+// Total Size: 476,16 KB
+// Total Lines: 13097
+// Classes: 140
+// Methods: 789
+// Comments (Blocks): 1084
 // =====================================

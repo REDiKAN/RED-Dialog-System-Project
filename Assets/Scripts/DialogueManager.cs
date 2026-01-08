@@ -1,11 +1,10 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.UI;
+﻿using System.Collections.Generic;
 using UnityEngine.Events;
-using System;
 using System.Collections;
+using UnityEngine.UI;
 using DialogueSystem;
+using UnityEngine;
+using System.Linq;
 
 /// <summary>
 /// Управляет выполнением диалогов в реальном времени
@@ -16,6 +15,7 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private ChatPanel chatPanel;
     [SerializeField] private OptionPanel optionPanel;
     [SerializeField] private Button _continueButton;
+    [SerializeField] private TimerDisplayController _timerDisplayController;
 
     [Header("Dialogue Settings")]
     [SerializeField] private float messageDelay = 0.5f;
@@ -26,7 +26,6 @@ public class DialogueManager : MonoBehaviour
     private Dictionary<string, string> stringVariables = new Dictionary<string, string>();
     private List<object> visitedNodes = new List<object>();
     private readonly System.Random random = new System.Random();
-    [SerializeField] private TimerDisplayController _timerDisplayController;
 
     private Dictionary<string, bool> _originalButtonPressStates = new Dictionary<string, bool>();
 
@@ -50,6 +49,7 @@ public class DialogueManager : MonoBehaviour
     }
     private void Awake()
     {
+
         // Гарантируем создание CharacterManager при запуске
         if (CharacterManager.Instance == null)
         {
@@ -191,9 +191,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         if (!newConfig.chatHandler.ValidateSetup())
-        {
             Debug.LogWarning($"ChatHandler at index {targetChatIndex} has invalid setup but will continue.");
-        }
 
         newConfig.chatHandler.SetActive(true);
 
@@ -219,34 +217,40 @@ public class DialogueManager : MonoBehaviour
         if (currentChatIndex >= 0 && currentChatIndex < chatConfigurations.Count)
         {
             var chatConfig = chatConfigurations[currentChatIndex];
+
             if (chatConfig != null && chatConfig.chatHandler != null)
             {
                 var chatHandler = chatConfig.chatHandler;
-                if (chatHandler.iconChatPanel != null)
-                {
-                    // Загружаем спрайт из Resources
-                    if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
-                    {
-                        // Убираем возможные расширения в пути
-                        string cleanPath = nodeData.IconSpritePath;
-                        if (cleanPath.EndsWith(".sprite"))
-                            cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
 
-                        var sprite = Resources.Load<Sprite>(cleanPath);
-                        if (sprite != null)
+                // ПРОВЕРКА: Используется ли иконка в этом хандлере?
+                if (chatHandler.useIconPanel)
+                {
+                    if (chatHandler.iconChatPanel != null)
+                    {
+                        // Загружаем спрайт из Resources
+                        if (!string.IsNullOrEmpty(nodeData.IconSpritePath))
                         {
-                            chatHandler.iconChatPanel.sprite = sprite;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
-                                $"Make sure the sprite is in Assets/Resources folder with correct path.");
+                            // Убираем возможные расширения в пути
+                            string cleanPath = nodeData.IconSpritePath;
+                            if (cleanPath.EndsWith(".sprite"))
+                                cleanPath = cleanPath.Substring(0, cleanPath.Length - 7);
+
+                            var sprite = Resources.Load<Sprite>(cleanPath);
+                            if (sprite != null)
+                            {
+                                chatHandler.iconChatPanel.sprite = sprite;
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Sprite not found in Resources for path: {cleanPath}. " +
+                                    $"Make sure the sprite is in Assets/Resources folder with correct path.");
+                            }
                         }
                     }
-                }
-                else
-                {
-                    Debug.LogWarning("iconChatPanel is null in active ChatHandler");
+                    else
+                    {
+                        Debug.LogWarning("Icon Chat Panel is not assigned, but 'Use Icon Panel' is enabled.", chatHandler);
+                    }
                 }
             }
             else
@@ -259,7 +263,7 @@ public class DialogueManager : MonoBehaviour
             Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
         }
 
-        // Переходим к следующему узлу
+        // Всегда переходим к следующему узлу, даже если иконка не была обновлена
         GoToNextNode(nodeData.Guid);
     }
 
@@ -272,14 +276,19 @@ public class DialogueManager : MonoBehaviour
             if (chatConfig != null && chatConfig.chatHandler != null)
             {
                 var chatHandler = chatConfig.chatHandler;
-                if (chatHandler.nameChatPanel != null)
+
+                // ПРОВЕРКА: Используется ли название в этом хандлере?
+                if (chatHandler.useNamePanel)
                 {
-                    // Устанавливаем новое название
-                    chatHandler.nameChatPanel.text = nodeData.NewChatName;
-                }
-                else
-                {
-                    Debug.LogWarning("nameChatPanel is null in active ChatHandler");
+                    if (chatHandler.nameChatPanel != null)
+                    {
+                        // Устанавливаем новое название
+                        chatHandler.nameChatPanel.text = nodeData.NewChatName;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Name Chat Panel is not assigned, but 'Use Name Panel' is enabled.", chatHandler);
+                    }
                 }
             }
             else
@@ -292,7 +301,7 @@ public class DialogueManager : MonoBehaviour
             Debug.LogWarning($"Invalid chat index: {currentChatIndex}");
         }
 
-        // Переходим к следующему узлу
+        // Всегда переходим к следующему узлу, даже если название не было обновлено
         GoToNextNode(nodeData.Guid);
     }
 

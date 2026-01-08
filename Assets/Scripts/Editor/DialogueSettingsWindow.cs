@@ -126,36 +126,65 @@ public class DialogueSettingsWindow : EditorWindow
         scrollView.style.marginBottom = 10;
 
         // Сгруппированные категории узлов
-        AddNodeCategoryToPanel(scrollView, "Speech Nodes", new[] {
-        "SpeechNodeText", "SpeechNodeAudio", "SpeechNodeImage", "SpeechNodeRandText"
+        AddNodeCategoryToPanel(scrollView, "Flow Control", new[] {
+        "EntryNode", "EndNode", "WireNode", "RandomBranchNode", "PauseNode"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Option Nodes", new[] {
-        "OptionNodeText", "OptionNodeAudio", "OptionNodeImage"
+        AddNodeCategoryToPanel(scrollView, "Dialogue Content", new[] {
+        "SpeechNodeText", "SpeechNodeImage", "SpeechNodeRandText"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Condition Nodes", new[] {
-        "IntConditionNode", "StringConditionNode", "CharacterIntConditionNode"
+        AddNodeCategoryToPanel(scrollView, "Player Choice", new[] {
+        "OptionNodeText", "OptionNodeImage", "TimerNode"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Action Nodes", new[] {
-        "ModifyIntNode", "CharacterModifyIntNode", "EventNode"
+        AddNodeCategoryToPanel(scrollView, "Conditions & Logic", new[] {
+        "IntConditionNode", "StringConditionNode"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Utility Nodes", new[] {
-        "EndNode", "NoteNode", "TimerNode", "PauseNode", "RandomBranchNode",
-        "WireNode", "ChatSwitchNode", "ChangeChatIconNode", "ChangeChatNameNode"
+        AddNodeCategoryToPanel(scrollView, "Variables", new[] {
+        "ModifyIntNode"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Character Nodes", new[] {
-        "CharacterButtonPressNode"
+        AddNodeCategoryToPanel(scrollView, "Characters", new[] {
+        "CharacterIntConditionNode", "CharacterModifyIntNode", "CharacterButtonPressNode"
     });
-
-        AddNodeCategoryToPanel(scrollView, "Debug Nodes", new[] {
-        "DebugLogNode", "DebugWarningNode", "DebugErrorNode"
+        AddNodeCategoryToPanel(scrollView, "UI & Chat Control", new[] {
+        "ChatSwitchNode", "ChangeChatNameNode", "ChangeChatIconNode"
+    });
+        AddNodeCategoryToPanel(scrollView, "System & Events", new[] {
+        "EventNode", "DebugLogNode", "DebugWarningNode", "DebugErrorNode"
     });
 
         _rightPanel.Add(scrollView);
+    }
+
+    private string GetDisplayNameForNodeType(string nodeType)
+    {
+        // Сопоставление имен классов с отображаемыми названиями
+        Dictionary<string, string> displayNames = new Dictionary<string, string>
+    {
+        {"SpeechNodeText", "Speech Node"},
+        {"SpeechNodeImage", "Speech Image Node"},
+        {"SpeechNodeRandText", "Speech Random Node"},
+        {"OptionNodeText", "Option Node"},
+        {"OptionNodeImage", "Option Image Node"},
+        {"IntConditionNode", "Int Condition Node"},
+        {"StringConditionNode", "String Condition Node"},
+        {"EntryNode", "Entry Node"},
+        {"EndNode", "End Node"},
+        {"WireNode", "Wire Node"},
+        {"RandomBranchNode", "Random Branch Node"},
+        {"PauseNode", "Pause Node"},
+        {"ModifyIntNode", "Modify Int Node"},
+        {"CharacterIntConditionNode", "Character Int Condition Node"},
+        {"CharacterModifyIntNode", "Character Modify Int Node"},
+        {"CharacterButtonPressNode", "Character Button Press Node"},
+        {"ChatSwitchNode", "Chat Switch Node"},
+        {"ChangeChatNameNode", "Change Chat Name Node"},
+        {"ChangeChatIconNode", "Change Chat Icon Node"},
+        {"EventNode", "Event Node"},
+        {"DebugLogNode", "Debug Log Node"},
+        {"DebugWarningNode", "Debug Warning Node"},
+        {"DebugErrorNode", "Debug Error Node"},
+        {"TimerNode", "Timer Node"}
+    };
+        return displayNames.TryGetValue(nodeType, out string displayName) ? displayName : nodeType;
     }
 
     private void AddNodeCategoryToPanel(VisualElement parent, string categoryName, string[] nodeTypes)
@@ -200,43 +229,6 @@ public class DialogueSettingsWindow : EditorWindow
 
             parent.Add(toggle);
         }
-    }
-
-    // Вспомогательный метод для получения отображаемого названия узла
-    private string GetDisplayNameForNodeType(string nodeType)
-    {
-        // Сопоставление имен классов с отображаемыми названиями
-        Dictionary<string, string> displayNames = new Dictionary<string, string>
-    {
-        {"SpeechNodeText", "Speech (Text)"},
-        {"SpeechNodeAudio", "Speech (Audio)"},
-        {"SpeechNodeImage", "Speech (Image)"},
-        {"SpeechNodeRandText", "Speech Rand (Text)"},
-        {"OptionNodeText", "Option (Text)"},
-        {"OptionNodeAudio", "Option (Audio)"},
-        {"OptionNodeImage", "Option (Image)"},
-        {"IntConditionNode", "Condition (Int)"},
-        {"StringConditionNode", "Condition (String)"},
-        {"CharacterIntConditionNode", "Character Condition (Int)"},
-        {"ModifyIntNode", "Modify Int"},
-        {"CharacterModifyIntNode", "Character Modify Int"},
-        {"EventNode", "Event"},
-        {"EndNode", "End Node"},
-        {"NoteNode", "Note Node"},
-        {"TimerNode", "Timer"},
-        {"PauseNode", "Pause"},
-        {"RandomBranchNode", "Random Branch"},
-        {"WireNode", "Wire"},
-        {"ChatSwitchNode", "Chat Switch"},
-        {"ChangeChatIconNode", "Change Chat Icon"},
-        {"ChangeChatNameNode", "Change Chat Name"},
-        {"CharacterButtonPressNode", "Character Button Press"},
-        {"DebugLogNode", "Debug Log"},
-        {"DebugWarningNode", "Debug Warning"},
-        {"DebugErrorNode", "Debug Error"}
-    };
-
-        return displayNames.TryGetValue(nodeType, out string displayName) ? displayName : nodeType;
     }
 
     private void SetAllFavorites(bool isSelected)

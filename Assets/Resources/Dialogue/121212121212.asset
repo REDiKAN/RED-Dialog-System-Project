@@ -79,9 +79,6 @@ MonoBehaviour:
   - BaseNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
     PortName: Next
     TargetNodeGuid: 3cacebac-afaa-4653-a571-3819f00b8d34
-  - BaseNodeGuid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
-    PortName: Next
-    TargetNodeGuid: 1a13830e-442c-460d-9fd5-5bc11b39d027
   - BaseNodeGuid: 5a678be6-5abc-40a6-aaaa-dc00e7527ed5
     PortName: Next
     TargetNodeGuid: ba3bdfcd-3d74-469f-8bd5-25b6b3bc8eeb
@@ -100,10 +97,19 @@ MonoBehaviour:
   - BaseNodeGuid: 58da9ca8-0a4a-45e8-915d-df7f7ea505b7
     PortName: Next
     TargetNodeGuid: d2431bbc-8369-4db4-8b80-67498cbc61c2
+  - BaseNodeGuid: d77c9491-3645-4fe6-a0f7-4843ad5bcfb5
+    PortName: Next
+    TargetNodeGuid: 1a13830e-442c-460d-9fd5-5bc11b39d027
   - BaseNodeGuid: a5ba3af1-38f9-4166-8e40-8801e2067014
     PortName: Output
     TargetNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
   - BaseNodeGuid: 2310d678-541b-4f9e-a929-214f5cfa595b
+    PortName: Next
+    TargetNodeGuid: 27e60ce4-0723-4742-b42f-41a83cf5dc39
+  - BaseNodeGuid: 27e60ce4-0723-4742-b42f-41a83cf5dc39
+    PortName: Next
+    TargetNodeGuid: c6c0dd51-b7cf-4af4-9f6e-1abdd89b726d
+  - BaseNodeGuid: c6c0dd51-b7cf-4af4-9f6e-1abdd89b726d
     PortName: Next
     TargetNodeGuid: c144ccf5-8ca3-4c8e-b88a-cd7d88ae6f88
   SpeechNodeDatas:
@@ -286,9 +292,458 @@ MonoBehaviour:
   ModifyIntNodeDatas: []
   EndNodeDatas:
   - Guid: c144ccf5-8ca3-4c8e-b88a-cd7d88ae6f88
-    Position: {x: 774, y: 456}
+    Position: {x: 1381, y: 456}
     NextDialogueName: 
+    ShouldEndDialogue: 1
   SpeechNodeImageDatas:
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
+  - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
+    Position: {x: 2355, y: 8}
+    ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
+    ImageSpritePath: Sprites/image(4)
+    NodeType: SpeechNodeImage
+    SpeakerGuid: 3a1ec005e0d02b64894bcc932a4e8333
+    SpeakerName: Lora
   - Guid: 5c42825a-6f31-4581-b8fb-0fb81b9e88e0
     Position: {x: 2355, y: 8}
     ImageSpriteGuid: Assets/Resources/Sprites/image(4).png
@@ -536,4 +991,10 @@ MonoBehaviour:
   - Guid: 7da82e66-d609-4c1f-ad20-4e44c54e9a90
     Position: {x: 518, y: -86}
     IconSpritePath: explorer_ofrXA0umQ3
-  ChangeChatNameNodeDatas: []
+  - Guid: 27e60ce4-0723-4742-b42f-41a83cf5dc39
+    Position: {x: 793, y: 456}
+    IconSpritePath: explorer_ofrXA0umQ3
+  ChangeChatNameNodeDatas:
+  - Guid: c6c0dd51-b7cf-4af4-9f6e-1abdd89b726d
+    Position: {x: 1102, y: 456}
+    NewChatName: "\u044B\u0432"

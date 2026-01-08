@@ -1,10 +1,10 @@
-﻿using UnityEditor.Experimental.GraphView;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine.UIElements;
-using UnityEditor;
-using UnityEngine;
-using System;
 using System.Linq;
+using UnityEditor;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// Window for searching and creating nodes in the dialogue graph
@@ -14,35 +14,32 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     private DialogueGraphView graphView;
     private EditorWindow editorWindow;
     private Texture2D indentationIcon;
-
     // Mapping for human-readable node type names
     private Dictionary<string, string> _nodeTypeDisplayNames = new Dictionary<string, string> {
-        {"SpeechNodeText", "Speech (Text)"},
-        {"SpeechNodeAudio", "Speech (Audio)"},
-        {"SpeechNodeImage", "Speech (Image)"},
-        {"SpeechNodeRandText", "Speech Rand (Text)"},
-        {"OptionNodeText", "Option (Text)"},
-        {"OptionNodeAudio", "Option (Audio)"},
-        {"OptionNodeImage", "Option (Image)"},
-        {"IntConditionNode", "Condition (Int)"},
-        {"StringConditionNode", "Condition (String)"},
-        {"CharacterIntConditionNode", "Character Condition (Int)"},
+        {"SpeechNodeText", "Speech Node"},
+        {"SpeechNodeImage", "Speech Image Node"},
+        {"SpeechNodeRandText", "Speech Random Node"},
+        {"OptionNodeText", "Option Node"},
+        {"OptionNodeImage", "Option Image Node"},
+        {"IntConditionNode", "Int Condition Node"},
+        {"StringConditionNode", "String Condition Node"},
         {"EntryNode", "Entry Node"},
         {"EndNode", "End Node"},
-        {"NoteNode", "Note Node"},
-        {"TimerNode", "Timer"},
-        {"PauseNode", "Pause"},
-        {"RandomBranchNode", "Random Branch"},
-        {"WireNode", "Wire"},
-        {"ModifyIntNode", "Modify Int"},
-        {"CharacterModifyIntNode", "Character Modify Int"},
-        {"EventNode", "Event"},
-        {"DebugLogNode", "Debug Log"},
-        {"DebugWarningNode", "Debug Warning"},
-        {"DebugErrorNode", "Debug Error"},
-        {"ChatSwitchNode", "Chat Switch"},
-        {"ChangeChatIconNode", "Change Chat Icon"},
-        {"ChangeChatNameNode", "Change Chat Name"}
+        {"WireNode", "Wire Node"},
+        {"RandomBranchNode", "Random Branch Node"},
+        {"PauseNode", "Pause Node"},
+        {"ModifyIntNode", "Modify Int Node"},
+        {"CharacterIntConditionNode", "Character Int Condition Node"},
+        {"CharacterModifyIntNode", "Character Modify Int Node"},
+        {"CharacterButtonPressNode", "Character Button Press Node"},
+        {"ChatSwitchNode", "Chat Switch Node"},
+        {"ChangeChatNameNode", "Change Chat Name Node"},
+        {"ChangeChatIconNode", "Change Chat Icon Node"},
+        {"EventNode", "Event Node"},
+        {"DebugLogNode", "Debug Log Node"},
+        {"DebugWarningNode", "Debug Warning Node"},
+        {"DebugErrorNode", "Debug Error Node"},
+        {"TimerNode", "Timer Node"}
     };
 
     /// <summary>
@@ -84,67 +81,67 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         if (favoriteNodeTypes.Count > 0)
         {
             entries.Add(new SearchTreeGroupEntry(new GUIContent("Favorite Nodes"), 1));
-
             foreach (var nodeType in favoriteNodeTypes)
             {
                 // Skip if node type not in our mapping
                 if (!_nodeTypeDisplayNames.ContainsKey(nodeType)) continue;
-
                 entries.Add(new SearchTreeEntry(new GUIContent(_nodeTypeDisplayNames[nodeType], indentationIcon))
                 {
                     userData = Type.GetType($"DialogueSystem.{nodeType}") ?? Type.GetType(nodeType),
                     level = 2
                 });
             }
-
             // Add separator between favorites and other nodes
             entries.Add(new SearchTreeEntry(new GUIContent("────────────────────")) { level = 1, userData = null });
-
         }
 
-        // Group remaining nodes by category
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Speech Nodes"), 1));
+        // Group 1: Flow Control (Управление потоком)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Flow Control"), 1));
+        AddNodeEntry(entries, "EntryNode", 2);
+        AddNodeEntry(entries, "EndNode", 2);
+        AddNodeEntry(entries, "WireNode", 2);
+        AddNodeEntry(entries, "RandomBranchNode", 2);
+        AddNodeEntry(entries, "PauseNode", 2);
+
+        // Group 2: Dialogue Content (Контент диалога)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Content"), 1));
         AddNodeEntry(entries, "SpeechNodeText", 2);
-        AddNodeEntry(entries, "SpeechNodeAudio", 2);
         AddNodeEntry(entries, "SpeechNodeImage", 2);
         AddNodeEntry(entries, "SpeechNodeRandText", 2);
 
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Option Nodes"), 1));
+        // Group 3: Player Choice (Выбор игрока)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Player Choice"), 1));
         AddNodeEntry(entries, "OptionNodeText", 2);
-        AddNodeEntry(entries, "OptionNodeAudio", 2);
         AddNodeEntry(entries, "OptionNodeImage", 2);
+        AddNodeEntry(entries, "TimerNode", 2);
 
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Condition Nodes"), 1));
+        // Group 4: Conditions & Logic (Условия и Логика)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Conditions & Logic"), 1));
         AddNodeEntry(entries, "IntConditionNode", 2);
         AddNodeEntry(entries, "StringConditionNode", 2);
-        AddNodeEntry(entries, "CharacterIntConditionNode", 2);
 
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Utility Nodes"), 1));
-        AddNodeEntry(entries, "EntryNode", 2);
-        AddNodeEntry(entries, "EndNode", 2);
-        AddNodeEntry(entries, "NoteNode", 2);
-        AddNodeEntry(entries, "TimerNode", 2);
-        AddNodeEntry(entries, "PauseNode", 2);
-        AddNodeEntry(entries, "RandomBranchNode", 2);
-        AddNodeEntry(entries, "WireNode", 2);
-        AddNodeEntry(entries, "ChatSwitchNode", 2);
-        AddNodeEntry(entries, "ChangeChatIconNode", 2);
-        AddNodeEntry(entries, "ChangeChatNameNode", 2);
-
-
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Action Nodes"), 1));
+        // Group 5: Variables (Переменные)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Variables"), 1));
         AddNodeEntry(entries, "ModifyIntNode", 2);
-        AddNodeEntry(entries, "CharacterModifyIntNode", 2);
-        AddNodeEntry(entries, "EventNode", 2);
 
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Character Nodes"), 1));
+        // Group 6: Characters (Персонажи)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("Characters"), 1));
+        AddNodeEntry(entries, "CharacterIntConditionNode", 2);
+        AddNodeEntry(entries, "CharacterModifyIntNode", 2);
         AddNodeEntry(entries, "CharacterButtonPressNode", 2);
 
-        entries.Add(new SearchTreeGroupEntry(new GUIContent("Debug Nodes"), 1));
+        // Group 7: UI & Chat Control (Управление интерфейсом)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("UI & Chat Control"), 1));
+        AddNodeEntry(entries, "ChatSwitchNode", 2);
+        AddNodeEntry(entries, "ChangeChatNameNode", 2);
+        AddNodeEntry(entries, "ChangeChatIconNode", 2);
+
+        // Group 8: System & Events (Система и События)
+        entries.Add(new SearchTreeGroupEntry(new GUIContent("System & Events"), 1));
+        AddNodeEntry(entries, "EventNode", 2);
         AddNodeEntry(entries, "DebugLogNode", 2);
         AddNodeEntry(entries, "DebugWarningNode", 2);
         AddNodeEntry(entries, "DebugErrorNode", 2);
-
 
         return entries;
     }
@@ -156,13 +153,10 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         var settings = LoadDialogueSettings();
         List<string> favoriteNodeTypes = settings?.FavoriteNodeTypes ?? new List<string>();
-
         // Skip if this node type is already in favorites
         if (favoriteNodeTypes.Contains(nodeType)) return;
-
         // Get the display name for this node type
         string displayName = _nodeTypeDisplayNames.TryGetValue(nodeType, out string name) ? name : nodeType;
-
         entries.Add(new SearchTreeEntry(new GUIContent(displayName, indentationIcon))
         {
             userData = Type.GetType($"DialogueSystem.{nodeType}") ?? Type.GetType(nodeType),
@@ -192,7 +186,7 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
                 if (existingEntryNodes.Any())
                 {
                     EditorUtility.DisplayDialog("Cannot Create Start Node",
-                        "Only one Start Node is allowed in the graph.", "OK");
+                    "Only one Start Node is allowed in the graph.", "OK");
                     return false;
                 }
             }
@@ -210,7 +204,6 @@ public class NodeSearchWindow : ScriptableObject, ISearchWindowProvider
         string[] guids = AssetDatabase.FindAssets("t:DialogueSettingsData");
         if (guids.Length == 0)
             return null;
-
         // Take the first found settings file
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
         return AssetDatabase.LoadAssetAtPath<DialogueSettingsData>(path);

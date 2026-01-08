@@ -6,7 +6,6 @@ using UnityEngine;
 using System.Linq;
 using UnityEditor;
 using System;
-using DialogueSystem;
 
 /// <summary>
 /// Граф для редактирования диалогов с новой логикой соединений
@@ -97,6 +96,7 @@ public class DialogueGraphView : GraphView
                 Insert(1, _gridBackground); // Вставляем после кастомного фона
                 _gridBackground.StretchToParentSize();
             }
+
         }
     }
 

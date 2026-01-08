@@ -945,6 +945,8 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   timerDisplayController: {fileID: 1859932804}
+  useNamePanel: 0
+  useIconPanel: 0
   isActiveByDefault: 1
   fadeDuration: 0.2
   nameChatPanel: {fileID: 1401059845}
@@ -1454,13 +1456,19 @@ MonoBehaviour:
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   _continueButton: {fileID: 1665971559}
+  _timerDisplayController: {fileID: 1859932804}
   messageDelay: 0.5
   currentDialogue: {fileID: 11400000, guid: e4bfcb4ebcb74a241841e8b323409001, type: 2}
-  _timerDisplayController: {fileID: 1859932804}
   chatConfigurations:
-  - chatHandler: {fileID: 245914490}
   - chatHandler: {fileID: 2111429941}
   - chatHandler: {fileID: 1489039320}
+  - chatHandler: {fileID: 1489039320}
+  startDialogueEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  endDialogueEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &541927738
 Transform:
   m_ObjectHideFlags: 0
@@ -4404,6 +4412,8 @@ MonoBehaviour:
   chatPanel: {fileID: 1596052913}
   optionPanel: {fileID: 1404971478}
   timerDisplayController: {fileID: 1297894608}
+  useNamePanel: 0
+  useIconPanel: 0
   isActiveByDefault: 1
   fadeDuration: 0.2
   nameChatPanel: {fileID: 1780841981}
@@ -7002,6 +7012,8 @@ MonoBehaviour:
   chatPanel: {fileID: 2114686459}
   optionPanel: {fileID: 648273691}
   timerDisplayController: {fileID: 924805882}
+  useNamePanel: 0
+  useIconPanel: 0
   isActiveByDefault: 1
   fadeDuration: 0.2
   nameChatPanel: {fileID: 0}
