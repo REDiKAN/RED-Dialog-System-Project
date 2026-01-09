@@ -1,33 +1,40 @@
+using UnityEngine; // Добавляем этот using для runtime
+#if UNITY_EDITOR
 using UnityEditor.Experimental.GraphView;
-using UnityEngine;
-using System;
-
+#endif
 /// <summary>
-/// Базовый класс для всех узлов диалогового графа
-/// Содержит общую логику и свойства для всех узлов
+/// Базовый класс для всех узлов в графе диалогов
+/// Содержит общие поля и методы для работы узлов
 /// </summary>
-public abstract class BaseNode : Node
+public abstract class BaseNode :
+#if UNITY_EDITOR
+Node
+#else
+UnityEngine.Object
+#endif
 {
     public string GUID { get; set; } // Уникальный идентификатор узла
-    public bool EntryPoint { get; set; } = false; // Является ли узел точкой входа
+    public bool EntryPoint { get; set; } = false; // Флаг, является ли узел начальной точкой графа
 
     /// <summary>
-    /// Инициализация узла с указанной позицией
+    /// Инициализация узла в указанной позиции
     /// </summary>
     public virtual void Initialize(Vector2 position)
     {
-        GUID = Guid.NewGuid().ToString();
+        GUID = System.Guid.NewGuid().ToString();
+#if UNITY_EDITOR
         SetPosition(new Rect(position, new Vector2(200, 150)));
+#endif
     }
 
     public virtual string SerializeNodeData()
     {
-        // Базовая реализация по умолчанию
+        // Стандартная реализация не содержит данных
         return "{}";
     }
 
     public virtual void DeserializeNodeData(string jsonData)
     {
-        // Пустая реализация по умолчанию
+        // Стандартная реализация не содержит данных
     }
 }
