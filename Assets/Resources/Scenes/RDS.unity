@@ -418,7 +418,7 @@ MonoBehaviour:
   _continueButton: {fileID: 1283895145}
   _timerDisplayController: {fileID: 227402780}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: 681089716c7d8b242ae6d64d20de7914, type: 2}
+  currentDialogue: {fileID: 11400000, guid: a07270d1f2df3e949ac4747f4f49b6b3, type: 2}
   chatConfigurations:
   - chatHandler: {fileID: 1234992288}
   startDialogueEvent:

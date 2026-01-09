@@ -15,8 +15,28 @@ MonoBehaviour:
   EntryNodeData:
     Guid: 538dfbbb-6414-4927-93e3-311d797f52af
     Position: {x: 100, y: 200}
-  NodeLinks: []
-  SpeechNodeDatas: []
+  NodeLinks:
+  - BaseNodeGuid: 538dfbbb-6414-4927-93e3-311d797f52af
+    PortName: Next
+    TargetNodeGuid: b2381ab4-b3f7-4969-a38d-eaf9be7fbd44
+  - BaseNodeGuid: b2381ab4-b3f7-4969-a38d-eaf9be7fbd44
+    PortName: Next
+    TargetNodeGuid: 50553fdb-f928-4d23-bf67-33ee2dee6e72
+  SpeechNodeDatas:
+  - Guid: b2381ab4-b3f7-4969-a38d-eaf9be7fbd44
+    Position: {x: 281, y: 203}
+    DialogueText: 2
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
+  - Guid: 50553fdb-f928-4d23-bf67-33ee2dee6e72
+    Position: {x: 630, y: 203}
+    DialogueText: 1
+    AudioClipGuid: 
+    SpeakerGuid: 9c350932098057440a0ccc790af5da30
+    SpeakerName: Alise
+    NodeType: SpeechNodeText
   OptionNodeDatas: []
   ExposedProperties: []
   IntExposedProperties: []
