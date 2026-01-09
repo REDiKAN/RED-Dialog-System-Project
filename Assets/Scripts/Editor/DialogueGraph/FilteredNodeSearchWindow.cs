@@ -37,13 +37,13 @@ public class FilteredNodeSearchWindow : ScriptableObject, ISearchWindowProvider
 
         // ===== Group 2: Dialogue Content (Контент диалога) =====
         tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue Content"), 1));
-        tree.Add(new SearchTreeEntry(new GUIContent("Speech Node")) { level = 2, userData = typeof(SpeechNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Speech Node")) { level = 2, userData = typeof(SpeechNodeText) });
         tree.Add(new SearchTreeEntry(new GUIContent("Speech Image Node")) { level = 2, userData = typeof(SpeechNodeImage) });
         tree.Add(new SearchTreeEntry(new GUIContent("Speech Random Node")) { level = 2, userData = typeof(SpeechNodeRandText) });
 
         // ===== Group 3: Player Choice (Выбор игрока) =====
         tree.Add(new SearchTreeGroupEntry(new GUIContent("Player Choice"), 1));
-        tree.Add(new SearchTreeEntry(new GUIContent("Option Node")) { level = 2, userData = typeof(OptionNode) });
+        tree.Add(new SearchTreeEntry(new GUIContent("Option Node")) { level = 2, userData = typeof(OptionNodeText) });
         tree.Add(new SearchTreeEntry(new GUIContent("Option Image Node")) { level = 2, userData = typeof(OptionNodeImage) });
         tree.Add(new SearchTreeEntry(new GUIContent("Timer Node")) { level = 2, userData = typeof(TimerNode) });
 

@@ -1433,6 +1433,7 @@ GameObject:
   m_Component:
   - component: {fileID: 541927738}
   - component: {fileID: 541927737}
+  - component: {fileID: 541927739}
   m_Layer: 0
   m_Name: DialogueSystem
   m_TagString: Untagged
@@ -1457,7 +1458,7 @@ MonoBehaviour:
   _continueButton: {fileID: 1665971559}
   _timerDisplayController: {fileID: 1859932804}
   messageDelay: 0.5
-  currentDialogue: {fileID: 11400000, guid: e4bfcb4ebcb74a241841e8b323409001, type: 2}
+  currentDialogue: {fileID: 11400000, guid: 66333657ae4e28142abeec33caa2f216, type: 2}
   chatConfigurations:
   - chatHandler: {fileID: 2111429941}
   - chatHandler: {fileID: 1489039320}
@@ -1483,6 +1484,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &541927739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541927736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e017e932052fa51438091c66817590a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &542612190
 GameObject:
   m_ObjectHideFlags: 0
@@ -4712,6 +4725,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1596052912}
   - component: {fileID: 1596052913}
+  - component: {fileID: 1596052914}
   m_Layer: 0
   m_Name: Chat Content
   m_TagString: Untagged
@@ -4756,6 +4770,24 @@ MonoBehaviour:
   messageContent: {fileID: 1871582217}
   characterName: {fileID: 797826916}
   characterIcon: {fileID: 303826646}
+--- !u!114 &1596052914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596052911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 683be2341a692604f84d598e11acece6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animateMessageText: 1
+  animateCharacterName: 0
+  animationType: 1
+  charactersPerSecond: 30
+  messageTextParent: {fileID: 0}
+  characterNameParent: {fileID: 0}
 --- !u!1 &1611337084
 GameObject:
   m_ObjectHideFlags: 0
