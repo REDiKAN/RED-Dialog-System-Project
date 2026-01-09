@@ -941,7 +941,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd4b0fc46606eb84dba33f84fa838b68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  typeChatHandler: 0
   chatPanel: {fileID: 808698045}
   optionPanel: {fileID: 871629838}
   timerDisplayController: {fileID: 1859932804}
@@ -4408,7 +4407,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd4b0fc46606eb84dba33f84fa838b68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  typeChatHandler: 0
   chatPanel: {fileID: 1596052913}
   optionPanel: {fileID: 1404971478}
   timerDisplayController: {fileID: 1297894608}
@@ -7008,7 +7006,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd4b0fc46606eb84dba33f84fa838b68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  typeChatHandler: 0
   chatPanel: {fileID: 2114686459}
   optionPanel: {fileID: 648273691}
   timerDisplayController: {fileID: 924805882}
